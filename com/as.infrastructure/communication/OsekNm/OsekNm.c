@@ -57,7 +57,7 @@ do{										\
 	}									\
 }while(0)
 
-#define AS_LOG_OSEK_NM 1
+#define AS_LOG_OSEK_NM 0
 #define nmDebug(str) ASLOG(OSEK_NM,str)
 /* ============================ [ TYPES     ] ====================================================== */
 /* OK we could see terrible thing here, too big the struct is. */

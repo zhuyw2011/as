@@ -94,7 +94,7 @@ Mcu_ResetType Mcu_GetResetReason( void )
 	return MCU_POWER_ON_RESET;
 }
 
-void Mcu_DistributePllClock( void )
+void __weak Mcu_DistributePllClock( void )
 {
 	Irq_Init();
 }

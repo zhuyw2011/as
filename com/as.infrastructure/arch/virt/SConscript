@@ -12,6 +12,11 @@ objs = []
 objs += Glob('bsp/serial.c')
 objs += Glob('bsp/timer.c')
 objs += Glob('bsp/interrupt.c')
+objs += Glob('../common/arm/*.c')
+asenv.Append(CPPPATH=[os.path.abspath('%s/../common/arm'%(cwd))])
+
+if('SMP' in MODULES):
+    objs += Glob('bsp/smp.c')
 
 if('PCI' in MODULES):
     objs += Glob('bsp/pci-virt.c')

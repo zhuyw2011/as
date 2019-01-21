@@ -52,6 +52,9 @@ SECTIONS
 	. = ALIGN(8);
 	. = . + 0x4000; /* 16kB of stack memory */
 	stack_top = .;
+	. = ALIGN(8);
+	. = . + 0x4000; /* 16kB of stack memory */
+	stack2_top = .;
 
 	.pcinp :
 	{
