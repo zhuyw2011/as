@@ -120,6 +120,7 @@ StatusType ActivateTask ( TaskType TaskID )
 	StatusType ercd = E_OK;
 	TaskVarType* pTaskVar;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( TaskID < TASK_NUM )
@@ -218,6 +219,8 @@ StatusType TerminateTask( void )
 {
 	StatusType ercd = E_OK;
 	imask_t mask;
+	DECLARE_SMP_PROCESSOR_ID();
+
 	#if(OS_STATUS == EXTENDED)
 	if( CallLevel != TCL_TASK )
 	{
@@ -312,6 +315,7 @@ StatusType ChainTask    ( TaskType TaskID )
 	StatusType ercd = E_OK;
 	imask_t mask;
 	TaskVarType* pTaskVar;
+	DECLARE_SMP_PROCESSOR_ID();
 	
 	#if(OS_STATUS == EXTENDED)
 	if( TaskID >= TASK_NUM )
@@ -443,6 +447,7 @@ StatusType Schedule     ( void )
 {
 	StatusType ercd = E_OK;
 	imask_t mask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( CallLevel != TCL_TASK )
@@ -498,6 +503,7 @@ StatusType Schedule     ( void )
 StatusType GetTaskID    ( TaskRefType pTaskType )
 {
 	imask_t mask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	Irq_Save(mask);
 	if(RunningVar !=  NULL)
@@ -543,6 +549,7 @@ StatusType GetTaskState ( TaskType TaskID,TaskStateRefType State )
 	StatusType ercd = E_OK;
 	TaskVarType* pTaskVar;
 	imask_t mask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( TaskID < TASK_NUM )
@@ -608,7 +615,7 @@ void Os_TaskInit(AppModeType appMode)
 void statOsTask(void)
 {
 	TaskType id;
-
+	DECLARE_SMP_PROCESSOR_ID();
 	const TaskConstType* pTaskConst;
 	TaskVarType* pTaskVar;
 	uint32_t pused;

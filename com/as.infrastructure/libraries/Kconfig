@@ -10,6 +10,6 @@ config FDT
 
 config TRACE
 	bool "enable the trace library"
-	default y
+	default n
 
 endmenu

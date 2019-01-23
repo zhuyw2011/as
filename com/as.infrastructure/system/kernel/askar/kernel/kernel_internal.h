@@ -24,6 +24,9 @@
 #ifdef USE_PTHREAD
 #include "sched.h"
 #endif
+#ifdef USE_SMP
+#include "smp.h"
+#endif
 /* ============================ [ MACROS    ] ====================================================== */
 #ifndef USE_PTHREAD
 #undef OS_PTHREAD_NUM
@@ -232,6 +235,24 @@ enum {
 #define USE_PTHREAD_PARENT
 #endif
 
+
+#ifdef USE_SMP
+#define DECLARE_SMP_PROCESSOR_ID() int cpuid = smp_processor_id()
+#define GET_SMP_PROCESSOR_ID() cpuid = smp_processor_id()
+#define SMP_PROCESSOR_ID() cpuid
+#define RunningVar  RunningVars[cpuid]
+#define ReadyVar    ReadyVars[cpuid]
+#define CallLevel   CallLevels[cpuid]
+#define OS_PORT_SPIN_LOCK()   Os_PortSpinLock()
+#define OS_PORT_SPIN_UNLOCK() Os_PortSpinUnLock()
+#else
+#define DECLARE_SMP_PROCESSOR_ID()
+#define GET_SMP_PROCESSOR_ID()
+#define SMP_PROCESSOR_ID() 0
+#define OS_PORT_SPIN_LOCK()
+#define OS_PORT_SPIN_UNLOCK()
+#endif
+
 /* ============================ [ TYPES     ] ====================================================== */
 typedef uint8					PriorityType;
 
@@ -375,9 +396,15 @@ struct pthread
 #endif
 /* ============================ [ DECLARES  ] ====================================================== */
 /* ============================ [ DATAS     ] ====================================================== */
+#ifdef USE_SMP
+extern TaskVarType* RunningVars[CPU_CORE_NUMBER];
+extern TaskVarType* ReadyVars[CPU_CORE_NUMBER];
+extern unsigned int CallLevels[CPU_CORE_NUMBER];
+#else
 extern TaskVarType* RunningVar;
 extern TaskVarType* ReadyVar;
 extern unsigned int CallLevel;
+#endif
 extern const TaskConstType TaskConstArray[TASK_NUM];
 extern TaskVarType TaskVarArray[TASK_NUM+OS_PTHREAD_NUM];
 extern CounterVarType CounterVarArray[COUNTER_NUM];
@@ -397,7 +424,10 @@ extern void Os_PortInit(void);
 extern void Os_PortInitContext(TaskVarType* pTaskVar);
 extern void Os_PortStartDispatch(void);
 extern void Os_PortDispatch(void);
-
+#ifdef USE_SMP
+extern void Os_PortSpinLock(void);
+extern void Os_PortSpinUnLock(void);
+#endif
 extern void Sched_Init(void);
 extern void Sched_AddReady(TaskType TaskID);
 extern void Sched_RemoveReady(TaskType TaskID);

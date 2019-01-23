@@ -137,6 +137,8 @@ void Sched_ShowRdyQ(void)
 }
 void Sched_AddReady(TaskType TaskID)
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	asAssert(ReadyQueue.size < ACTIVATION_SUM);
 
 	ReadyQueue.heap[ReadyQueue.size].taskID = TaskID;
@@ -163,6 +165,8 @@ void Sched_RemoveReady(TaskType TaskID)
 
 void Sched_Preempt(void)
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	asAssert(ReadyVar == &TaskVarArray[ReadyQueue.heap[0].taskID]);
 	ReadyQueue.heap[0].taskID = RunningVar - TaskVarArray;
 	ReadyQueue.heap[0].priority = NEW_PRIOHIGHEST(RunningVar->priority);
@@ -171,6 +175,8 @@ void Sched_Preempt(void)
 
 void Sched_GetReady(void)
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	if(ReadyQueue.size > 0)
 	{
 		ReadyVar = &TaskVarArray[ReadyQueue.heap[0].taskID];
@@ -188,6 +194,7 @@ void Sched_GetReady(void)
 boolean Sched_Schedule(void)
 {
 	boolean needSchedule = FALSE;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	if(ReadyQueue.size > 0)
 	{

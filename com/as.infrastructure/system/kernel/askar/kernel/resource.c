@@ -68,8 +68,8 @@ static ResourceVarType ResourceVarArray[RESOURCE_NUM];
 StatusType GetResource (ResourceType ResID)
 {
 	StatusType ercd = E_OK;
-
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( ResID >= RESOURCE_NUM )
@@ -147,8 +147,8 @@ StatusType GetResource (ResourceType ResID)
 StatusType ReleaseResource ( ResourceType ResID )
 {
 	StatusType ercd = E_OK;
-
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( ResID >= RESOURCE_NUM )

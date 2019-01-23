@@ -36,12 +36,18 @@ extern void statOsCounter(void);
 OSServiceIdType _errorhook_svcid;
 _ErrorHook_Par  _errorhook_par1, _errorhook_par2, _errorhook_par3;
 
+#ifdef USE_SMP
+TaskVarType* RunningVars[CPU_CORE_NUMBER];
+TaskVarType* ReadyVars[CPU_CORE_NUMBER];
+unsigned int CallLevels[CPU_CORE_NUMBER];
+#else
 TaskVarType* RunningVar;
 TaskVarType* ReadyVar;
+unsigned int CallLevel;
+#endif
 
 TickType				OsTickCounter;
 
-unsigned int CallLevel;
 static AppModeType appMode;
 #ifdef USE_SHELL
 static SHELL_CONST ShellCmdT statOsCmd  = {
@@ -69,9 +75,15 @@ SHELL_CMD_EXPORT(killOsCmd);
 /* ============================ [ LOCALS    ] ====================================================== */
 static void Os_MiscInit(void)
 {
+#ifdef USE_SMP
+	memset(RunningVars,0,sizeof(RunningVars));
+	memset(ReadyVars,0,sizeof(ReadyVars));
+	memset(CallLevels,0,sizeof(CallLevels));
+#else
 	RunningVar = NULL;
 	ReadyVar   = NULL;
 	CallLevel  = TCL_NULL;
+#endif
 
 	OsTickCounter = 1;
 
@@ -166,8 +178,11 @@ static int killOsFunc(int argc, char* argv[])
 /* |------------------+------------------------------------------------------| */
 /* | Conformance:     | BCC1, BCC2, ECC1, ECC2                               | */
 /* |------------------+------------------------------------------------------| */
+void __weak Os_PortStartFirstDispatch(void) { Os_PortStartDispatch(); }
 void StartOS ( AppModeType Mode )
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	appMode = Mode;
 
 	Irq_Disable();
@@ -186,12 +201,14 @@ void StartOS ( AppModeType Mode )
 	OSStartupHook();
 
 	Sched_GetReady();
-	Os_PortStartDispatch();
+	Os_PortStartFirstDispatch();
 	while(1);
 }
 
 void ShutdownOS( StatusType Error )
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	OSShutdownHook(Error);
 	Irq_Disable();
 	while(1);

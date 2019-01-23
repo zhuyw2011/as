@@ -45,6 +45,7 @@
 StatusType GetAlarmBase( AlarmType AlarmID, AlarmBaseRefType Info )
 {
 	StatusType ercd = E_OK;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( AlarmID < ALARM_NUM )
@@ -90,6 +91,7 @@ StatusType GetAlarm    ( AlarmType AlarmID ,TickRefType Tick )
 {
 	StatusType ercd = E_OK;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( AlarmID < ALARM_NUM )
@@ -168,6 +170,7 @@ StatusType SetRelAlarm ( AlarmType AlarmID , TickType Increment ,TickType Cycle 
 {
 	StatusType ercd = E_OK;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( AlarmID >= ALARM_NUM )
@@ -257,6 +260,7 @@ StatusType SetAbsAlarm ( AlarmType AlarmID , TickType Start ,TickType Cycle )
 {
 	StatusType ercd = E_OK;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( AlarmID >= ALARM_NUM )
@@ -338,6 +342,7 @@ StatusType CancelAlarm ( AlarmType AlarmID )
 {
 	StatusType ercd = E_OK;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( AlarmID < ALARM_NUM )

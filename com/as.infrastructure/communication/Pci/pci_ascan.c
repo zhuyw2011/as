@@ -22,6 +22,9 @@
 #include "Os.h"
 #include "pci_core.h"
 #include "asdebug.h"
+#ifdef USE_ASKAR
+#include "kernel_internal.h"
+#endif
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_CAN 0
 #define AS_LOG_CANRX 0
@@ -192,7 +195,7 @@ static void can_isr(void)
 
 	#ifdef USE_ASKAR
 	imask_t imask;
-	extern unsigned int CallLevel;
+	DECLARE_SMP_PROCESSOR_ID();
 	unsigned int savedCallLevel;
 	#endif
 

@@ -1,5 +1,9 @@
 menu "AUTOSAR MCAL&CDD for arch virt"
 
+config SMP
+	bool "enable multicore"
+	default y
+
 config PCI
 	bool "PCI driver"
 	default y

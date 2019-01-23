@@ -54,6 +54,7 @@ StatusType SetEvent  ( TaskType TaskID , EventMaskType Mask )
 {
 	StatusType ercd = E_OK;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( TaskID >= TASK_NUM )
@@ -118,6 +119,8 @@ StatusType ClearEvent( EventMaskType Mask )
 	StatusType ercd = E_OK;
 	imask_t imask;
 
+	DECLARE_SMP_PROCESSOR_ID();
+
 	#if(OS_STATUS == EXTENDED)
 	if( CallLevel != TCL_TASK )
 	{
@@ -171,6 +174,7 @@ StatusType GetEvent  ( TaskType TaskID , EventMaskRefType Mask )
 {
 	StatusType ercd = E_OK;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( TaskID >= TASK_NUM )
@@ -227,6 +231,7 @@ StatusType WaitEvent ( EventMaskType Mask )
 {
 	StatusType ercd = E_OK;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	#if(OS_STATUS == EXTENDED)
 	if( CallLevel != TCL_TASK )

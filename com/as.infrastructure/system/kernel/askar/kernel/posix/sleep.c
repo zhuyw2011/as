@@ -39,6 +39,7 @@ void Os_SleepInit(void)
 void Os_Sleep(TickType tick)
 {
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	Irq_Save(imask);
 	if(NULL != RunningVar)
@@ -220,6 +221,7 @@ int Os_ListWait(TaskListType* list, const struct timespec *abstime)
 {
 	int ercd = 0;
 	TickType ticks;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	if(NULL != abstime)
 	{

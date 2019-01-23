@@ -25,6 +25,12 @@
 #define MACROS_ONLY
 #include "Os_Cfg.h"
 /* ============================ [ MACROS    ] ====================================================== */
+#if CPU_CORE_NUMBER > 1
+#define RunningVar RunningVars
+#define ReadyVar   ReadyVars
+#define CallLevel  CallLevels
+#endif
+
 /* for i in range(16): print("stp x%d, x%d, [sp, #-16]!"%(2*i, 2*i+1)) */
 .macro SaveContext
 	stp x0, x1, [sp, #-16]!
@@ -101,9 +107,14 @@
 	.extern PostTaskHook
 	.extern Os_PortActivateImpl
 /* ============================ [ DATAS     ] ====================================================== */
+#if CPU_CORE_NUMBER > 1
+	.extern RunningVars
+	.extern ReadyVars
+	.extern CallLevels
+#else
 	.extern RunningVar
 	.extern ReadyVar
-	.extern CallLevel
+#endif
 	.extern ISR2Counter
 	.extern stack_top
 /* ============================ [ LOCALS    ] ====================================================== */
@@ -113,11 +124,21 @@
 Os_PortIdle:
 	/* set RunningVar to NULL */
 	ldr     x1, =RunningVar
+	#if CPU_CORE_NUMBER > 1
+	mrs     x6, mpidr_el1
+	and     x6, x6, #3
+	str     x0, [x0, x6, lsl #3]
+	#else
 	str     x0, [x1]
+	#endif
 	bl      Irq_Enable
 l_idle:
 	ldr     x0, =ReadyVar
+	#if CPU_CORE_NUMBER > 1
+	ldr     x0, [x0, x6, lsl #3]
+	#else
 	ldr     x0, [x0]
+	#endif
 	cmp     x0, #0
 	ble     l_idle
 	bl      Irq_Disable
@@ -129,23 +150,50 @@ l_idle:
 /* void Os_PortStartDispatchImpl( void ); */
 Os_PortStartDispatchImpl:
 	ldr     x0, =ReadyVar
+	#if CPU_CORE_NUMBER > 1
+	mrs     x6, mpidr_el1
+	and     x6, x6, #3
+	ldr     x0, [x0, x6, lsl #3]
+	#else
 	ldr     x0, [x0]
+	#endif
 	cmp     x0, #0
 	beq     Os_PortIdle
 	ldr     x1, =RunningVar
+	#if CPU_CORE_NUMBER > 1
+	str     x0, [x1, x6, lsl #3]
+	#else
 	str     x0, [x1]
+	#endif
 Os_PortDispatchFormISR:
 	#ifdef OS_USE_PRETASK_HOOK
 	ldr     x1, = CallLevel
+	#if CPU_CORE_NUMBER > 1
+	mrs     x6, mpidr_el1
+	and     x6, x6, #3
+	ldr     w3, [x1, x6, lsl #2]
+	#else
 	ldr     w3, [x1]
+	#endif
 	mov     w2, #8   /* CallLevel = TCL_PREPOST */
+	#if CPU_CORE_NUMBER > 1
+	str     w2, [x1, x6, lsl #2]
+	#else
 	str     w2,[x1]
+	#endif
+
 	stp     x0,x1, [sp, #-16]!
 	stp     x2,x3, [sp, #-16]!
+	stp     x29,x30, [sp, #-16]!
 	bl      PreTaskHook
+	ldp     x29,x30, [sp], #16
 	ldp     x2,x3, [sp], #16
 	ldp     x0,x1, [sp], #16
+	#if CPU_CORE_NUMBER > 1
+	str     w3,[x1, x6, lsl #2]
+	#else
 	str     w3,[x1]  /* restore CallLevel */
+	#endif
 	#endif
 	ldr     x1, [x0, #0x0 ]
 	mov     sp, x1
@@ -171,7 +219,13 @@ Os_PortDispatchImpl:
 	SaveContext
 
 	ldr     x3, =RunningVar
+	#if CPU_CORE_NUMBER > 1
+	mrs     x6, mpidr_el1
+	and     x6, x6, #3
+	ldr     x4, [x3, x6, lsl #3]
+	#else
 	ldr     x4, [x3]
+	#endif
 
 	mov     x5, sp
 	str     x5, [x4, #0x0 ]
@@ -181,33 +235,65 @@ Os_PortDispatchImpl:
 
 	/* loading system stack */
 	ldr x0, =stack_top
+	#if CPU_CORE_NUMBER > 1
+	lsl x3, x6, #14    /*stack size is 16K(1<<14) */
+	add x0, x0, x3
+	#endif
 	mov sp, x0
 
 	#ifdef OS_USE_POSTTASK_HOOK
 	ldr     x1, = CallLevel
+	#if CPU_CORE_NUMBER > 1
+	ldr     w3, [x1, x6, lsl #2]
+	#else
 	ldr     w3, [x1]
+	#endif
 	mov     w2, #8   /* CallLevel = TCL_PREPOST */
+	#if CPU_CORE_NUMBER > 1
+	str     w2, [x1, x6, lsl #2]
+	#else
 	str     w2,[x1]
+	#endif
 	stp     x0,x1, [sp, #-16]!
 	stp     x2,x3, [sp, #-16]!
+	stp     x29,x30, [sp, #-16]!
 	bl      PostTaskHook
+	ldp     x29,x30, [sp], #16
 	ldp     x2,x3, [sp], #16
 	ldp     x0,x1, [sp], #16
+	#if CPU_CORE_NUMBER > 1
+	str     w3,[x1, x6, lsl #2]
+	#else
 	str     w3,[x1]  /* restore CallLevel */
+	#endif
 	#endif
 
 	b       Os_PortStartDispatchImpl
 
 EnterISR:
 	ldr     x3, =RunningVar
+	#if CPU_CORE_NUMBER > 1
+	mrs     x6, mpidr_el1
+	and     x6, x6, #3
+	ldr     x4, [x3, x6, lsl #3]
+	#else
 	ldr     x4, [x3]
+	#endif
 	cmp     x4, #0
 	beq     l_nosave    /* no task is running */
 
 	ldr     x1, =ISR2Counter
+	#if CPU_CORE_NUMBER > 1
+	ldr     w2, [x1, x6, lsl #2]
+	#else
 	ldr     w2, [x1]
+	#endif
 	add     w2, w2, #1  /* ISR2Counter++ */
+	#if CPU_CORE_NUMBER > 1
+	str     w2, [x1, x6, lsl #2]
+	#else
 	str     w2, [x1]
+	#endif
 	cmp     w2, #1      /* previous CirticalCounter==0 */
 	bne     l_nosave
 
@@ -219,13 +305,25 @@ EnterISR:
 
 	/* loading system stack */
 	ldr x0, =stack_top
+	#if CPU_CORE_NUMBER > 1
+	lsl x3, x6, #14    /*stack size is 16K(1<<14) */
+	add x0, x0, x3
+	#endif
 	mov sp, x0
 
 	#ifdef OS_USE_POSTTASK_HOOK
 	ldr     x1, = CallLevel
+	#if CPU_CORE_NUMBER > 1
+	ldr     w3, [x1, x6, lsl #2]
+	#else
 	ldr     w3, [x1]
+	#endif
 	mov     w2, #8   /* CallLevel = TCL_PREPOST */
+	#if CPU_CORE_NUMBER > 1
+	str     w2, [x1, x6, lsl #2]
+	#else
 	str     w2,[x1]
+	#endif
 	stp     x0,x1, [sp, #-16]!
 	stp     x2,x3, [sp, #-16]!
 	stp     x29,x30, [sp, #-16]!
@@ -233,40 +331,78 @@ EnterISR:
 	ldp     x29,x30, [sp], #16
 	ldp     x2,x3, [sp], #16
 	ldp     x0,x1, [sp], #16
+	#if CPU_CORE_NUMBER > 1
+	str     w3,[x1, x6, lsl #2]
+	#else
 	str     w3,[x1]  /* restore CallLevel */
+	#endif
 	#endif
 
 l_nosave:
 	ldr     x1, = CallLevel
+	#if CPU_CORE_NUMBER > 1
+	ldr     w0, [x1, x6, lsl #2]
+	#else
 	ldr     w0, [x1]
+	#endif
 	stp     x0,x1, [sp, #-16]!	/* previous CallLevel */
 	mov     w0, #2   /* CallLevel = TCL_ISR2 */
+	#if CPU_CORE_NUMBER > 1
+	str     w0, [x1, x6, lsl #2]
+	#else
 	str     w0,[x1]
+	#endif
 	ret
 
 ExitISR:
+	#if CPU_CORE_NUMBER > 1
+	mrs     x6, mpidr_el1
+	and     x6, x6, #3
+	#endif
+
 	ldp     x0,x1, [sp], #16
+	#if CPU_CORE_NUMBER > 1
+	str     w0, [x1, x6, lsl #2]
+	#else
 	str     w0,[x1] /* restore CallLevel */
+	#endif
 
 	ldr     x0, = RunningVar
+	#if CPU_CORE_NUMBER > 1
+	ldr     x0, [x0, x6, lsl #3]
+	#else
 	ldr     x0, [x0]
+	#endif
 	cmp     x0, #0
 	beq     l_nodispatch
 
 	ldr     x3, =ISR2Counter
+	#if CPU_CORE_NUMBER > 1
+	ldr     w1, [x3, x6, lsl #2]
+	#else
 	ldr     w1, [x3]
+	#endif
+
 	sub     w1, w1, #1
 	str     w1, [x3]
 	cmp     w1, #0
 	bne     l_nodispatch
 
 	ldr     x1, = CallLevel
+	#if CPU_CORE_NUMBER > 1
+	ldr     w3, [x1, x6, lsl #2]
+	#else
 	ldr     w3, [x1]
+	#endif
 	cmp     w3, #1  /* TCL_TASK */
 	bne     l_nopreempt
 
 	ldr     x1, = ReadyVar
+	#if CPU_CORE_NUMBER > 1
+	ldr     x1, [x1, x6, lsl #3]
+	#else
 	ldr     x1, [x1]
+	#endif
 
 	cmp     x0, x1	/* ReadyVar == RunningVar */
 	beq     l_nopreempt

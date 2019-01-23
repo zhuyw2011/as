@@ -44,6 +44,12 @@ _start:
 	b .
 
 	.section .text
+
+	.global secondary_start
+	.weak secondary_main
+secondary_main:
+	b .
+
 	.global secondary_start
 secondary_start:
 	/* set up stack */

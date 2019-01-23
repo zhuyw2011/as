@@ -122,6 +122,7 @@ def GenH(gendir,os_list):
     except KeyError:
         fp.write('#ifndef OS_PTHREAD_NUM\n#define OS_PTHREAD_NUM 0\n#endif\n')
         fp.write('#ifndef OS_PTHREAD_PRIORITY\n#define OS_PTHREAD_PRIORITY 0\n#endif\n')
+    fp.write('#define CPU_CORE_NUMBER %s\n'%(GAGet(general,'CPU_CORE_NUMBER')))
     fp.write('#define OS_STATUS %s\n'%(GAGet(general,'Status')))
     fp.write('\n\n')
     task_list = ScanFrom(os_list,'Task')

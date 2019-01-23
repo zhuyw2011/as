@@ -29,6 +29,7 @@ StatusType SignalCounter(CounterType CounterID)
 	AlarmType AlarmID;
 	unsigned int savedLevel;
 	TickType curValue;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	if(CounterID < COUNTER_NUM)
 	{

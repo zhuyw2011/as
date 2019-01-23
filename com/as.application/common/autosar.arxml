@@ -2,7 +2,13 @@
 
 <AUTOSAR>
 <OS>
-<General Comment="Not Used" Conformance="ECC1" ErrorHook="ErrorHook" PTHREAD="32" PTHREAD_PRIORITY="32" PostTaskHook="PostTaskHook" PreTaskHook="PreTaskHook" ProtectionHook="NULL" ShutdownHook="ShutdownHook" StartupHook="StartupHook" Status="EXTENDED" />
+<General Comment="Not Used" Conformance="ECC1" ErrorHook="ErrorHook" PTHREAD="32" PTHREAD_PRIORITY="32" PostTaskHook="PostTaskHook" PreTaskHook="PreTaskHook" ProtectionHook="NULL" ShutdownHook="ShutdownHook" StartupHook="StartupHook" Status="EXTENDED" 
+#ifdef USE_SMP
+CPU_CORE_NUMBER="2"
+#else
+CPU_CORE_NUMBER="1"
+#endif
+/>
 <ApplicationModeList Max="TBD">
 <ApplicationMode Comment="*" Name="OSDEFAULTAPPMODE" />
 </ApplicationModeList>
@@ -16,6 +22,9 @@
 </ApplicationModeList>
 </Task>
 <Task Activation="1" Application="OsDefaultApp" Autostart="False" Comment="*" Name="SchM_BswService" Priority="8" Schedule="FULL" StackSize="2048" />
+#ifdef USE_SMP
+<Task Activation="1" Application="OsDefaultApp" Autostart="True" Comment="*" Name="TaskIdle2" Priority="0" Schedule="FULL" StackSize="2048" />
+#endif
 </TaskList>
 <AlarmList Max="TBD">
 <Alarm Action="ActivateTask" Application="OsDefaultApp" Autostart="False" Callback="TBD" Comment="*" Counter="OsClock" Event="TBD" Name="Alarm_BswService" Period="100" StartTime="0" Task="SchM_BswService" />

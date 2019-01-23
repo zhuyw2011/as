@@ -15,20 +15,34 @@
 /* ============================ [ INCLUDES  ] ====================================================== */
 #include "kernel_internal.h"
 #include "asdebug.h"
+#ifdef USE_SMP
+#include "spinlock.h"
+#endif
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_OS 0
 #define AS_LOG_OSE 1
+#define AS_LOG_SMP 1
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern void Os_PortResume(void);
 extern void Os_PortActivate(void);
 extern void Os_PortStartSysTick(void);
+#ifdef USE_SMP
+extern void secondary_start(void);
+#endif
 /* ============================ [ DATAS     ] ====================================================== */
+#ifdef USE_SMP
+static spinlock_t knlSpinlock;
+uint32 ISR2Counter[CPU_CORE_NUMBER];
+#else
 uint32 ISR2Counter;
+#endif
 /* ============================ [ LOCALS    ] ====================================================== */
 /* ============================ [ FUNCTIONS ] ====================================================== */
 void Os_PortActivateImpl(void)
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	/* get internal resource or NON schedule */
 	RunningVar->priority = RunningVar->pConst->runPriority;
 
@@ -48,7 +62,12 @@ void Os_PortActivateImpl(void)
 
 void Os_PortInit(void)
 {
+	DECLARE_SMP_PROCESSOR_ID();
+#ifdef USE_SMP
+	memset(ISR2Counter, 0, sizeof(ISR2Counter));
+#else
 	ISR2Counter = 0;
+#endif
 	Os_PortStartSysTick();
 }
 
@@ -67,10 +86,51 @@ void Os_PortDispatch(void)
 
 void Os_PortStartDispatch(void)
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	RunningVar = NULL;
 	Os_PortDispatch();
 	asAssert(0);
 }
+#ifdef USE_SMP
+void Os_PortSpinLock(void)
+{
+	spin_lock(&knlSpinlock);
+}
+
+void Os_PortSpinUnLock(void)
+{
+	spin_unlock(&knlSpinlock);
+}
+
+TASK(TaskIdle2)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+
+	RunningVar->priority = 0;
+
+	ASLOG(SMP, "TaskIdle2 is running on CPU%d\n", smp_processor_id());
+
+	for(;;)
+	{
+
+	}
+}
+void secondary_main(void)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+
+	ASLOG(SMP, "!!!CPU%d is up!!!\n", SMP_PROCESSOR_ID());
+	while(1);
+}
+
+void Os_PortStartFirstDispatch(void)
+{
+	ASLOG(SMP, "!!!CPU%d is up!!!\n", smp_processor_id());
+	smp_boot_secondary(1, secondary_start);
+	Os_PortStartDispatch();
+}
+#endif
 
 void Os_PortException(long exception, void* sp, long esr)
 {
@@ -91,6 +151,8 @@ void LeaveISR(void)
 #ifdef USE_PTHREAD_SIGNAL
 void Os_PortCallSignal(int sig, void (*handler)(int), void* sp, void (*pc)(void))
 {
+	DECLARE_SMP_PROCESSOR_ID();
+
 	asAssert(NULL != handler);
 
 	handler(sig);

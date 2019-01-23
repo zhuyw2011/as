@@ -298,6 +298,7 @@ int sigwait(const sigset_t * set, int * sig)
 
 	imask_t imask;
 	pthread_t tid;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	asAssert((NULL != set) && (NULL != sig));
 
@@ -332,6 +333,7 @@ int pthread_kill (pthread_t tid, int signum)
 	int ercd = 0;
 	struct signal * sig = NULL;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	if(signum >= NSIG)
 	{

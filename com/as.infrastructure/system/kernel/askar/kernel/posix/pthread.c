@@ -57,6 +57,7 @@ static void pthread_entry_main(void)
 {
 	void* r;
 	pthread_t pthread;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	pthread = (pthread_t)RunningVar->pConst;
 
@@ -108,6 +109,7 @@ int pthread_create (pthread_t *tid, const pthread_attr_t *attr,
 	TaskVarType* pTaskVar;
 	TaskConstType* pTaskConst;
 	pthread_t pthread;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	Irq_Save(imask);
 
@@ -266,6 +268,7 @@ ELF_EXPORT(pthread_cleanup_pop);
 void pthread_exit (void *value_ptr)
 {
 	pthread_t tid;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	tid = pthread_self();
 
@@ -387,6 +390,7 @@ int pthread_join(pthread_t tid, void ** thread_return)
 {
 	int ercd = 0;
 	imask_t imask;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	asAssert(tid);
 	asAssert((tid->pTaskVar-TaskVarArray) >= TASK_NUM);
@@ -427,6 +431,7 @@ ELF_EXPORT(pthread_join);
 pthread_t pthread_self(void)
 {
 	pthread_t tid;
+	DECLARE_SMP_PROCESSOR_ID();
 
 	asAssert((RunningVar-TaskVarArray) >= TASK_NUM);
 	asAssert((RunningVar-TaskVarArray) < (TASK_NUM+OS_PTHREAD_NUM));
@@ -684,6 +689,7 @@ ELF_EXPORT(pthread_once);
 
 void sched_yield(void)
 {
+	DECLARE_SMP_PROCESSOR_ID();
 	ASLOG(PTHREAD, "pthread%d yield\n", (RunningVar-TaskVarArray-TASK_NUM));
 	Schedule();
 }
@@ -691,6 +697,7 @@ ELF_EXPORT(sched_yield);
 
 pid_t getpid(void)
 {
+	DECLARE_SMP_PROCESSOR_ID();
 	return (RunningVar-TaskVarArray);
 }
 ELF_EXPORT(getpid);

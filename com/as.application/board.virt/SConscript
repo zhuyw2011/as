@@ -43,8 +43,6 @@ MODULES += ['PCI',
 
 MODULES += ['FDT']
 
-MODULES += ['SMP']
-
 ARCH='virt'
 arch='arm64'
 
