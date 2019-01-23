@@ -56,10 +56,14 @@ def IsEnabled(key,arobj):
     Enabled = True
     if(reEnabled.search(descriptor)):
         list = reEnabled.search(descriptor).groups()[0]
+        list = list.split('\\n')[0]
         list = re.split(reSpilt, list)
         isAnd = True # '&&"
         isEnabled = True
         for cond in list:
+            cond = cond.strip()
+            if(cond == ''): continue
+            if((cond[0]!=')') and (cond[-1]==')')): cond = cond[:-1]
             if(cond == '||' or cond == 'or'):
                 isAnd = False
             elif(cond == '&&' or cond == 'and'):
@@ -169,13 +173,6 @@ class ArgInput(QLineEdit):
         self.IsNotInTableWidget=IsNotInTableWidget
         super(QLineEdit,self).__init__(self.arobj.arxml.attrib(self.key))
         self.setEnabled(IsEnabled(key, arobj))
-        if(IsEnabled(key, arobj)==False):
-            # if disabled set it to default
-            reDeafult = re.compile(r'\s+Default=([^\s=\(\)]+)')
-            descriptor = self.arobj.arxml.getKeyDescriptor(self.key)
-            if(reDeafult.search(descriptor)):
-                var = reDeafult.search(descriptor).groups()[0]
-                self.arobj.arxml.attrib(self.key,var)
         self.setToolTip(self.arobj.arxml.getKeyDescriptor(self.key).replace('\\n','\n'))
         #self.textChanged.connect(self.onTextChanged)
         self.startTimer(100)   # TODO : this is a patch code  

@@ -310,7 +310,7 @@ const CanIf_DispatchConfigType CanIfDispatchConfig =
     fp.write("""
 #if defined(__WINDOWS__) || defined(__LINUX__)
 #else
-static const
+const
 #endif
 CanIf_TxPduConfigType CanIfTxPduConfigData[] = 
 {

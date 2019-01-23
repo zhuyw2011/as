@@ -34,12 +34,14 @@
 #if defined(__LINUX__) || defined(__WINDOWS__)
 #define ASENV_OSEKNM_NODE_ID()  atoi(ASENV(1))
 #else
-#define ASENV_OSEKNM_NODE_ID()  1
+#define ASENV_OSEKNM_NODE_ID()  (CanIfTxPduConfigData[CANIF_ID_OSEK_NM_TX].CanIfCanTxPduIdCanId&0xFF)
 #endif
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 #if defined(__WINDOWS__) || defined(__LINUX__)
 extern CanIf_TxPduConfigType CanIfTxPduConfigData[];
+#else
+extern const CanIf_TxPduConfigType CanIfTxPduConfigData[];
 #endif
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ LOCALS    ] ====================================================== */
@@ -127,6 +129,8 @@ void NMInit(NetIdType NetId)
 	(void)memset(config,0x01,32); /*care node :0,8,16,24,32,... */
 	#if defined(__LINUX__) || defined(__WINDOWS__)
 	CanIfTxPduConfigData[CANIF_ID_OSEK_NM_TX].CanIfCanTxPduIdCanId = 0x400+ASENV_OSEKNM_NODE_ID();
+	#else
+	printf("OSEK NM node ID is %d\n", ASENV_OSEKNM_NODE_ID());
 	#endif
 	if(NetId == 0)
 	{
