@@ -184,23 +184,30 @@ void Sched_Init(void)
 
 void Sched_AddReady(TaskType TaskID)
 {
-	uint8 oncpu = TaskVarArray[TaskID].oncpu;
-	ReadyQueueType* pReadyQueue = &ReadyQueue[oncpu];
+	uint8 oncpu;
+	ReadyQueueType* pReadyQueue;
 
+	OS_PORT_SPIN_LOCK();
+	oncpu = TaskVarArray[TaskID].oncpu;
+	pReadyQueue = &ReadyQueue[oncpu];
 	#ifdef MULTIPLY_TASK_ACTIVATION
 	asAssert((OS_ON_ANY_CPU!=oncpu) || (1==TaskVarArray[TaskID].pConst->maxActivation));
 	#endif
 	Sched_AddReadyInternal(pReadyQueue, TaskID, NEW_PRIORITY(TaskVarArray[TaskID].pConst->initPriority));
 
 	Sched_FindReady(&pReadyQueue);
+	OS_PORT_SPIN_UNLOCK();
 }
 
 void Sched_RemoveReady(TaskType TaskID)
 {
 	uint32 i;
-	uint8 oncpu = TaskVarArray[TaskID].oncpu;
-	ReadyQueueType* pReadyQueue = &ReadyQueue[oncpu];
+	uint8 oncpu;
+	ReadyQueueType* pReadyQueue;
 
+	OS_PORT_SPIN_LOCK();
+	oncpu = TaskVarArray[TaskID].oncpu;
+	pReadyQueue = &ReadyQueue[oncpu];
 	for(i=0; i<pReadyQueue->size; i++)
 	{
 		while( (TaskID == pReadyQueue->heap[i].taskID) &&
@@ -224,25 +231,17 @@ void Sched_RemoveReady(TaskType TaskID)
 			}
 		}
 	}
+	OS_PORT_SPIN_UNLOCK();
 }
 
 void Sched_Preempt(void)
 {
 	DECLARE_SMP_PROCESSOR_ID();
-	ReadyQueueType* pReadyQueue = &ReadyQueue[cpuid];
+	ReadyQueueType* pReadyQueue;
 
 	asAssert(cpuid == ReadyVar->oncpu);
 
-	Sched_GetReady();
-
-	Sched_AddReadyInternal(pReadyQueue, RunningVar-TaskVarArray, NEW_PRIOHIGHEST(RunningVar->priority));
-}
-
-void Sched_GetReady(void)
-{
-	DECLARE_SMP_PROCESSOR_ID();
-	ReadyQueueType* pReadyQueue;
-
+	OS_PORT_SPIN_LOCK();
 	Sched_FindReady(&pReadyQueue);
 	if(NULL != pReadyQueue)
 	{
@@ -254,15 +253,38 @@ void Sched_GetReady(void)
 
 		ReadyVar->oncpu = cpuid;
 	}
+
+	Sched_AddReadyInternal(&ReadyQueue[cpuid], RunningVar-TaskVarArray, NEW_PRIOHIGHEST(RunningVar->priority));
+	OS_PORT_SPIN_UNLOCK();
+}
+
+void Sched_GetReady(void)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+	ReadyQueueType* pReadyQueue;
+
+	OS_PORT_SPIN_LOCK();
+	Sched_FindReady(&pReadyQueue);
+	if(NULL != pReadyQueue)
+	{
+		asAssert((ReadyVar-TaskVarArray) == pReadyQueue->heap[0].taskID);
+		pReadyQueue->size --;
+		pReadyQueue->heap[0] = pReadyQueue->heap[pReadyQueue->size];
+
+		Sched_BubbleDown(pReadyQueue, 0);
+
+		ReadyVar->oncpu = cpuid;
+	}
+	OS_PORT_SPIN_UNLOCK();
 }
 
 boolean Sched_Schedule(void)
 {
 	boolean needSchedule = FALSE;
 	DECLARE_SMP_PROCESSOR_ID();
-
 	ReadyQueueType* pReadyQueue;
 
+	OS_PORT_SPIN_LOCK();
 	Sched_FindReady(&pReadyQueue);
 	if(NULL != pReadyQueue)
 	{
@@ -272,13 +294,20 @@ boolean Sched_Schedule(void)
 		if(ReadyVar->priority > RunningVar->priority)
 #endif
 		{
+			asAssert((ReadyVar-TaskVarArray) == pReadyQueue->heap[0].taskID);
+			pReadyQueue->size --;
+			pReadyQueue->heap[0] = pReadyQueue->heap[pReadyQueue->size];
+
+			Sched_BubbleDown(pReadyQueue, 0);
+
 			ReadyVar->oncpu = cpuid;
 
-			Sched_Preempt();
+			Sched_AddReadyInternal(&ReadyQueue[cpuid], RunningVar-TaskVarArray, NEW_PRIOHIGHEST(RunningVar->priority));
 
 			needSchedule = TRUE;
 		}
 	}
+	OS_PORT_SPIN_UNLOCK();
 	return needSchedule;
 }
 

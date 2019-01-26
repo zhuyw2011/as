@@ -102,11 +102,11 @@ void Os_PortIdle(void)
 	DECLARE_SMP_PROCESSOR_ID();
 	#ifdef USE_SMP
 	ASLOG(OSE, "!!!CPU%d enter PortIdle!!!\n", SMP_PROCESSOR_ID());
-	asAssert(0);
 	#else
 	ASLOG(OSE, "!!!enter PortIdle!!!\n");
-	asAssert(0);
 	#endif
+
+	asAssert(0);
 }
 #ifdef USE_SMP
 void Os_PortSpinLock(void)
