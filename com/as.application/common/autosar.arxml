@@ -16,14 +16,18 @@ CPU_CORE_NUMBER="1"
 <Application Comment="*" Name="OsDefaultApp" RestartTask="SchM_Startup" Trusted="True" UseRestartTask="True" />
 </ApplicationList>
 <TaskList Max="TBD">
-<Task Activation="1" Application="OsDefaultApp" Autostart="True" Comment="*" Name="SchM_Startup" Priority="7" Schedule="FULL" StackSize="2048">
+<Task Activation="1" Application="OsDefaultApp" Autostart="True" Comment="*" Cpu="0" Name="SchM_Startup" Priority="7" Schedule="FULL" StackSize="2048">
 <ApplicationModeList Max="TBD">
 <ApplicationMode Comment="*" Name="OSDEFAULTAPPMODE" />
 </ApplicationModeList>
 </Task>
-<Task Activation="1" Application="OsDefaultApp" Autostart="False" Comment="*" Name="SchM_BswService" Priority="8" Schedule="FULL" StackSize="2048" />
+<Task Activation="1" Application="OsDefaultApp" Autostart="False" Comment="*" Cpu="0" Name="SchM_BswService" Priority="8" Schedule="FULL" StackSize="2048" />
 #ifdef USE_SMP
-<Task Activation="1" Application="OsDefaultApp" Autostart="True" Comment="*" Name="TaskIdle2" Priority="0" Schedule="FULL" StackSize="2048" />
+<Task Activation="1" Application="OsDefaultApp" Autostart="True" Comment="*" Cpu="1" Name="TaskIdle2" Priority="0" Schedule="FULL" StackSize="2048" >
+<ApplicationModeList Max="TBD">
+<ApplicationMode Comment="*" Name="OSDEFAULTAPPMODE" />
+</ApplicationModeList>
+</Task>
 #endif
 </TaskList>
 <AlarmList Max="TBD">

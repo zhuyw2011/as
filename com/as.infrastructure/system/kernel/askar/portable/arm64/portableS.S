@@ -117,33 +117,10 @@
 #endif
 	.extern ISR2Counter
 	.extern stack_top
+	.extern Os_PortIdle
 /* ============================ [ LOCALS    ] ====================================================== */
 /* ============================ [ FUNCTIONS ] ====================================================== */
 	.section .text
-
-Os_PortIdle:
-	/* set RunningVar to NULL */
-	ldr     x1, =RunningVar
-	#if CPU_CORE_NUMBER > 1
-	mrs     x6, mpidr_el1
-	and     x6, x6, #3
-	str     x0, [x0, x6, lsl #3]
-	#else
-	str     x0, [x1]
-	#endif
-	bl      Irq_Enable
-l_idle:
-	ldr     x0, =ReadyVar
-	#if CPU_CORE_NUMBER > 1
-	ldr     x0, [x0, x6, lsl #3]
-	#else
-	ldr     x0, [x0]
-	#endif
-	cmp     x0, #0
-	ble     l_idle
-	bl      Irq_Disable
-	bl      Sched_GetReady
-	b       Os_PortStartDispatchImpl
 
 	.global Os_PortStartDispatchImpl
 	.type   Os_PortStartDispatchImpl, %function

@@ -8,6 +8,7 @@
 			Schedule="FULL" 
 			StackSize="2048"
 			Application="OsDefaultApp"
+			Cpu="0"
      		Comment="*" />
 	</Os>
 	<KSM> <CANIdle><Running/></CANIdle> </KSM>

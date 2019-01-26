@@ -63,6 +63,11 @@ secondary_start:
 	mov x4, #(3 << 20)
 	msr cpacr_el1, x4
 
+	/* set up exception handling */
+	ldr x4, =vector_table_el1
+	msr vbar_el1, x4
+	isb
+
 	b secondary_main
 	b .
 

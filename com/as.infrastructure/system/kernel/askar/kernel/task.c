@@ -36,6 +36,10 @@ static void InitContext(TaskVarType* pTaskVar)
 	pTaskVar->priority = pTaskVar->pConst->initPriority;
 	pTaskVar->currentResource = INVALID_RESOURCE;
 
+	#ifdef USE_SMP
+	pTaskVar->oncpu = pTaskVar->pConst->cpu;
+	#endif
+
 	#ifdef EXTENDED_TASK
 	if(NULL != pTaskVar->pConst->pEventVar)
 	{

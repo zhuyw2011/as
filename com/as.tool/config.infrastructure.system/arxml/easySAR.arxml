@@ -40,7 +40,8 @@
 			Activation="Integer Range=1~255 Default=1 PosGUI=4" 
 			Autostart="Boolean Default=True PosGUI=5" 
 			Application="EnumRef=OS.ApplicationList PosGUI=6"
-			Comment="TextArea Default=* PosGUI=7"
+			Cpu="Enum=(0,1,2,3,4,5,6,7,ANY) Enabled=(OS.General.CPU_CORE_NUMBER>1) Default=OS_ON_ANY_CPU PosGUI=7"
+			Comment="TextArea Default=* PosGUI=8"
 			>
 		<EventList Max="32">
 			<Event 

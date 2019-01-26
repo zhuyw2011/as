@@ -122,7 +122,10 @@ def GenH(gendir,os_list):
     except KeyError:
         fp.write('#ifndef OS_PTHREAD_NUM\n#define OS_PTHREAD_NUM 0\n#endif\n')
         fp.write('#ifndef OS_PTHREAD_PRIORITY\n#define OS_PTHREAD_PRIORITY 0\n#endif\n')
-    fp.write('#define CPU_CORE_NUMBER %s\n'%(GAGet(general,'CPU_CORE_NUMBER')))
+    try:
+        fp.write('#define CPU_CORE_NUMBER %s\n'%(GAGet(general,'CPU_CORE_NUMBER')))
+    except KeyError:
+        pass
     fp.write('#define OS_STATUS %s\n'%(GAGet(general,'Status')))
     fp.write('\n\n')
     task_list = ScanFrom(os_list,'Task')
@@ -265,6 +268,11 @@ def GenC(gendir,os_list):
         fp.write('extern void %s (void);\n'%(isr.attrib['Name']))
     fp.write('/* ============================ [ DATAS     ] ====================================================== */\n')
     general = ScanFrom(os_list,'General')[0]
+    CPU_CORE_NUMBER = 0
+    try:
+        CPU_CORE_NUMBER = int(GAGet(general,'CPU_CORE_NUMBER'))
+    except KeyError:
+        pass
     try:
         pthnum = Integer(GAGet(general,'PTHREAD'))
         pthprio = Integer(GAGet(general,'PTHREAD_PRIORITY'))
@@ -349,6 +357,16 @@ def GenC(gendir,os_list):
         fp.write('\t\t#ifdef MULTIPLY_TASK_ACTIVATION\n')
         fp.write('\t\t/*.maxActivation =*/ %s,\n'%(maxAct))
         fp.write('\t\t#endif\n')
+        if(CPU_CORE_NUMBER > 1):
+            try:
+                cpu = GAGet(task,'Cpu')
+                if(cpu == 'ANY'):
+                    cpu = 'OS_ON_ANY_CPU'
+            except:
+                cpu = 'OS_ON_ANY_CPU'
+            fp.write('\t\t/*.cpu =*/ %s,\n'%(cpu))
+        if((maxAct>1) and (cpu=='OS_ON_ANY_CPU')):
+            raise Exception('Task<%s>: must be assigned to one specific CPU as max activation is %s > 1'%(GAGet(task,'Name'), maxAct))
         fp.write('\t},\n')
     fp.write('};\n\n')
     fp.write('const ResourceConstType ResourceConstArray[RESOURCE_NUM] =\n{\n')

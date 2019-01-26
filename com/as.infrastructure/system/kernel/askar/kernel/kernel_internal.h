@@ -253,6 +253,8 @@ enum {
 #define OS_PORT_SPIN_UNLOCK()
 #endif
 
+#define OS_ON_ANY_CPU CPU_CORE_NUMBER
+
 /* ============================ [ TYPES     ] ====================================================== */
 typedef uint8					PriorityType;
 
@@ -295,6 +297,9 @@ typedef struct
 	#ifdef MULTIPLY_TASK_ACTIVATION
 	uint8 maxActivation;
 	#endif
+	#ifdef USE_SMP
+	uint8 cpu;
+	#endif
 	#ifdef USE_PTHREAD
 	uint8 flag;
 	#endif
@@ -323,6 +328,9 @@ typedef struct TaskVar
 	/* for sleep purpose */
 	TickType sleep_tick;
 	TAILQ_ENTRY(TaskVar) sentry;
+	#endif
+	#ifdef USE_SMP
+	uint8 oncpu;
 	#endif
 } TaskVarType;
 

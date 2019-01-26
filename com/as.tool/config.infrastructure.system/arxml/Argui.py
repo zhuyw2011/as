@@ -45,11 +45,22 @@ def Integer(cstr):
         return None
 
 def IsEnabled(key,arobj):
+    def evalOp(op, v1, v2):
+        if(op=='==' and v1==v2):
+            isEnabled = True
+        elif(op=='!=' and v1!=v2):
+            isEnabled = True
+        elif(op  in ['>','>=','<','<=']):
+            ss = '%s %s %s'%(v1, op, v2)
+            isEnabled = eval(ss)
+        else:
+            isEnabled = False
+        return isEnabled
     arxml=arobj.arxml
     reEnabled = re.compile(r'Enabled=\((.*)\)')
     reSpilt  = re.compile(r'\s+')
-    reSelf   = re.compile(r'Self\.([^\s\(\)]+)(==|!=)(\w+)')
-    reUrl    = re.compile(r'([^\s]+)(==|!=)(\w+)')
+    reSelf   = re.compile(r'Self\.([^\s\(\)]+)(==|!=|>|>=|<|<=)([\w\d]+)')
+    reUrl    = re.compile(r'([^\s]+)(==|!=|>|>=|<|<=)([\w\d]+)')
     reUrlSelf= re.compile(r'Self\.([^\s\(\)]+)')
     reSubSelf= re.compile(r'\(Self\.([^\s\(\)]+)\)')
     descriptor = arxml.getKeyDescriptor(key)
@@ -77,14 +88,9 @@ def IsEnabled(key,arobj):
                             tarobj = tarobj.parent()
                         else:
                             break
-                    operater = reSelf.search(cond).groups()[1]
+                    operator = reSelf.search(cond).groups()[1]
                     value = reSelf.search(cond).groups()[2]
-                    if(operater=='==' and tarobj.arxml.attrib(key1)==value):
-                        isEnabled = True
-                    elif(operater=='!=' and tarobj.arxml.attrib(key1)!=value):
-                        isEnabled = True
-                    else:
-                        isEnabled = False
+                    isEnabled = evalOp(operator, tarobj.arxml.attrib(key1), value)
                 elif(reUrlSelf.search(cond)):
                     if(reSubSelf.search(cond)):
                         for em in reSubSelf.search(cond).groups():
@@ -110,16 +116,11 @@ def IsEnabled(key,arobj):
                         url=url.replace('(Self.%s)'%(keyL),selfV)
                     else:
                         url=reUrl.search(cond).groups()[0]
-                    operater = reUrl.search(cond).groups()[1]
+                    operator = reUrl.search(cond).groups()[1]
                     value = reUrl.search(cond).groups()[2]
                     if(value=='None'):
                         rV=arobj.root.getURL(url)
-                        if(operater=='==' and rV==None):
-                            isEnabled = True
-                        elif(operater=='!=' and rV!=None):
-                            isEnabled = True
-                        else:
-                            isEnabled = False
+                        isEnabled = evalOp(operator, rV, None)
                     else:
                         urlL=url.split('.')
                         key1=urlL[len(urlL)-1]
@@ -127,20 +128,27 @@ def IsEnabled(key,arobj):
                         url1=url[:-back]
                         rV=arobj.root.getURL(url1)
                         if(rV != None):
-                            if(operater=='==' and rV.attrib[key1]==value):
-                                isEnabled = True
-                            elif(operater=='!=' and rV.attrib[key1]!=value):
-                                isEnabled = True
-                            else:
-                                isEnabled = False
+                            isEnabled = evalOp(operator, rV.attrib[key1], value)
                         else:
                             isEnabled = False    
                 else:
                     if(cond=='False'):
                         isEnabled = False
+                    elif(reUrl.search(cond)):
+                        url=reUrl.search(cond).groups()[0]
+                        operator = reUrl.search(cond).groups()[1]
+                        value = reUrl.search(cond).groups()[2]
+                        urlL=url.split('.')
+                        key1=urlL[len(urlL)-1]
+                        back=len(key1)+1
+                        url1=url[:-back]
+                        rV=arobj.root.getURL(url1)
+                        if(rV != None):
+                            isEnabled = evalOp(operator, rV.attrib[key1], value)
+                        else:
+                            isEnabled = False  
                     else:
                         isEnabled = True
-                                        
                 if(isAnd):
                     Enabled = (Enabled and isEnabled)
                 else:

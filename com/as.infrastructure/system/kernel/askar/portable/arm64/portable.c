@@ -19,7 +19,7 @@
 #include "spinlock.h"
 #endif
 /* ============================ [ MACROS    ] ====================================================== */
-#define AS_LOG_OS 0
+#define AS_LOG_OS  0
 #define AS_LOG_OSE 1
 #define AS_LOG_SMP 1
 /* ============================ [ TYPES     ] ====================================================== */
@@ -46,8 +46,13 @@ void Os_PortActivateImpl(void)
 	/* get internal resource or NON schedule */
 	RunningVar->priority = RunningVar->pConst->runPriority;
 
+#ifdef USE_SMP
+	ASLOG(OS, "%s(%d) is running on CPU %d\n", RunningVar->pConst->name,
+			RunningVar->pConst->initPriority, cpuid);
+#else
 	ASLOG(OS, "%s(%d) is running\n", RunningVar->pConst->name,
 			RunningVar->pConst->initPriority);
+#endif
 
 	OSPreTaskHook();
 
@@ -92,6 +97,17 @@ void Os_PortStartDispatch(void)
 	Os_PortDispatch();
 	asAssert(0);
 }
+void Os_PortIdle(void)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+	#ifdef USE_SMP
+	ASLOG(OSE, "!!!CPU%d enter PortIdle!!!\n", SMP_PROCESSOR_ID());
+	asAssert(0);
+	#else
+	ASLOG(OSE, "!!!enter PortIdle!!!\n");
+	asAssert(0);
+	#endif
+}
 #ifdef USE_SMP
 void Os_PortSpinLock(void)
 {
@@ -113,7 +129,7 @@ TASK(TaskIdle2)
 
 	for(;;)
 	{
-
+		Schedule();
 	}
 }
 void secondary_main(void)
@@ -121,6 +137,8 @@ void secondary_main(void)
 	DECLARE_SMP_PROCESSOR_ID();
 
 	ASLOG(SMP, "!!!CPU%d is up!!!\n", SMP_PROCESSOR_ID());
+	Sched_GetReady();
+	Os_PortStartDispatch();
 	while(1);
 }
 
