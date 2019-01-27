@@ -365,8 +365,8 @@ def GenC(gendir,os_list):
             except:
                 cpu = 'OS_ON_ANY_CPU'
             fp.write('\t\t/*.cpu =*/ %s,\n'%(cpu))
-        if((maxAct>1) and (cpu=='OS_ON_ANY_CPU')):
-            raise Exception('Task<%s>: must be assigned to one specific CPU as max activation is %s > 1'%(GAGet(task,'Name'), maxAct))
+            if((maxAct>1) and (cpu=='OS_ON_ANY_CPU')):
+                raise Exception('Task<%s>: must be assigned to one specific CPU as max activation is %s > 1'%(GAGet(task,'Name'), maxAct))
         fp.write('\t},\n')
     fp.write('};\n\n')
     fp.write('const ResourceConstType ResourceConstArray[RESOURCE_NUM] =\n{\n')
