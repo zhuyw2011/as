@@ -191,6 +191,7 @@ StatusType SetRelAlarm ( AlarmType AlarmID , TickType Increment ,TickType Cycle 
 	if(E_OK == ercd)
 	{
 		Irq_Save(imask);
+		OS_SPIN_LOCK();
 		if( FALSE == OS_IS_ALARM_STARTED(&AlarmVarArray[AlarmID]) )
 		{
 			TickType Start = (TickType)(AlarmConstArray[AlarmID].pCounter->pVar->value+Increment);
@@ -200,6 +201,7 @@ StatusType SetRelAlarm ( AlarmType AlarmID , TickType Increment ,TickType Cycle 
 		{
 			ercd = E_OS_STATE;
 		}
+		OS_SPIN_UNLOCK();
 		Irq_Restore(imask);
 	}
 
@@ -281,6 +283,7 @@ StatusType SetAbsAlarm ( AlarmType AlarmID , TickType Start ,TickType Cycle )
 	if(E_OK == ercd)
 	{
 		Irq_Save(imask);
+		OS_SPIN_LOCK();
 		if( FALSE == OS_IS_ALARM_STARTED(&AlarmVarArray[AlarmID]) )
 		{
 			TickType Increment = AlarmConstArray[AlarmID].pCounter->pVar->value%AlarmConstArray[AlarmID].pCounter->base.maxallowedvalue;
@@ -312,6 +315,7 @@ StatusType SetAbsAlarm ( AlarmType AlarmID , TickType Start ,TickType Cycle )
 		{
 			ercd = E_OS_STATE;
 		}
+		OS_SPIN_UNLOCK();
 		Irq_Restore(imask);
 	}
 
@@ -349,6 +353,7 @@ StatusType CancelAlarm ( AlarmType AlarmID )
 	{
 	#endif
 		Irq_Save(imask);
+		OS_SPIN_LOCK();
 		if( OS_IS_ALARM_STARTED(&AlarmVarArray[AlarmID]) )
 		{
 			TAILQ_REMOVE(&(AlarmConstArray[AlarmID].pCounter->pVar->head), &AlarmVarArray[AlarmID], entry);
@@ -358,6 +363,7 @@ StatusType CancelAlarm ( AlarmType AlarmID )
 		{
 			ercd = E_OS_NOFUNC;
 		}
+		OS_SPIN_UNLOCK();
 		Irq_Restore(imask);
 	#if(OS_STATUS == EXTENDED)
 	}

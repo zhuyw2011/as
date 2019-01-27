@@ -81,7 +81,9 @@ int sem_getvalue(sem_t *sem, int *sval)
 	imask_t imask;
 
 	Irq_Save(imask);
+	OS_SPIN_LOCK();
 	*sval  = sem->value;
+	OS_SPIN_UNLOCK();
 	Irq_Restore(imask);
 
 	return 0;
@@ -102,7 +104,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime)
 	imask_t imask;
 
 	Irq_Save(imask);
-
+	OS_SPIN_LOCK();
 	if(sem->value > 0)
 	{
 		sem->value --;
@@ -112,6 +114,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime)
 		ercd = Os_ListWait(&(sem->head), abstime);
 	}
 
+	OS_SPIN_UNLOCK();
 	Irq_Restore(imask);
 
 	return ercd;
@@ -137,12 +140,12 @@ int sem_post(sem_t *sem)
 	imask_t imask;
 
 	Irq_Save(imask);
-
+	OS_SPIN_LOCK();
 	if(0 != Os_ListPost(&(sem->head), TRUE))
 	{
 		sem->value ++;
 	}
-
+	OS_SPIN_UNLOCK();
 	Irq_Restore(imask);
 
 	return ercd;
@@ -160,7 +163,9 @@ sem_t *sem_open(const char *name, int oflag, ...)
 	asAssert(name != NULL);
 
 	Irq_Save(imask);
+	OS_SPIN_LOCK();
 	sem = sem_find(name);
+	OS_SPIN_UNLOCK();
 	Irq_Restore(imask);
 
 	if( (NULL == sem) && (0 != (oflag & O_CREAT)))
@@ -177,17 +182,21 @@ sem_t *sem_open(const char *name, int oflag, ...)
 		sem->refcount = 0;
 		sem->unlinked = 0;
 		Irq_Save(imask);
+		OS_SPIN_LOCK();
 		/* no consideration of the sem_create race condition,
 		 * so just assert if such condition */
 		asAssert(NULL == sem_find(name));
 		TAILQ_INSERT_TAIL(&OsSemaphoreList, sem, entry);
+		OS_SPIN_UNLOCK();
 		Irq_Restore(imask);
 	}
 
 	if(NULL != sem)
 	{
 		Irq_Save(imask);
+		OS_SPIN_LOCK();
 		sem->refcount++;
+		OS_SPIN_UNLOCK();
 		Irq_Restore(imask);
 	}
 
@@ -202,6 +211,7 @@ int     sem_close(sem_t* sem2)
 	struct semaphore *sem;
 
 	Irq_Save(imask);
+	OS_SPIN_LOCK();
 	sem = sem_find2((struct semaphore *)sem2);
 	if((NULL != sem) && (sem->refcount > 0))
 	{
@@ -216,6 +226,7 @@ int     sem_close(sem_t* sem2)
 	{
 		ercd = -EACCES;
 	}
+	OS_SPIN_UNLOCK();
 	Irq_Restore(imask);
 
 	return ercd;
@@ -229,6 +240,7 @@ int     sem_unlink(const char *name)
 	struct semaphore *sem;
 
 	Irq_Save(imask);
+	OS_SPIN_LOCK();
 	sem = sem_find(name);
 	if(NULL != sem)
 	{
@@ -239,6 +251,7 @@ int     sem_unlink(const char *name)
 			free(sem);
 		}
 	}
+	OS_SPIN_UNLOCK();
 	Irq_Restore(imask);
 
 	return ercd;

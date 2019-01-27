@@ -132,6 +132,7 @@ StatusType ActivateTask ( TaskType TaskID )
 	#endif
 		pTaskVar   = &TaskVarArray[TaskID];
 		Irq_Save(imask);
+		OS_SPIN_LOCK();
 		if(SUSPENDED == TASK_STATE(pTaskVar))
 		{
 			InitContext(pTaskVar);
@@ -167,7 +168,12 @@ StatusType ActivateTask ( TaskType TaskID )
 			(ReadyVar->priority > RunningVar->priority) )
 		{
 			Sched_Preempt();
+			OS_SPIN_UNLOCK();
 			Os_PortDispatch();
+		}
+		else
+		{
+			OS_SPIN_UNLOCK();
 		}
 
 		Irq_Restore(imask);
@@ -239,6 +245,7 @@ StatusType TerminateTask( void )
 	if(E_OK == ercd)
 	{
 		Irq_Save(mask);
+		OS_SPIN_LOCK();
 		#ifdef MULTIPLY_TASK_ACTIVATION
 		asAssert(RunningVar->activation > 0);
 		RunningVar->activation--;
@@ -257,6 +264,7 @@ StatusType TerminateTask( void )
 
 		Sched_GetReady();
 		OSPostTaskHook();
+		OS_SPIN_UNLOCK();
 		Os_PortStartDispatch();
 
 		Irq_Restore(mask);
@@ -343,13 +351,16 @@ StatusType ChainTask    ( TaskType TaskID )
 		if(pTaskVar == RunningVar)
 		{
 			Irq_Save(mask);
+			OS_SPIN_LOCK();
 			InitContext(RunningVar);
 			Sched_AddReady(TaskID);
+			OS_SPIN_UNLOCK();
 			Irq_Restore(mask);
 		}
 		else
 		{
 			Irq_Save(mask);
+			OS_SPIN_LOCK();
 			if(SUSPENDED == TASK_STATE(pTaskVar))
 			{
 				InitContext(pTaskVar);
@@ -376,11 +387,13 @@ StatusType ChainTask    ( TaskType TaskID )
 					ercd = E_OS_LIMIT;
 				}
 			}
+			OS_SPIN_UNLOCK();
 			Irq_Restore(mask);
 
 			if(ercd == E_OK)
 			{
 				Irq_Save(mask);
+				OS_SPIN_LOCK();
 				#ifdef MULTIPLY_TASK_ACTIVATION
 				asAssert(RunningVar->activation > 0);
 				RunningVar->activation--;
@@ -396,6 +409,7 @@ StatusType ChainTask    ( TaskType TaskID )
 				{
 					RunningVar->state = SUSPENDED;
 				}
+				OS_SPIN_UNLOCK();
 				Irq_Restore(mask);
 			}
 		}
@@ -404,8 +418,10 @@ StatusType ChainTask    ( TaskType TaskID )
 		{
 			OS_TRACE_TASK_ACTIVATION(pTaskVar);
 			Irq_Save(mask);
+			OS_SPIN_LOCK();
 			Sched_GetReady();
 			OSPostTaskHook();
+			OS_SPIN_UNLOCK();
 			Os_PortStartDispatch();
 			Irq_Restore(mask);
 		}
@@ -467,13 +483,16 @@ StatusType Schedule     ( void )
 	if(E_OK == ercd)
 	{
 		Irq_Save(mask);
-
+		OS_SPIN_LOCK();
 		RunningVar->priority = RunningVar->pConst->initPriority;
 		if(Sched_Schedule())
 		{
+			OS_SPIN_UNLOCK();
 			Os_PortDispatch();
+			OS_SPIN_LOCK();
 		}
 		RunningVar->priority = RunningVar->pConst->runPriority;
+		OS_SPIN_UNLOCK();
 		Irq_Restore(mask);
 	}
 

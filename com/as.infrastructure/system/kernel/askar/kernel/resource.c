@@ -93,6 +93,7 @@ StatusType GetResource (ResourceType ResID)
 		if(TCL_TASK == CallLevel)
 		{
 			Irq_Save(imask);
+			OS_SPIN_LOCK();
 			ResourceVarArray[ResID].prevRes = RunningVar->currentResource;
 			ResourceVarArray[ResID].prevPrio = RunningVar->priority;
 			RunningVar->currentResource = ResID;
@@ -100,6 +101,7 @@ StatusType GetResource (ResourceType ResID)
 			{
 				RunningVar->priority = ResourceConstArray[ResID].ceilPrio;
 			}
+			OS_SPIN_UNLOCK();
 			Irq_Restore(imask);
 		}
 		else if(TCL_ISR2 == CallLevel)
@@ -177,6 +179,7 @@ StatusType ReleaseResource ( ResourceType ResID )
 		if(TCL_TASK == CallLevel)
 		{
 			Irq_Save(imask);
+			OS_SPIN_LOCK();
 			RunningVar->currentResource = ResourceVarArray[ResID].prevRes;
 			RunningVar->priority = ResourceVarArray[ResID].prevPrio;
 			ResourceVarArray[ResID].prevPrio = INVALID_PRIORITY;
@@ -184,8 +187,17 @@ StatusType ReleaseResource ( ResourceType ResID )
 			{	/* if PRIORITY_NUM, then not preempt-able */
 				if(Sched_Schedule())
 				{
+					OS_SPIN_UNLOCK();
 					Os_PortDispatch();
 				}
+				else
+				{
+					OS_SPIN_UNLOCK();
+				}
+			}
+			else
+			{
+				OS_SPIN_UNLOCK();
 			}
 			Irq_Restore(imask);
 		}

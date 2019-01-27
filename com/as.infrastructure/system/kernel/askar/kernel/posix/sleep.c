@@ -42,11 +42,17 @@ void Os_Sleep(TickType tick)
 	DECLARE_SMP_PROCESSOR_ID();
 
 	Irq_Save(imask);
+	OS_SPIN_LOCK();
 	if(NULL != RunningVar)
 	{
 		Os_SleepAdd(RunningVar,tick);
 		Sched_GetReady();
+		OS_SPIN_UNLOCK();
 		Os_PortDispatch();
+	}
+	else
+	{
+		OS_SPIN_UNLOCK();
 	}
 	Irq_Restore(imask);
 
@@ -92,7 +98,7 @@ void Os_SleepTick(void)
 	imask_t imask;
 
 	Irq_Save(imask);
-
+	OS_SPIN_LOCK();
 	timeofday.tv_usec += USECONDS_PER_TICK;
 
 	if(timeofday.tv_usec > 1000000)
@@ -124,7 +130,7 @@ void Os_SleepTick(void)
 			break;
 		}
 	}
-
+	OS_SPIN_UNLOCK();
 	Irq_Restore(imask);
 }
 
@@ -254,7 +260,9 @@ int Os_ListWait(TaskListType* list, const struct timespec *abstime)
 	if(0 == ercd)
 	{
 		Sched_GetReady();
+		OS_SPIN_UNLOCK();
 		Os_PortDispatch();
+		OS_SPIN_LOCK();
 
 		if(RunningVar->state&PTHREAD_STATE_SLEEPING)
 		{	/* event reached before timeout */
@@ -289,7 +297,9 @@ int Os_ListPost(TaskListType* list, boolean schedule)
 		Sched_AddReady(pTaskVar-TaskVarArray);
 		if(schedule)
 		{
+			OS_SPIN_UNLOCK();
 			(void)Schedule();
+			OS_SPIN_LOCK();
 		}
 	}
 	else

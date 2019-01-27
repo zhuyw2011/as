@@ -243,14 +243,14 @@ enum {
 #define RunningVar  RunningVars[cpuid]
 #define ReadyVar    ReadyVars[cpuid]
 #define CallLevel   CallLevels[cpuid]
-#define OS_PORT_SPIN_LOCK()   Os_PortSpinLock()
-#define OS_PORT_SPIN_UNLOCK() Os_PortSpinUnLock()
+#define OS_SPIN_LOCK()   Os_PortSpinLock()
+#define OS_SPIN_UNLOCK() Os_PortSpinUnLock()
 #else
 #define DECLARE_SMP_PROCESSOR_ID()
 #define GET_SMP_PROCESSOR_ID()
 #define SMP_PROCESSOR_ID() 0
-#define OS_PORT_SPIN_LOCK()
-#define OS_PORT_SPIN_UNLOCK()
+#define OS_SPIN_LOCK()
+#define OS_SPIN_UNLOCK()
 #endif
 
 #define OS_ON_ANY_CPU CPU_CORE_NUMBER
