@@ -489,10 +489,12 @@ StatusType Schedule     ( void )
 		{
 			OS_SPIN_UNLOCK();
 			Os_PortDispatch();
+		}
+		else
+		{
 			OS_SPIN_LOCK();
 		}
 		RunningVar->priority = RunningVar->pConst->runPriority;
-		OS_SPIN_UNLOCK();
 		Irq_Restore(mask);
 	}
 
@@ -680,7 +682,9 @@ void statOsTask(void)
 #endif
 					pTaskVar->actCnt);
 		}
-
+#ifdef USE_SMP
+		SHELL_printf(" on CPU%d", pTaskVar->oncpu);
+#endif
 		SHELL_printf(" %s\n", (pTaskVar == RunningVar)?"<-RunningVar":"");
 	}
 
@@ -714,6 +718,9 @@ void statOsTask(void)
 			{
 				SHELL_printf(" pthread%d", tid->parent -TaskVarArray);
 			}
+#endif
+#ifdef USE_SMP
+			SHELL_printf(" on CPU%d", pTaskVar->oncpu);
 #endif
 			SHELL_printf(" %s\n", (pTaskVar == RunningVar)?"<-RunningVar":"");
 		}

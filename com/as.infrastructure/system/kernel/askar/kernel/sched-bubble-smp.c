@@ -233,11 +233,20 @@ void Sched_RemoveReady(TaskType TaskID)
 void Sched_Preempt(void)
 {
 	DECLARE_SMP_PROCESSOR_ID();
-	asAssert(cpuid == ReadyVar->oncpu);
+	ReadyQueueType* pReadyQueue;
 
-	Sched_GetReady();
+	asAssert(ReadyVar);
+
+	pReadyQueue = &ReadyQueue[ReadyVar->oncpu];
+
+	asAssert(ReadyVar == &TaskVarArray[pReadyQueue->heap[0].taskID]);
+	pReadyQueue->size --;
+	pReadyQueue->heap[0] = pReadyQueue->heap[pReadyQueue->size];
+	Sched_BubbleDown(pReadyQueue, 0);
+
+	ReadyVar->oncpu = cpuid;
+
 	Sched_AddReadyInternal(&ReadyQueue[cpuid], RunningVar-TaskVarArray, NEW_PRIOHIGHEST(RunningVar->priority));
-
 }
 
 void Sched_GetReady(void)

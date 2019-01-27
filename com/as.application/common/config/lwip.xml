@@ -9,6 +9,7 @@
 				Schedule="FULL" 
 				StackSize="2048"
 				Application="OsDefaultApp"
+				CPU="0"
 	     		Comment="*" >
 			<ApplicationModeList Max="32">
 				<ApplicationMode 

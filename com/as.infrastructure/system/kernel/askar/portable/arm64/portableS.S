@@ -106,6 +106,8 @@
 	.extern PreTaskHook
 	.extern PostTaskHook
 	.extern Os_PortActivateImpl
+	.extern Os_PortSpinLock
+	.extern Os_PortSpinUnLock
 /* ============================ [ DATAS     ] ====================================================== */
 #if CPU_CORE_NUMBER > 1
 	.extern RunningVars
@@ -374,6 +376,19 @@ ExitISR:
 	cmp     w3, #1  /* TCL_TASK */
 	bne     l_nopreempt
 
+#if CPU_CORE_NUMBER > 1
+	bl      Os_PortSpinLock
+	bl      Sched_Schedule
+	stp     x0,x1, [sp, #-16]!
+	bl      Os_PortSpinUnLock
+	ldp     x0,x1, [sp], #16
+	cmp     x0, #0
+
+	bne     Os_PortStartDispatchImpl
+
+	ldr     x0, = RunningVar
+	ldr     x0, [x0, x6, lsl #3]
+#else
 	ldr     x1, = ReadyVar
 	#if CPU_CORE_NUMBER > 1
 	ldr     x1, [x1, x6, lsl #3]
@@ -392,6 +407,8 @@ ExitISR:
 	bl      Sched_Preempt
 
 	b       Os_PortStartDispatchImpl
+#endif
+
 l_nopreempt:
 	b       Os_PortDispatchFormISR
 
@@ -425,7 +442,21 @@ vector_stub el0_error_32, 15
 .global vector_table_el1
 vector_table_el1:
 curr_el_sp0_sync:
-	b el1t_sync
+	stp     x0,x1, [sp, #-16]!
+	#if CPU_CORE_NUMBER > 1
+	mrs     x1, mpidr_el1
+	and     x1, x1, #3
+	ldr     x0, [x0, x1, lsl #3]
+	#else
+	ldr     x0, [x0]
+	#endif
+	cmp     x0, #0
+	beq     l_svc_start_disatch0
+	ldp     x0,x1, [sp], #16
+	b       Os_PortDispatchImpl
+l_svc_start_disatch0:
+	ldp     x0,x1, [sp], #16
+	b     Os_PortStartDispatchImpl
 
 .balign 0x80
 curr_el_sp0_irq:
@@ -443,7 +474,13 @@ curr_el_sp0_serror:
 curr_el_spx_sync:
 	stp     x0,x1, [sp, #-16]!
 	ldr     x0, = RunningVar
+	#if CPU_CORE_NUMBER > 1
+	mrs     x1, mpidr_el1
+	and     x1, x1, #3
+	ldr     x0, [x0, x1, lsl #3]
+	#else
 	ldr     x0, [x0]
+	#endif
 	cmp     x0, #0
 	beq     l_svc_start_disatch
 	ldp     x0,x1, [sp], #16

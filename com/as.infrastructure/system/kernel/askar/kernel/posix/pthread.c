@@ -352,16 +352,18 @@ void exit (int code)
 			(pTaskConst > (TaskConstType *)1) &&
 			(pParent == (((pthread_t)pTaskConst)->parent)) )
 		{	/* force exit of its children */
+			OS_SPIN_UNLOCK();
 			(void)pthread_detach((pthread_t)pTaskConst);
 			if(0 == pthread_cancel((pthread_t)pTaskConst))
 			{	/* sleep 1 tick to make sure that child exit fully */
 				Os_Sleep(1);
 			}
+			OS_SPIN_LOCK();
 		}
 	}
 #endif
 	OS_SPIN_UNLOCK();
-	pthread_exit((void*)code);
+	pthread_exit((void*)(long)code);
 
 	while(1) asAssert(0);
 }

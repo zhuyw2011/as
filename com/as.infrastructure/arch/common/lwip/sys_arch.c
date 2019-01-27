@@ -378,6 +378,8 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
 	TickType StartTime, EndTime, Elapsed;
 
+	StatusType ercd;
+
 	StartTime = GetOsTick();
 
 	if(	timeout != 0)
@@ -409,8 +411,15 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
             GetTaskID(&TaskID);
 			semlist[*sem].task[semlist[*sem].taskIndex++] = TaskID;
 			sys_arch_unprotect(val);
-			WaitEvent(semlist[*sem].event);
-			ClearEvent(semlist[*sem].event);
+			ercd = WaitEvent(semlist[*sem].event);
+			if(E_OK == ercd)
+			{
+				ClearEvent(semlist[*sem].event);
+			}
+			else
+			{
+				asAssert(0);
+			}
 		}
 		EndTime = GetOsTick();
 		Elapsed = EndTime - StartTime;
