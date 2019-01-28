@@ -73,8 +73,7 @@ StatusType SetEvent  ( TaskType TaskID , EventMaskType Mask )
 
 	if( E_OK == ercd )
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		TaskConstArray[TaskID].pEventVar->set |= Mask;
 		if( 0u != (TaskConstArray[TaskID].pEventVar->set & TaskConstArray[TaskID].pEventVar->wait) )
 		{
@@ -86,19 +85,10 @@ StatusType SetEvent  ( TaskType TaskID , EventMaskType Mask )
 				(ReadyVar->priority > RunningVar->priority) )
 			{
 				Sched_Preempt();
-				OS_SPIN_UNLOCK();
 				Os_PortDispatch();
 			}
-			else
-			{
-				OS_SPIN_UNLOCK();
-			}
 		}
-		else
-		{
-			OS_SPIN_UNLOCK();
-		}
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	OSErrorTwo(SetEvent, TaskID, Mask);
@@ -144,11 +134,9 @@ StatusType ClearEvent( EventMaskType Mask )
 
 	if( E_OK == ercd )
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		RunningVar->pConst->pEventVar->set &= ~Mask;
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	OSErrorOne(ClearEvent, Mask);
@@ -205,11 +193,9 @@ StatusType GetEvent  ( TaskType TaskID , EventMaskRefType Mask )
 
 	if( E_OK == ercd )
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		*Mask = TaskConstArray[TaskID].pEventVar->set;
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 
 	}
 	OSErrorTwo(GetEvent, TaskID, Mask);
@@ -264,21 +250,17 @@ StatusType WaitEvent ( EventMaskType Mask )
 
 	if( E_OK == ercd )
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		if( 0u == (Mask&RunningVar->pConst->pEventVar->set))
 		{
 			RunningVar->priority = RunningVar->pConst->initPriority;
 			RunningVar->pConst->pEventVar->wait = Mask;
 			RunningVar->state=WAITING;
 			Sched_GetReady();
-			OS_SPIN_UNLOCK();
 			Os_PortDispatch();
-			OS_SPIN_LOCK();
 			RunningVar->priority = RunningVar->pConst->runPriority;
 		}
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	OSErrorOne(ClearEvent, Mask);

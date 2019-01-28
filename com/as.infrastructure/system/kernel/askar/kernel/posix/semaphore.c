@@ -80,11 +80,9 @@ int sem_getvalue(sem_t *sem, int *sval)
 {
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	*sval  = sem->value;
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return 0;
 }
@@ -103,8 +101,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime)
 	int ercd = 0;
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(sem->value > 0)
 	{
 		sem->value --;
@@ -113,9 +110,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abstime)
 	{
 		ercd = Os_ListWait(&(sem->head), abstime);
 	}
-
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -139,14 +134,12 @@ int sem_post(sem_t *sem)
 	int ercd = 0;
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(0 != Os_ListPost(&(sem->head), TRUE))
 	{
 		sem->value ++;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -162,11 +155,9 @@ sem_t *sem_open(const char *name, int oflag, ...)
 
 	asAssert(name != NULL);
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	sem = sem_find(name);
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	if( (NULL == sem) && (0 != (oflag & O_CREAT)))
 	{
@@ -181,23 +172,19 @@ sem_t *sem_open(const char *name, int oflag, ...)
 		strcpy(sem->name, name);
 		sem->refcount = 0;
 		sem->unlinked = 0;
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		/* no consideration of the sem_create race condition,
 		 * so just assert if such condition */
 		asAssert(NULL == sem_find(name));
 		TAILQ_INSERT_TAIL(&OsSemaphoreList, sem, entry);
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	if(NULL != sem)
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		sem->refcount++;
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	return &(sem->sem);
@@ -210,8 +197,7 @@ int     sem_close(sem_t* sem2)
 	imask_t imask;
 	struct semaphore *sem;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	sem = sem_find2((struct semaphore *)sem2);
 	if((NULL != sem) && (sem->refcount > 0))
 	{
@@ -226,8 +212,7 @@ int     sem_close(sem_t* sem2)
 	{
 		ercd = -EACCES;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -239,8 +224,7 @@ int     sem_unlink(const char *name)
 	imask_t imask;
 	struct semaphore *sem;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	sem = sem_find(name);
 	if(NULL != sem)
 	{
@@ -251,8 +235,7 @@ int     sem_unlink(const char *name)
 			free(sem);
 		}
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 

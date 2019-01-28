@@ -33,8 +33,7 @@ StatusType SignalCounter(CounterType CounterID)
 
 	if(CounterID < COUNTER_NUM)
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		savedLevel = CallLevel;
 		CallLevel = TCL_LOCK;
 		/* yes, only software counter supported */
@@ -55,12 +54,9 @@ StatusType SignalCounter(CounterType CounterID)
 						AlarmVarArray[AlarmID].period);
 				}
 
-				OS_SPIN_UNLOCK();
-				Irq_Restore(imask);
+				UNLOCK_KERNEL(imask);
 				AlarmConstArray[AlarmID].Action();
-				Irq_Save(imask);
-				OS_SPIN_LOCK();
-
+				LOCK_KERNEL(imask);
 			}
 			else
 			{
@@ -69,8 +65,7 @@ StatusType SignalCounter(CounterType CounterID)
 		}
 		#endif
 		CallLevel = savedLevel;
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 	else
 	{

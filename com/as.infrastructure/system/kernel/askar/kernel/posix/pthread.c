@@ -111,13 +111,9 @@ int pthread_create (pthread_t *tid, const pthread_attr_t *attr,
 	pthread_t pthread;
 	DECLARE_SMP_PROCESSOR_ID();
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
-
+	LOCK_KERNEL(imask);
 	pTaskVar = pthread_malloc_tcb();
-
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	if(NULL != pTaskVar)
 	{
@@ -200,15 +196,13 @@ int pthread_create (pthread_t *tid, const pthread_attr_t *attr,
 		sigemptyset(&pthread->sigWait);
 #endif
 
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		if((NULL == attr) || (PTHREAD_CREATE_JOINABLE == attr->detachstate))
 		{
 			pTaskConst->flag |= PTHREAD_JOINABLE_MASK;
 		}
 		Sched_AddReady(pTaskVar - TaskVarArray);
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	return ercd;
@@ -229,11 +223,9 @@ void pthread_cleanup_push(void (*routine)(void*), void *arg)
 	{
 		cleanup->routine = routine;
 		cleanup->arg = arg;
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		TAILQ_INSERT_HEAD(&tid->cleanupList, cleanup, entry);
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 	else
 	{
@@ -251,8 +243,7 @@ void pthread_cleanup_pop(int execute)
 
 	tid = pthread_self();
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	cleanup = TAILQ_FIRST(&tid->cleanupList);
 
 	if(NULL != cleanup)
@@ -266,8 +257,7 @@ void pthread_cleanup_pop(int execute)
 			cls.routine(cls.arg);
 		}
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 }
 ELF_EXPORT(pthread_cleanup_pop);
 #endif
@@ -275,11 +265,11 @@ void pthread_exit (void *value_ptr)
 {
 	pthread_t tid;
 	DECLARE_SMP_PROCESSOR_ID();
+	imask_t imask;
 
 	tid = pthread_self();
 
-	Irq_Disable();
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 
 	ASLOG(PTHREAD, "pthread%d exit\n", (RunningVar-TaskVarArray-TASK_NUM));
 
@@ -318,8 +308,7 @@ void pthread_exit (void *value_ptr)
 	}
 
 	Sched_GetReady();
-	OS_SPIN_UNLOCK();
-	Os_PortDispatch();
+	Os_PortStartDispatch();
 
 	while(1) asAssert(0);
 }
@@ -335,10 +324,10 @@ void exit (int code)
 	TaskVarType *pTaskVar;
 	const TaskConstType *pTaskConst;
 #endif
+	imask_t imask;
 
 	tid = pthread_self();
-	Irq_Disable();
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 
 	Os_ListDetach(tid->pTaskVar, FALSE);
 
@@ -352,17 +341,15 @@ void exit (int code)
 			(pTaskConst > (TaskConstType *)1) &&
 			(pParent == (((pthread_t)pTaskConst)->parent)) )
 		{	/* force exit of its children */
-			OS_SPIN_UNLOCK();
 			(void)pthread_detach((pthread_t)pTaskConst);
 			if(0 == pthread_cancel((pthread_t)pTaskConst))
 			{	/* sleep 1 tick to make sure that child exit fully */
 				Os_Sleep(1);
 			}
-			OS_SPIN_LOCK();
 		}
 	}
 #endif
-	OS_SPIN_UNLOCK();
+	UNLOCK_KERNEL(imask);
 	pthread_exit((void*)(long)code);
 
 	while(1) asAssert(0);
@@ -379,8 +366,7 @@ int pthread_detach(pthread_t tid)
 	asAssert((tid->pTaskVar-TaskVarArray) >= TASK_NUM);
 	asAssert((tid->pTaskVar-TaskVarArray) < (TASK_NUM+OS_PTHREAD_NUM));
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(tid->TaskConst.flag & PTHREAD_JOINED_MASK)
 	{	/* the tid is already exited */
 		tid->pTaskVar->pConst = NULL;
@@ -393,8 +379,7 @@ int pthread_detach(pthread_t tid)
 	{
 		tid->TaskConst.flag &= ~PTHREAD_JOINABLE_MASK;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -410,8 +395,7 @@ int pthread_join(pthread_t tid, void ** thread_return)
 	asAssert((tid->pTaskVar-TaskVarArray) >= TASK_NUM);
 	asAssert((tid->pTaskVar-TaskVarArray) < (TASK_NUM+OS_PTHREAD_NUM));
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(tid->TaskConst.flag & PTHREAD_JOINABLE_MASK)
 	{
 		if(0u == (tid->TaskConst.flag & PTHREAD_JOINED_MASK))
@@ -437,8 +421,7 @@ int pthread_join(pthread_t tid, void ** thread_return)
 	{
 		ercd = -EACCES;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -475,8 +458,7 @@ int pthread_cancel (pthread_t tid)
 	}
 	else
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 
 		if(tid->pTaskVar->pConst > (TaskConstType*)1)
 		{
@@ -485,15 +467,9 @@ int pthread_cancel (pthread_t tid)
 				Os_ListDetach(tid->pTaskVar, TRUE);
 			}
 
-			OS_SPIN_UNLOCK();
 			ercd = pthread_kill(tid, SIGKILL);
 		}
-		else
-		{
-			/* the tid is already dead */
-			OS_SPIN_UNLOCK();
-		}
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	return ercd;
@@ -531,8 +507,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
 	int ercd = 0;
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(TRUE == mutex->locked)
 	{
 		/* wait it forever */
@@ -541,8 +516,7 @@ int pthread_mutex_lock(pthread_mutex_t *mutex)
 
 	mutex->locked = TRUE;
 
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -553,8 +527,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex)
 	int ercd = 0;
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(TRUE == mutex->locked)
 	{
 		if(0 != Os_ListPost(&mutex->head, TRUE))
@@ -566,8 +539,7 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex)
 	{
 		ercd = -EACCES;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -578,8 +550,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex)
 	int ercd = 0;
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(TRUE == mutex->locked)
 	{
 		ercd = -EBUSY;
@@ -588,8 +559,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex)
 	{
 		mutex->locked = TRUE;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -619,13 +589,12 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
 {
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	while(0 == Os_ListPost(&(cond->head), FALSE))
 		;
-	OS_SPIN_UNLOCK();
+
 	(void) Schedule();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return 0;
 }
@@ -636,14 +605,12 @@ int pthread_cond_signal(pthread_cond_t *cond)
 	int ercd = 0;
 	imask_t imask;
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(0 != Os_ListPost(&cond->head, TRUE))
 	{
 		cond->signals ++;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -666,42 +633,23 @@ int pthread_cond_timedwait(pthread_cond_t        *cond,
 
 	asAssert(mutex->locked);
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	if(0 == cond->signals)
 	{
-		/* unlock */
-		if(TRUE == mutex->locked)
-		{
-			if(0 != Os_ListPost(&mutex->head, TRUE))
-			{
-				mutex->locked = FALSE;
-			}
-		}
-		else
-		{
-			ercd = -EACCES;
-		}
+		ercd = pthread_mutex_unlock(mutex);
 
 		if(0 == ercd)
 		{
 			ercd = Os_ListWait(&(cond->head), abstime);
-			/* lock */
-			if(TRUE == mutex->locked)
-			{
-				/* wait it forever */
-				Os_ListWait(&mutex->head, NULL);
-			}
 
-			mutex->locked = TRUE;
+			(void)pthread_mutex_lock(mutex);
 		}
 	}
 	else
 	{
 		cond->signals --;
 	}
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }

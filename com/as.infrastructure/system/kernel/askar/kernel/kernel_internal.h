@@ -243,14 +243,15 @@ enum {
 #define RunningVar  RunningVars[cpuid]
 #define ReadyVar    ReadyVars[cpuid]
 #define CallLevel   CallLevels[cpuid]
-#define OS_SPIN_LOCK()   Os_PortSpinLock()
-#define OS_SPIN_UNLOCK() Os_PortSpinUnLock()
+
+#define LOCK_KERNEL(imask )  imask = Os_LockKernel()
+#define UNLOCK_KERNEL(imask) Os_UnLockKernel(imask)
 #else
 #define DECLARE_SMP_PROCESSOR_ID()
 #define GET_SMP_PROCESSOR_ID()
 #define SMP_PROCESSOR_ID() 0
-#define OS_SPIN_LOCK()
-#define OS_SPIN_UNLOCK()
+#define LOCK_KERNEL(imask )  Irq_Save(imask)
+#define UNLOCK_KERNEL(imask) Irq_Restore(imask)
 #endif
 
 #define OS_ON_ANY_CPU CPU_CORE_NUMBER
@@ -308,16 +309,10 @@ typedef struct
 typedef struct TaskVar
 {
 	TaskContextType context;
-	PriorityType priority;
+	PriorityType priority; /* TODO: move it to uint8 area */
+
+	/*** pointer area ***/
 	const TaskConstType* pConst;
-	#ifdef MULTIPLY_TASK_ACTIVATION
-	uint8 activation;
-	#endif
-	volatile StatusType state;
-	ResourceType currentResource;
-	#ifdef USE_SHELL
-	uint32 actCnt;
-	#endif
 	#if defined(USE_SCHED_LIST)
 	TAILQ_ENTRY(TaskVar) rentry;
 	#endif
@@ -325,11 +320,27 @@ typedef struct TaskVar
 	/* generic entry for event/timer/mutex/semaphore etc. */
 	TAILQ_ENTRY(TaskVar) entry;
 	TaskListType* list; /* the list that the task is waiting on*/
-	/* for sleep purpose */
-	TickType sleep_tick;
 	TAILQ_ENTRY(TaskVar) sentry;
 	#endif
+
+	/*** uint32 area ***/
+	#if (OS_PTHREAD_NUM > 0)
+	TickType sleep_tick;
+	#endif
+	#ifdef USE_SHELL
+	uint32 actCnt;
+	#endif
+
+	/*** uint16 area ***/
+
+	/*** uint8 area ***/
+	#ifdef MULTIPLY_TASK_ACTIVATION
+	uint8 activation;
+	#endif
+	volatile StatusType state;
+	ResourceType currentResource;
 	#ifdef USE_SMP
+	uint8 lock;
 	uint8 oncpu;
 	#endif
 } TaskVarType;
@@ -456,5 +467,8 @@ extern int Os_PortInstallSignal(TaskVarType* pTaskVar, int sig, void* handler);
 extern void Os_FreeSignalHandler(struct pthread* tid);
 extern void Os_SignalInit(void);
 extern void Os_SignalBroadCast(int signo);
+
+extern imask_t Os_LockKernel(void);
+extern void Os_UnLockKernel(imask_t imask);
 #endif
 #endif /* KERNEL_INTERNAL_H_ */

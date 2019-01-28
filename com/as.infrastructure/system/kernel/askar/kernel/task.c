@@ -37,6 +37,7 @@ static void InitContext(TaskVarType* pTaskVar)
 	pTaskVar->currentResource = INVALID_RESOURCE;
 
 	#ifdef USE_SMP
+	pTaskVar->lock = 0;
 	pTaskVar->oncpu = pTaskVar->pConst->cpu;
 	#endif
 
@@ -131,8 +132,7 @@ StatusType ActivateTask ( TaskType TaskID )
 	{
 	#endif
 		pTaskVar   = &TaskVarArray[TaskID];
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		if(SUSPENDED == TASK_STATE(pTaskVar))
 		{
 			InitContext(pTaskVar);
@@ -168,15 +168,10 @@ StatusType ActivateTask ( TaskType TaskID )
 			(ReadyVar->priority > RunningVar->priority) )
 		{
 			Sched_Preempt();
-			OS_SPIN_UNLOCK();
 			Os_PortDispatch();
 		}
-		else
-		{
-			OS_SPIN_UNLOCK();
-		}
 
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	#if(OS_STATUS == EXTENDED)
 	}
 	else
@@ -244,8 +239,7 @@ StatusType TerminateTask( void )
 
 	if(E_OK == ercd)
 	{
-		Irq_Save(mask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(mask);
 		#ifdef MULTIPLY_TASK_ACTIVATION
 		asAssert(RunningVar->activation > 0);
 		RunningVar->activation--;
@@ -264,10 +258,9 @@ StatusType TerminateTask( void )
 
 		Sched_GetReady();
 		OSPostTaskHook();
-		OS_SPIN_UNLOCK();
 		Os_PortStartDispatch();
 
-		Irq_Restore(mask);
+		UNLOCK_KERNEL(mask);
 	}
 
 	OSErrorNone(TerminateTask);
@@ -350,17 +343,14 @@ StatusType ChainTask    ( TaskType TaskID )
 
 		if(pTaskVar == RunningVar)
 		{
-			Irq_Save(mask);
-			OS_SPIN_LOCK();
+			LOCK_KERNEL(mask);
 			InitContext(RunningVar);
 			Sched_AddReady(TaskID);
-			OS_SPIN_UNLOCK();
-			Irq_Restore(mask);
+			UNLOCK_KERNEL(mask);
 		}
 		else
 		{
-			Irq_Save(mask);
-			OS_SPIN_LOCK();
+			LOCK_KERNEL(mask);
 			if(SUSPENDED == TASK_STATE(pTaskVar))
 			{
 				InitContext(pTaskVar);
@@ -387,13 +377,11 @@ StatusType ChainTask    ( TaskType TaskID )
 					ercd = E_OS_LIMIT;
 				}
 			}
-			OS_SPIN_UNLOCK();
-			Irq_Restore(mask);
+			UNLOCK_KERNEL(mask);
 
 			if(ercd == E_OK)
 			{
-				Irq_Save(mask);
-				OS_SPIN_LOCK();
+				LOCK_KERNEL(mask);
 				#ifdef MULTIPLY_TASK_ACTIVATION
 				asAssert(RunningVar->activation > 0);
 				RunningVar->activation--;
@@ -409,21 +397,18 @@ StatusType ChainTask    ( TaskType TaskID )
 				{
 					RunningVar->state = SUSPENDED;
 				}
-				OS_SPIN_UNLOCK();
-				Irq_Restore(mask);
+				UNLOCK_KERNEL(mask);
 			}
 		}
 
 		if(ercd == E_OK)
 		{
 			OS_TRACE_TASK_ACTIVATION(pTaskVar);
-			Irq_Save(mask);
-			OS_SPIN_LOCK();
+			LOCK_KERNEL(mask);
 			Sched_GetReady();
 			OSPostTaskHook();
-			OS_SPIN_UNLOCK();
 			Os_PortStartDispatch();
-			Irq_Restore(mask);
+			UNLOCK_KERNEL(mask);
 		}
 	}
 
@@ -482,20 +467,14 @@ StatusType Schedule     ( void )
 
 	if(E_OK == ercd)
 	{
-		Irq_Save(mask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(mask);
 		RunningVar->priority = RunningVar->pConst->initPriority;
 		if(Sched_Schedule())
 		{
-			OS_SPIN_UNLOCK();
 			Os_PortDispatch();
 		}
-		else
-		{
-			OS_SPIN_LOCK();
-		}
 		RunningVar->priority = RunningVar->pConst->runPriority;
-		Irq_Restore(mask);
+		UNLOCK_KERNEL(mask);
 	}
 
 	OSErrorNone(Schedule);
@@ -580,7 +559,7 @@ StatusType GetTaskState ( TaskType TaskID,TaskStateRefType State )
 	if( TaskID < TASK_NUM )
 	{
 	#endif
-		Irq_Save(mask);
+		LOCK_KERNEL(mask);
 		pTaskVar = &TaskVarArray[TaskID];
 		if(RunningVar == pTaskVar)
 		{
@@ -590,7 +569,7 @@ StatusType GetTaskState ( TaskType TaskID,TaskStateRefType State )
 		{
 			*State   = pTaskVar->state;
 		}
-		Irq_Restore(mask);
+		UNLOCK_KERNEL(mask);
 	#if(OS_STATUS == EXTENDED)
 	}
 	else

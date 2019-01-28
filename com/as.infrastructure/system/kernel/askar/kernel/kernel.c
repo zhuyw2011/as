@@ -20,6 +20,7 @@
 #include "signal.h"
 #endif
 #endif
+#include "asdebug.h"
 /* ============================ [ MACROS    ] ====================================================== */
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
@@ -199,7 +200,9 @@ void StartOS ( AppModeType Mode )
 #endif
 
 	OSStartupHook();
-
+#ifdef USE_SMP
+	Os_PortSpinLock();
+#endif
 	Sched_GetReady();
 	Os_PortStartFirstDispatch();
 	while(1);
@@ -232,3 +235,58 @@ void OsTick(void)
 	Os_SleepTick();
 #endif
 }
+
+#ifdef USE_SMP
+imask_t Os_LockKernel(void)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+	imask_t imask;
+
+	Irq_Save(imask);
+
+	if(RunningVar != NULL)
+	{
+		RunningVar->lock ++;
+		/* bug if too much nested lock */
+		asAssert(RunningVar->lock != 0xFF);
+		if(1 == RunningVar->lock)
+		{
+			Os_PortSpinLock();
+		}
+	}
+
+	return imask;
+}
+
+
+void Os_UnLockKernel(imask_t imask)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+
+	if(RunningVar != NULL)
+	{
+		asAssert(RunningVar->lock > 0);
+		RunningVar->lock --;
+		if(0 == RunningVar->lock)
+		{
+			Os_PortSpinUnLock();
+		}
+	}
+
+	Irq_Restore(imask);
+}
+
+/* This can only be called in context switching area where OS spin lock is locked */
+void Os_RestoreKernelLock(void)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+
+	if(RunningVar != NULL)
+	{
+		if(0 == RunningVar->lock)
+		{
+			Os_PortSpinUnLock();
+		}
+	}
+}
+#endif

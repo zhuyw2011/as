@@ -272,7 +272,9 @@ boolean Sched_Schedule(void)
 	boolean needSchedule = FALSE;
 	DECLARE_SMP_PROCESSOR_ID();
 	ReadyQueueType* pReadyQueue;
+	imask_t imask;
 
+	LOCK_KERNEL(imask);
 	Sched_FindReady(&pReadyQueue);
 	if(NULL != pReadyQueue)
 	{
@@ -295,6 +297,7 @@ boolean Sched_Schedule(void)
 			needSchedule = TRUE;
 		}
 	}
+	UNLOCK_KERNEL(imask);
 	return needSchedule;
 }
 

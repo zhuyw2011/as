@@ -124,19 +124,19 @@ void Os_SignalBroadCast(int signo)
 
 	for(id=0; id < OS_PTHREAD_NUM; id++)
 	{
-		Irq_Save(imask);
+		LOCK_KERNEL(imask);
 		pTaskVar   = &TaskVarArray[TASK_NUM+id];
 		pTaskConst = pTaskVar->pConst;
 		if(pTaskConst > (TaskConstType*)1)
 		{
-			Irq_Restore(imask);
+			UNLOCK_KERNEL(imask);
 			if(0 == pthread_kill((pthread_t)pTaskConst, signo))
 			{
 				flag = 1;
 			}
-			Irq_Save(imask);
+			LOCK_KERNEL(imask);
 		}
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	if(0 == flag)
@@ -227,11 +227,9 @@ int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
 
 	tid = pthread_self();
 
-	Irq_Save(imask);
-	OS_SPIN_LOCK();
+	LOCK_KERNEL(imask);
 	sig = lookup_signal(tid, signum);
-	OS_SPIN_UNLOCK();
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	if(NULL != sig)
 	{
@@ -248,11 +246,9 @@ int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
 			{
 				sig->signum = signum;
 				sig->action = *act;
-				Irq_Save(imask);
-				OS_SPIN_LOCK();
+				LOCK_KERNEL(imask);
 				TAILQ_INSERT_TAIL(&tid->signalList, sig, entry);
-				OS_SPIN_UNLOCK();
-				Irq_Restore(imask);
+				UNLOCK_KERNEL(imask);
 			}
 			else
 			{
@@ -265,11 +261,9 @@ int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
 		if(NULL != act)
 		{	/* replace old action */
 			asAssert(act->sa_handler);
-			Irq_Save(imask);
-			OS_SPIN_LOCK();
+			LOCK_KERNEL(imask);
 			sig->action = *act;
-			OS_SPIN_UNLOCK();
-			Irq_Restore(imask);
+			UNLOCK_KERNEL(imask);
 		}
 	}
 
@@ -315,8 +309,7 @@ int sigwait(const sigset_t * set, int * sig)
 		ASLOG(SIGNAL, "pthread%d sigwait 0x%x @%u\n",
 				(RunningVar-TaskVarArray-TASK_NUM),
 				*set, OsTickCounter);
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		tid->sigWait = *set;
 		(void)Os_ListWait(&tid->sigList, NULL);
 		*sig = tid->signo;
@@ -324,8 +317,7 @@ int sigwait(const sigset_t * set, int * sig)
 		ASLOG(SIGNAL, "pthread%d sigwait 0x%x get %d @%u\n",
 				(RunningVar-TaskVarArray-TASK_NUM),
 				*set, *sig, OsTickCounter);
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 	else
 	{
@@ -354,11 +346,9 @@ int pthread_kill (pthread_t tid, int signum)
 
 	if(tid->pTaskVar->pConst > (TaskConstType*)1)
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		sig = lookup_signal2(tid, signum);
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 		ASLOG(SIGNAL, "kill to pthread%d %d\n",
 				(tid->pTaskVar-TaskVarArray-TASK_NUM),
 				signum);
@@ -368,23 +358,20 @@ int pthread_kill (pthread_t tid, int signum)
 
 			if(tid->sigWait & (1<<signum))
 			{
-				Irq_Save(imask);
+				LOCK_KERNEL(imask);
 				Os_ListPost(&tid->sigList, FALSE);
-				Irq_Restore(imask);
+				UNLOCK_KERNEL(imask);
 			}
 			if(tid->pTaskVar != RunningVar)
 			{
-				Irq_Save(imask);
-				OS_SPIN_LOCK();
+				LOCK_KERNEL(imask);
 				if(0 == Os_PortInstallSignal(tid->pTaskVar, signum, sig->action.sa_handler))
 				{
 					#ifdef USE_SCHED_LIST
 					/* this is ugly signal call as treating signal call the highest priority */
 					Sched_AddReady(RunningVar - TaskVarArray);
 					ReadyVar = tid->pTaskVar;
-					OS_SPIN_UNLOCK();
 					Os_PortDispatch();
-					OS_SPIN_LOCK();
 					#else
 					/* kick the signal call immediately by an extra activation */
 					Sched_AddReady(tid->pTaskVar - TaskVarArray);
@@ -397,8 +384,7 @@ int pthread_kill (pthread_t tid, int signum)
 							signum);
 					ercd = -ENOMEM;
 				}
-				OS_SPIN_UNLOCK();
-				Irq_Restore(imask);
+				UNLOCK_KERNEL(imask);
 			}
 			else
 			{
@@ -411,11 +397,9 @@ int pthread_kill (pthread_t tid, int signum)
 
 			if(tid->sigWait & (1<<signum))
 			{
-				Irq_Save(imask);
-				OS_SPIN_LOCK();
+				LOCK_KERNEL(imask);
 				Os_ListPost(&tid->sigList, TRUE);
-				OS_SPIN_UNLOCK();
-				Irq_Restore(imask);
+				UNLOCK_KERNEL(imask);
 			}
 			else
 			{

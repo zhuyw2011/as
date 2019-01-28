@@ -106,8 +106,7 @@
 	.extern PreTaskHook
 	.extern PostTaskHook
 	.extern Os_PortActivateImpl
-	.extern Os_PortSpinLock
-	.extern Os_PortSpinUnLock
+	.extern Os_RestoreKernelLock
 /* ============================ [ DATAS     ] ====================================================== */
 #if CPU_CORE_NUMBER > 1
 	.extern RunningVars
@@ -174,6 +173,15 @@ Os_PortDispatchFormISR:
 	str     w3,[x1]  /* restore CallLevel */
 	#endif
 	#endif
+
+	#if CPU_CORE_NUMBER > 1
+	stp     x0,x1, [sp, #-16]!
+	stp     x29,x30, [sp, #-16]!
+	bl      Os_RestoreKernelLock
+	ldp     x29,x30, [sp], #16
+	ldp     x0,x1, [sp], #16
+	#endif
+
 	ldr     x1, [x0, #0x0 ]
 	mov     sp, x1
 	ldr     x1, [x0,#0x08]
@@ -377,11 +385,7 @@ ExitISR:
 	bne     l_nopreempt
 
 #if CPU_CORE_NUMBER > 1
-	bl      Os_PortSpinLock
 	bl      Sched_Schedule
-	stp     x0,x1, [sp, #-16]!
-	bl      Os_PortSpinUnLock
-	ldp     x0,x1, [sp], #16
 	cmp     x0, #0
 
 	bne     Os_PortStartDispatchImpl

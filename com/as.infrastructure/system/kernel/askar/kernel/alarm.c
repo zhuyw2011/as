@@ -97,7 +97,7 @@ StatusType GetAlarm    ( AlarmType AlarmID ,TickRefType Tick )
 	if( AlarmID < ALARM_NUM )
 	{
 	#endif
-		Irq_Save(imask);
+		LOCK_KERNEL(imask);
 		if( OS_IS_ALARM_STARTED(&AlarmVarArray[AlarmID]) )
 		{
 			/* rely on the trick of integer overflow */
@@ -107,7 +107,7 @@ StatusType GetAlarm    ( AlarmType AlarmID ,TickRefType Tick )
 		{
 			ercd = E_OS_NOFUNC;
 		}
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	#if(OS_STATUS == EXTENDED)
 	}
 	else
@@ -190,8 +190,7 @@ StatusType SetRelAlarm ( AlarmType AlarmID , TickType Increment ,TickType Cycle 
 
 	if(E_OK == ercd)
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		if( FALSE == OS_IS_ALARM_STARTED(&AlarmVarArray[AlarmID]) )
 		{
 			TickType Start = (TickType)(AlarmConstArray[AlarmID].pCounter->pVar->value+Increment);
@@ -201,8 +200,7 @@ StatusType SetRelAlarm ( AlarmType AlarmID , TickType Increment ,TickType Cycle 
 		{
 			ercd = E_OS_STATE;
 		}
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 
@@ -282,8 +280,7 @@ StatusType SetAbsAlarm ( AlarmType AlarmID , TickType Start ,TickType Cycle )
 
 	if(E_OK == ercd)
 	{
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		if( FALSE == OS_IS_ALARM_STARTED(&AlarmVarArray[AlarmID]) )
 		{
 			TickType Increment = AlarmConstArray[AlarmID].pCounter->pVar->value%AlarmConstArray[AlarmID].pCounter->base.maxallowedvalue;
@@ -315,8 +312,7 @@ StatusType SetAbsAlarm ( AlarmType AlarmID , TickType Start ,TickType Cycle )
 		{
 			ercd = E_OS_STATE;
 		}
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	OSErrorThree(SetAbsAlarm,AlarmID,Start,Cycle);
@@ -352,8 +348,7 @@ StatusType CancelAlarm ( AlarmType AlarmID )
 	if( AlarmID < ALARM_NUM )
 	{
 	#endif
-		Irq_Save(imask);
-		OS_SPIN_LOCK();
+		LOCK_KERNEL(imask);
 		if( OS_IS_ALARM_STARTED(&AlarmVarArray[AlarmID]) )
 		{
 			TAILQ_REMOVE(&(AlarmConstArray[AlarmID].pCounter->pVar->head), &AlarmVarArray[AlarmID], entry);
@@ -363,8 +358,7 @@ StatusType CancelAlarm ( AlarmType AlarmID )
 		{
 			ercd = E_OS_NOFUNC;
 		}
-		OS_SPIN_UNLOCK();
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	#if(OS_STATUS == EXTENDED)
 	}
 	else

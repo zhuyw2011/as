@@ -71,9 +71,9 @@ mqd_t   mq_open(const char *name, int oflag, ...)
 
 	asAssert(name != NULL);
 
-	Irq_Save(imask);
+	LOCK_KERNEL(imask);
 	mq = mq_find(name);
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	if( (NULL == mq) && (0 != (oflag & O_CREAT)))
 	{
@@ -102,20 +102,20 @@ mqd_t   mq_open(const char *name, int oflag, ...)
 			mq->msgsize = attr->mq_msgsize;
 			mq->refcount = 0;
 			mq->unlinked = 0;
-			Irq_Save(imask);
+			LOCK_KERNEL(imask);
 			/* no consideration of the mq_create race condition,
 			 * so just assert if such condition */
 			asAssert(NULL == mq_find(name));
 			TAILQ_INSERT_TAIL(&OsMqueueList, mq, entry);
-			Irq_Restore(imask);
+			UNLOCK_KERNEL(imask);
 		}
 	}
 
 	if(NULL != mq)
 	{
-		Irq_Save(imask);
+		LOCK_KERNEL(imask);
 		mq->refcount++;
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 
 	return mq;
@@ -127,7 +127,7 @@ int     mq_close(mqd_t mq)
 	int ercd = 0;
 	imask_t imask;
 
-	Irq_Save(imask);
+	LOCK_KERNEL(imask);
 	if(mq->refcount > 0)
 	{
 		mq->refcount --;
@@ -141,7 +141,7 @@ int     mq_close(mqd_t mq)
 	{
 		ercd = -EACCES;
 	}
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 }
@@ -153,7 +153,7 @@ int     mq_unlink(const char *name)
 	imask_t imask;
 	struct mqd *mq = NULL;
 
-	Irq_Save(imask);
+	LOCK_KERNEL(imask);
 	mq = mq_find(name);
 	if(NULL != mq)
 	{
@@ -164,7 +164,7 @@ int     mq_unlink(const char *name)
 			free(mq);
 		}
 	}
-	Irq_Restore(imask);
+	UNLOCK_KERNEL(imask);
 
 	return ercd;
 
@@ -190,7 +190,7 @@ int     mq_timedsend(mqd_t                  mq,
 	/* greater than one message size */
 	if (msg_len <= mq->msgsize)
 	{
-		Irq_Save(imask);
+		LOCK_KERNEL(imask);
 		msg = TAILQ_FIRST(&mq->free);
 		if(NULL == msg)
 		{
@@ -214,7 +214,7 @@ int     mq_timedsend(mqd_t                  mq,
 		{
 			ercd = -ENOSPC;
 		}
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 	else
 	{
@@ -250,7 +250,7 @@ ssize_t mq_timedreceive(mqd_t                  mq,
 	/* greater than one message size */
 	if (msg_len <= mq->msgsize)
 	{
-		Irq_Save(imask);
+		LOCK_KERNEL(imask);
 		msg = TAILQ_FIRST(&mq->avail);
 		if(NULL == msg)
 		{
@@ -273,7 +273,7 @@ ssize_t mq_timedreceive(mqd_t                  mq,
 		{
 			ercd = -ENOSPC;
 		}
-		Irq_Restore(imask);
+		UNLOCK_KERNEL(imask);
 	}
 	else
 	{
