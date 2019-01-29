@@ -137,6 +137,8 @@ void secondary_main(void)
 	DECLARE_SMP_PROCESSOR_ID();
 
 	ASLOG(SMP, "!!!CPU%d is up!!!\n", SMP_PROCESSOR_ID());
+
+	Os_PortSpinLock();
 	Sched_GetReady();
 	Os_PortStartDispatch();
 	while(1);

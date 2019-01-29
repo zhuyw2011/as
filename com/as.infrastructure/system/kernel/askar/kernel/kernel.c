@@ -246,13 +246,13 @@ imask_t Os_LockKernel(void)
 
 	if(RunningVar != NULL)
 	{
-		RunningVar->lock ++;
-		/* bug if too much nested lock */
-		asAssert(RunningVar->lock != 0xFF);
-		if(1 == RunningVar->lock)
+		if(0 == RunningVar->lock)
 		{
 			Os_PortSpinLock();
 		}
+		RunningVar->lock ++;
+		/* bug if too much nested lock */
+		asAssert(RunningVar->lock != 0xFF);
 	}
 
 	return imask;
@@ -285,6 +285,7 @@ void Os_RestoreKernelLock(void)
 	{
 		if(0 == RunningVar->lock)
 		{
+			asAssert(RunningVars[cpuid?0:1]->lock==0);
 			Os_PortSpinUnLock();
 		}
 	}

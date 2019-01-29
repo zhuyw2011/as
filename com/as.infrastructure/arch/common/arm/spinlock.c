@@ -27,11 +27,7 @@
 void spin_lock(spinlock_t *lock)
 {
 	uint32_t val, fail;
-	if (!mmu_enabled()) {
-		lock->v = 1;
-		smp_mb();
-		return;
-	}
+
 #ifdef __AARCH64__
 	do {
 		asm volatile(
@@ -62,10 +58,5 @@ void spin_lock(spinlock_t *lock)
 void spin_unlock(spinlock_t *lock)
 {
 	smp_mb();
-#ifdef __AARCH64__
-	if (mmu_enabled())
-		asm volatile("stlrh wzr, [%0]" :: "r" (&lock->v));
-	else
-#endif
-		lock->v = 0;
+	lock->v = 0;
 }

@@ -387,9 +387,14 @@ ExitISR:
 #if CPU_CORE_NUMBER > 1
 	bl      Sched_Schedule
 	cmp     x0, #0
+	beq     mc_nopreempt
 
-	bne     Os_PortStartDispatchImpl
+	bl      Os_PortSpinLock
 
+	b       Os_PortStartDispatchImpl
+
+mc_nopreempt:
+	bl      Os_PortSpinLock
 	ldr     x0, = RunningVar
 	ldr     x0, [x0, x6, lsl #3]
 #else

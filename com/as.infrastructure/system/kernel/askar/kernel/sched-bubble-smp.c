@@ -182,6 +182,24 @@ void Sched_Init(void)
 	}
 }
 
+void Sched_ShowRdyQ(void)
+{
+	uint32 i;
+	uint8 oncpu;
+	ReadyQueueType* pReadyQueue;
+	for(oncpu=0; oncpu<=CPU_CORE_NUMBER; oncpu++)
+	{
+		printf("\nRDYQ%d:", oncpu);
+		pReadyQueue = &ReadyQueue[oncpu];
+		for(i=0; (i<pReadyQueue->size) && (i<ACTIVATION_SUM); i++)
+		{
+			printf("%d(%d/%d)->", pReadyQueue->heap[i].taskID,
+					REAL_PRIORITY(pReadyQueue->heap[i].priority),
+					TaskVarArray[pReadyQueue->heap[i].taskID].priority);
+		}
+		printf("\n");
+	}
+}
 void Sched_AddReady(TaskType TaskID)
 {
 	uint8 oncpu;

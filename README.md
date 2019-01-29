@@ -50,7 +50,7 @@ For the purpose that to be able to run most of the common applications which are
 General supported CPU architecture list:
 
 * arm32: cortex-m3 arm926
-* arm64: cortex-a57
+* arm64: cortex-a57 (multicore is supported)
 * ppc: mpc5634
 * intel: i386
 
