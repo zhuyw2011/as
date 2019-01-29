@@ -459,15 +459,15 @@ def GenC(gendir,os_list):
         prio = Integer(GAGet(task,'Priority'))
         if(prio > maxPrio):
             maxPrio = prio
+    if(CPU_CORE_NUMBER > 1):
+        perCpu = '[CPU_CORE_NUMBER+1]'
+    else:
+        perCpu = ''
     fp.write('#ifdef USE_SCHED_FIFO\n')
     fp.write('#ifdef USE_PTHREAD\n')
-    cstr = '\nconst ReadyFIFOType ReadyFIFO[OS_PTHREAD_PRIORITY+PRIORITY_NUM+1]=\n{\n'
-    cstr += '#ifdef USE_PTHREAD\n'
     for prio in range(pthprio):
         sumact = pthnum
-        fp.write('static TaskType ReadyFIFO_pthread_prio%s[%s];\n'%(prio,sumact))
-        cstr += '\t{\n\t\t/*.max=*/%s,\n\t\t/*.pFIFO=*/ReadyFIFO_pthread_prio%s\n\t},\n'%(sumact, prio)
-    cstr += '#endif\n'
+        fp.write('static TaskType ReadyFIFO_pthread_prio%s%s[%s];\n'%(prio,perCpu,sumact))
     fp.write('#endif\n')
     for prio in range(maxPrio+1):
         sumact = 3+2 # 2 for the ceiling of resource and one more additional slow
@@ -478,10 +478,35 @@ def GenC(gendir,os_list):
                 sumact+= Integer(GAGet(task,'Activation'))
                 comments += '%s(Activation=%s),'%(GAGet(task,'Name'),GAGet(task,'Activation'))
         if(sumact > 5):
-            fp.write('static TaskType ReadyFIFO_prio%s[%s];\n'%(prio,sumact))
-            cstr += '\t{\n\t\t/*.max=*/%s,/* %s */\n\t\t/*.pFIFO=*/ReadyFIFO_prio%s\n\t},\n'%(sumact,comments, prio)
+            fp.write('static TaskType ReadyFIFO_prio%s%s[%s];\n'%(prio,perCpu,sumact))
+    cstr = '\nconst ReadyFIFOType ReadyFIFO%s[OS_PTHREAD_PRIORITY+PRIORITY_NUM+1]=\n{\n'%(perCpu)
+    for i in range(CPU_CORE_NUMBER+1):
+        if(CPU_CORE_NUMBER > 1):
+            perCpu = '[%s]'%(i)
+            cstr += '  {\n'
         else:
-            cstr += '\t{\n\t\t/*.max=*/0,\n\t\t/*.pFIFO=*/NULL\n\t},\n'
+            perCpu = ''
+        cstr += '#ifdef USE_PTHREAD\n'
+        for prio in range(pthprio):
+            sumact = pthnum
+            cstr += '\t{\n\t\t/*.max=*/%s,\n\t\t/*.pFIFO=*/ReadyFIFO_pthread_prio%s%s\n\t},\n'%(sumact,prio,perCpu)
+        cstr += '#endif\n'
+        for prio in range(maxPrio+1):
+            sumact = 3+2 # 2 for the ceiling of resource and one more additional slow
+            comments = ''
+            for id,task in enumerate(task_list):
+                prio2 = Integer(GAGet(task,'Priority'))
+                if(prio2 == prio):
+                    sumact+= Integer(GAGet(task,'Activation'))
+                    comments += '%s(Activation=%s),'%(GAGet(task,'Name'),GAGet(task,'Activation'))
+            if(sumact > 5):
+                cstr += '\t{\n\t\t/*.max=*/%s,/* %s */\n\t\t/*.pFIFO=*/ReadyFIFO_prio%s%s\n\t},\n'%(sumact,comments,prio,perCpu)
+            else:
+                cstr += '\t{\n\t\t/*.max=*/0,\n\t\t/*.pFIFO=*/NULL\n\t},\n'
+        if(CPU_CORE_NUMBER > 1):
+            cstr += '  },\n'
+        else:
+            break
     cstr += '};\n\n'
     fp.write(cstr)
     fp.write('#endif\n')
