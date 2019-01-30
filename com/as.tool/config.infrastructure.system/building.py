@@ -1109,11 +1109,11 @@ def SHA256(v):
     if(type(v) == list):
         for vv in v:
             with open(vv) as f:
-                m.update(f.read())
+                m.update(f.read().encode('utf-8'))
     else:
         with open(v) as f:
-            m.update(f.read())
-    return m.digest()
+            m.update(f.read().encode('utf-8'))
+    return str(m.digest())
 
 def PreProcess(cfgdir, fil):
     print('  PP %s'%(fil))

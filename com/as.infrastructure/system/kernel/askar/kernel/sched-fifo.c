@@ -14,7 +14,7 @@
  */
 /* ============================ [ INCLUDES  ] ====================================================== */
 #include "kernel_internal.h"
-#ifdef USE_SCHED_FIFO
+#if defined(USE_SCHED_FIFO) && !defined(USE_SMP)
 #include "asdebug.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #define SCHED_FIFO_SIZE(fifo) ((fifo)->pFIFO)[0]

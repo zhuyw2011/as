@@ -124,7 +124,7 @@ static void Sched_FindReady(ReadyQueueType **pReadyQueue)
 {
 	DECLARE_SMP_PROCESSOR_ID();
 	ReadyQueueType* pReadyQueue1 = &ReadyQueue[cpuid];
-	ReadyQueueType* pReadyQueue2 = &ReadyQueue[CPU_CORE_NUMBER];
+	ReadyQueueType* pReadyQueue2 = &ReadyQueue[OS_ON_ANY_CPU];
 	TaskVarType* pTaskVar1;
 	TaskVarType* pTaskVar2;
 

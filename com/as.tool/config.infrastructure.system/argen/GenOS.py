@@ -479,7 +479,7 @@ def GenC(gendir,os_list):
                 comments += '%s(Activation=%s),'%(GAGet(task,'Name'),GAGet(task,'Activation'))
         if(sumact > 5):
             fp.write('static TaskType ReadyFIFO_prio%s%s[%s];\n'%(prio,perCpu,sumact))
-    cstr = '\nconst ReadyFIFOType ReadyFIFO%s[OS_PTHREAD_PRIORITY+PRIORITY_NUM+1]=\n{\n'%(perCpu)
+    cstr = '\nconst ReadyFIFOType ReadyFIFO%s[PRIORITY_NUM+1]=\n{\n'%(perCpu)
     for i in range(CPU_CORE_NUMBER+1):
         if(CPU_CORE_NUMBER > 1):
             perCpu = '[%s]'%(i)
