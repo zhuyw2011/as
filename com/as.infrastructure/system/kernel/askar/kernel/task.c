@@ -90,6 +90,26 @@ static uint32_t checkStackUsage(const TaskConstType* pTaskConst, uint32_t* used)
 	/* round up */
 	return (*used +(pTaskConst->stackSize/100 -1))*100/pTaskConst->stackSize;
 }
+
+static boolean isRunning(TaskVarType* pTaskVar)
+{
+#ifdef USE_SMP
+	int cpuid;
+	boolean rv = FALSE;
+	for(cpuid=0; cpuid<CPU_CORE_NUMBER; cpuid++)
+	{
+		if(pTaskVar == RunningVar)
+		{
+			rv = TRUE;
+			break;
+		}
+	}
+
+	return rv;
+#else
+	return (pTaskVar == RunningVar)
+#endif
+}
 #endif
 /* ============================ [ FUNCTIONS ] ====================================================== */
 /* |------------------+------------------------------------------------------------| */
@@ -664,7 +684,7 @@ void statOsTask(void)
 #ifdef USE_SMP
 		SHELL_printf(" on CPU%d", pTaskVar->oncpu);
 #endif
-		SHELL_printf(" %s\n", (pTaskVar == RunningVar)?"<-RunningVar":"");
+		SHELL_printf(" %s\n", isRunning(pTaskVar)?"<-RunningVar":"");
 	}
 
 #if(OS_PTHREAD_NUM > 0)
@@ -701,7 +721,7 @@ void statOsTask(void)
 #ifdef USE_SMP
 			SHELL_printf(" on CPU%d", pTaskVar->oncpu);
 #endif
-			SHELL_printf(" %s\n", (pTaskVar == RunningVar)?"<-RunningVar":"");
+			SHELL_printf(" %s\n", isRunning(pTaskVar)?"<-RunningVar":"");
 		}
 	}
 #endif
