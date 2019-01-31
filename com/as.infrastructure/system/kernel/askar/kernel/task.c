@@ -107,7 +107,7 @@ static boolean isRunning(TaskVarType* pTaskVar)
 
 	return rv;
 #else
-	return (pTaskVar == RunningVar)
+	return (pTaskVar == RunningVar);
 #endif
 }
 #endif
