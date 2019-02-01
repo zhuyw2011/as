@@ -202,7 +202,9 @@ void Sched_ShowRdyQ(void)
 }
 void Sched_AddReady(TaskType TaskID)
 {
+	DECLARE_SMP_PROCESSOR_ID();
 	uint8 oncpu;
+	PriorityType priority;
 	ReadyQueueType* pReadyQueue;
 
 	oncpu = TaskVarArray[TaskID].oncpu;
@@ -210,9 +212,18 @@ void Sched_AddReady(TaskType TaskID)
 	#ifdef MULTIPLY_TASK_ACTIVATION
 	asAssert((OS_ON_ANY_CPU!=oncpu) || (1==TaskVarArray[TaskID].pConst->maxActivation));
 	#endif
-	Sched_AddReadyInternal(pReadyQueue, TaskID, NEW_PRIORITY(TaskVarArray[TaskID].pConst->initPriority));
+	priority = TaskVarArray[TaskID].pConst->initPriority;
+	Sched_AddReadyInternal(pReadyQueue, TaskID, NEW_PRIORITY(priority));
 
 	Sched_FindReady(&pReadyQueue);
+
+	if(cpuid != oncpu)
+	{
+		if(priority > RunningVars[oncpu]->priority)
+		{
+			Os_PortRequestSchedule(oncpu);
+		}
+	}
 }
 
 void Sched_RemoveReady(TaskType TaskID)

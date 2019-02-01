@@ -29,6 +29,8 @@ extern void Os_PortActivate(void);
 extern void Os_PortStartSysTick(void);
 #ifdef USE_SMP
 extern void secondary_start(void);
+extern void Ipc_KickTo(int cpu, int irqno);
+extern void Irq_Install(int irqno, void (*handler)(void), int oncpu);
 #endif
 /* ============================ [ DATAS     ] ====================================================== */
 #ifdef USE_SMP
@@ -38,6 +40,13 @@ uint32 ISR2Counter[CPU_CORE_NUMBER];
 uint32 ISR2Counter;
 #endif
 /* ============================ [ LOCALS    ] ====================================================== */
+#ifdef USE_SMP
+static void Os_PortSchedule(void)
+{
+	DECLARE_SMP_PROCESSOR_ID();
+	ASLOG(SMP, "Os_PortSchedule on CPU%d!\n", cpuid);
+}
+#endif
 /* ============================ [ FUNCTIONS ] ====================================================== */
 void Os_PortActivateImpl(void)
 {
@@ -67,13 +76,14 @@ void Os_PortActivateImpl(void)
 
 void Os_PortInit(void)
 {
-	DECLARE_SMP_PROCESSOR_ID();
 #ifdef USE_SMP
 	memset(ISR2Counter, 0, sizeof(ISR2Counter));
+	Irq_Install(0, Os_PortSchedule, 0);
+	Irq_Install(1, Os_PortSchedule, 1);
 #else
 	ISR2Counter = 0;
-#endif
 	Os_PortStartSysTick();
+#endif
 }
 
 void Os_PortInitContext(TaskVarType* pTaskVar)
@@ -132,6 +142,7 @@ TASK(TaskIdle2)
 		Schedule();
 	}
 }
+
 void secondary_main(void)
 {
 	DECLARE_SMP_PROCESSOR_ID();
@@ -144,10 +155,17 @@ void secondary_main(void)
 	while(1);
 }
 
+void Os_PortRequestSchedule(uint8 cpu)
+{
+	Ipc_KickTo((int)cpu, (int)cpu);
+}
+
 void Os_PortStartFirstDispatch(void)
 {
 	ASLOG(SMP, "!!!CPU%d is up!!!\n", smp_processor_id());
 	smp_boot_secondary(1, secondary_start);
+	Os_PortStartSysTick();
+
 	Os_PortStartDispatch();
 }
 #endif

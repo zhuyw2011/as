@@ -470,5 +470,6 @@ extern void Os_SignalBroadCast(int signo);
 
 extern imask_t Os_LockKernel(void);
 extern void Os_UnLockKernel(imask_t imask);
+extern void Os_PortRequestSchedule(uint8 cpu);
 #endif
 #endif /* KERNEL_INTERNAL_H_ */

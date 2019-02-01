@@ -17,7 +17,10 @@
  */
 /* ============================ [ INCLUDES  ] ====================================================== */
 #include "Std_Types.h"
+#include "smp.h"
 /* ============================ [ MACROS    ] ====================================================== */
+#define isb()		asm volatile("isb" : : : "memory")
+
 /* DAIF, Interrupt Mask Bits */
 #define DAIF_DBG_BIT		(1<<3)	/* Debug mask bit */
 #define DAIF_ABT_BIT		(1<<2)	/* Asynchronous abort mask bit */
@@ -366,6 +369,15 @@ static int gic_v3_find_pending_irq(irq_no *irqp) {
 
 	return rc;
 }
+static void gicv3_write_sgi1r(uint64_t val)
+{
+	#if 0
+	asm volatile("msr ICC_SGI1R_EL1, %0" : : "r" (val));
+	#else
+	writel(GIC_GICD_SGIR, val);
+	#endif
+}
+
 /* ============================ [ FUNCTIONS ] ====================================================== */
 void Irq_Enable(void)
 {
@@ -405,12 +417,12 @@ void Irq_Init(void)
 	gic_v3_initialize();
 }
 
-void Irq_Install(int irqno, void (*handler)(void))
+void Irq_Install(int irqno, void (*handler)(void), int oncpu)
 {
 	isr_pc[irqno] = handler;
 	gicd_config(irqno, GIC_GICD_ICFGR_EDGE);
 	gicd_set_priority(irqno, 0 << GIC_PRI_SHIFT );  /* Set priority */
-	gicd_set_target(irqno, 0x1);  /* processor 0 */
+	gicd_set_target(irqno, oncpu);
 	gicd_clear_pending(irqno);
 	gicd_enable_int(irqno);
 }
@@ -440,8 +452,19 @@ void Os_PortIsrHandler(void)
 		if(isr_pc[irq] != NULL) {
 			isr_pc[irq]();
 			gicd_enable_int(irq);			/* unmask this irq line */
+		} else {
+			printf("GIC ERROR: uninstalled IRQ %d on CPU%d\n", irq, smp_processor_id());
 		}
 	}
 
 	Irq_Restore(imask);
 }
+/* https://static.docs.arm.com/dai0492/a/GICv3_Software_Overview_Official_Release_A.pdf */
+void Ipc_KickTo(int cpu, int irqno)
+{
+	assert(irqno<16);
+
+//	gicv3_write_sgi1r((1<<(cpu+24)) | irqno);
+	isb();
+}
+

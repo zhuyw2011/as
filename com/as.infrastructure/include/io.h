@@ -20,15 +20,18 @@
 #endif
 #include "Std_Types.h"
 #ifndef IO_VALUE_FIRST
+#define writeq WRITE64
 #define writel WRITE32
 #define writew WRITE32
 #define writeb WRITE8
 #else
+#define writeq(v,a) WRITE64(a,v)
 #define writel(v,a) WRITE32(a,v)
 #define writew(v,a) WRITE32(a,v)
 #define writeb(v,a) WRITE8(a,v)
 #endif
 
+#define readq READ64
 #define readl READ32
 #define readw READ32
 #define readb READ8

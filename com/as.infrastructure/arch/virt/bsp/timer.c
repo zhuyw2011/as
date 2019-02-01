@@ -14,6 +14,7 @@
  */
 /* ============================ [ INCLUDES  ] ====================================================== */
 #include "Std_Types.h"
+#include "smp.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #define TIMER_IRQ					(27)
 #define CNTV_CTL_ENABLE		(1 << 0)	/* Enables the timer */
@@ -22,7 +23,7 @@
 
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
-extern void Irq_Install(int irqno, void (*handler)(void));
+extern void Irq_Install(int irqno, void (*handler)(void), int oncpu);
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ LOCALS    ] ====================================================== */
 /* CNTV_CTL_EL0, Counter-timer Virtual Timer Control register
@@ -116,7 +117,7 @@ void Os_PortStartSysTick(void)
 	uint64_t ticks,current_cnt;
 	uint32_t cntfrq;
 
-	Irq_Install(TIMER_IRQ, timer_isr_handler);
+	Irq_Install(TIMER_IRQ, timer_isr_handler, smp_processor_id());
 
 	cntfrq = raw_read_cntfrq_el0();
 	ticks = cntfrq/OS_TICKS_PER_SECOND;

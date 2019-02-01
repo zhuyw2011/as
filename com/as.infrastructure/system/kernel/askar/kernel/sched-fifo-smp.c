@@ -276,6 +276,14 @@ void Sched_AddReady(TaskType TaskID)
 	{
 		/* no update of ReadyVar */
 	}
+
+	if(cpuid != oncpu)
+	{
+		if(priority > RunningVars[oncpu]->priority)
+		{
+			Os_PortRequestSchedule(oncpu);
+		}
+	}
 }
 
 void Sched_Preempt(void)
