@@ -18,6 +18,9 @@ if('TRACE' in MODULES):
     objs += Glob('trace/*.c')
     asenv.Append(CPPPATH=['%s/trace'%(cwd)])
 
+if('ARMNN' in MODULES):
+    objs += SConscript('nn/armnn/SConscript')
+
 objs += Glob('ringbuffer/*.c')
 asenv.Append(CPPPATH=['%s/ringbuffer'%(cwd)])
 

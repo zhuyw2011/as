@@ -12,4 +12,8 @@ config TRACE
 	bool "enable the trace library"
 	default n
 
+config ARMNN
+	bool "enable ARM CMSIS NN library"
+	default n
+
 endmenu

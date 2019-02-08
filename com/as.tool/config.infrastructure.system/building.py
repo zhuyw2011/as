@@ -430,6 +430,14 @@ def Download(url, tgt=None):
             RunCommand('wget %s'%(url))
             RunCommand('mv -v %s %s'%(tf, tgt))
 
+def AddPackage(url, ** parameters):
+    global Env
+    pkg = {}
+    pkg['url'] = url
+    for key,v in parameters.items():
+        pkg[key] = v
+    Env['PACKAGES'].append(pkg)
+
 def Package(url, ** parameters):
     if(type(url) == dict):
         parameters = url
@@ -711,7 +719,7 @@ def GetELFEnv(so=True):
     return env
 
 def ForkEnv(father=None):
-    if(father == None):
+    if(father is None):
         father = Env
     child = Environment()
     for key,v in father.items():
