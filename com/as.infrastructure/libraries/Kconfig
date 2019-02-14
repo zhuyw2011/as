@@ -16,4 +16,8 @@ config ARMNN
 	bool "enable ARM CMSIS NN library"
 	default n
 
+config LIBFIXMATH
+	bool "Cross Platform Fixed Point Maths Library"
+	default y
+
 endmenu

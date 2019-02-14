@@ -21,6 +21,9 @@ if('TRACE' in MODULES):
 if('ARMNN' in MODULES):
     objs += SConscript('nn/armnn/SConscript')
 
+if('LIBFIXMATH' in MODULES):
+    AddPackage('https://github.com/autoas/libfixmath.git')
+
 objs += Glob('ringbuffer/*.c')
 asenv.Append(CPPPATH=['%s/ringbuffer'%(cwd)])
 
