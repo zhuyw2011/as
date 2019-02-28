@@ -1133,3 +1133,13 @@ void vfs_init(void)
 
 #endif
 }
+
+#if !defined(__WINDOWS__) && !defined(__LINUX__) && defined (__GNUC__)
+FILE* fopen (const char *filename, const char *opentype) __attribute__((weak, alias("vfs_fopen")));
+int fclose (FILE* stream) __attribute__((weak, alias("vfs_fclose")));
+size_t fread (void *data, size_t size, size_t count, FILE *stream) __attribute__((weak, alias("vfs_fread")));
+size_t fwrite (const void *data, size_t size, size_t count, FILE *stream) __attribute__((weak, alias("vfs_fwrite")));
+int fflush (FILE *stream) __attribute__((weak, alias("vfs_fflush")));
+int fseek (FILE *stream, long int offset, int whence) __attribute__((weak, alias("vfs_fseek")));
+long ftell (FILE *stream) __attribute__((weak, alias("vfs_ftell")));
+#endif
