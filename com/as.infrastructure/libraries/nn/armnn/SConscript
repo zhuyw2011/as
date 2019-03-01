@@ -8,6 +8,7 @@ MODULES = asenv['MODULES']
 objs = []
 
 AddPackage('https://github.com/autoas/CMSIS_5.git')
-AddPackage('https://github.com/autoas/nnom.git')
+if('NNOM' in MODULES):
+    AddPackage('https://github.com/autoas/nnom.git')
 
 Return('objs')
