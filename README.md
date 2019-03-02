@@ -1,14 +1,14 @@
 # as
 automotive software and its tool-chain
 
-[![Build Status](https://travis-ci.org/parai/as.svg?branch=master)](https://travis-ci.org/parai/as)
+[![Build Status](https://travis-ci.org/autoas/as.svg?branch=master)](https://travis-ci.org/autoas/as)
 
 ## why this repository
 Because I am not powerful so I decided to develop tiny but smart part of automotive software based on open source, and create a general AUTOSAR & Automotive Software study environment.
 
 As below picture shows, it was an virtual cluster based on AUTOSAR and can be simulated on Windows and Linux.
 
-![ascore posix vic on AUTOSAR](https://github.com/parai/as/raw/gh-pages/images/ascore_posix_vic.gif)
+![ascore posix vic on AUTOSAR](https://github.com/autoas/as/raw/gh-pages/images/ascore_posix_vic.gif)
 
 ## Key Point
 
@@ -23,11 +23,11 @@ As below picture shows, it was an virtual cluster based on AUTOSAR and can be si
 #### 1.2 AS Mini BSW
 Mainly for the purpose to create a small footprint bootloader with all of the code implemented by me.
 
-* Diagnostic: [CanTpMini](https://github.com/parai/as/blob/master/com/as.infrastructure/communication/CanTp/CanTpMini.c) [DcmMini](https://github.com/parai/as/tree/master/com/as.infrastructure/diagnostic/Dcm/DcmMini.c)
+* Diagnostic: [CanTpMini](https://github.com/autoas/as/blob/master/com/as.infrastructure/communication/CanTp/CanTpMini.c) [DcmMini](https://github.com/autoas/as/tree/master/com/as.infrastructure/diagnostic/Dcm/DcmMini.c)
 
 
 
-### 2. OS [ASKAR](https://github.com/parai/as/tree/master/com/as.infrastructure/system/kernel/askar) - [Automotive oSeK AutosaR](http://parai.github.io/as/autosar/2017/10/27/ASKAR-architecture.html)
+### 2. OS [ASKAR](https://github.com/autoas/as/tree/master/com/as.infrastructure/system/kernel/askar) - [Automotive oSeK AutosaR](http://autoas.github.io/as/autosar/2017/10/27/ASKAR-architecture.html)
 This RTOS ASKAR is designed according to [OSEK/VDX OS223](http://trampolinebin.rts-software.org/os223.pdf) by taking a reference of a lot of other open source RTOS, generally, the bwlow is the list:
 
 * [toppers_osek](https://www.toppers.jp/osek-os.html)
@@ -58,7 +58,7 @@ General supported CPU architecture list:
 ## 3. BSW configuration tool
 > This GUI tool is the one from [OpenSAR](https://github.com/parai/OpenSAR.git) which is also developed by me, the GUI can be automatically created from xml.
 
-![as configure tool](http://parai.github.io/as/images/config.infrastructure.system.gif)
+![as configure tool](http://autoas.github.io/as/images/config.infrastructure.system.gif)
 
 ## 4. AUTOSAR & LINUX communication
 * [virtio](http://docs.oasis-open.org/virtio/virtio/v1.0/csprd01/virtio-v1.0-csprd01.pdf)
@@ -72,13 +72,13 @@ General supported CPU architecture list:
 * a powerful python as.one.py tool: Dcm Xcp Bootloader and others.
 * a powerful third party RTE tool integrated: [cogu/autosar](https://github.com/cogu/autosar)
 
-![as.one.py bootloader](http://parai.github.io/as/images/python3-asone-tool.png)
+![as.one.py bootloader](http://autoas.github.io/as/images/python3-asone-tool.png)
 
 ## 6. Other 3rd part package
 * [LWIP](http://savannah.nongnu.org/projects/lwip/): about text:133Kb, data:11Kb
 * [contiki-net](http://contiki-os.org/): about text:54Kb(including the protothread), data:4Kb
 * [afbinder/websock](https://github.com/automotive-grade-linux/docs-agl/blob/master/docs/app-framework/index.md)
-* qemu PCI sample driver: [asnet](https://github.com/parai/as/blob/master/com/as.tool/qemu/hw/char/asnet.c) [ascan](https://github.com/parai/as/blob/master/com/as.tool/qemu/hw/char/ascan.c) [asblk](https://github.com/parai/as/blob/master/com/as.tool/qemu/hw/char/asblk.c)
+* qemu PCI sample driver: [asnet](https://github.com/autoas/as/blob/master/com/as.tool/qemu/hw/char/asnet.c) [ascan](https://github.com/autoas/as/blob/master/com/as.tool/qemu/hw/char/ascan.c) [asblk](https://github.com/autoas/as/blob/master/com/as.tool/qemu/hw/char/asblk.c)
 * [FatFS](http://elm-chan.org/fsw/ff/00index_e.html)
 * [lwext4](https://github.com/gkostka/lwext4.git)
 * libelf: an OS independent ELF library for ELF loading&executing.
@@ -89,7 +89,7 @@ General supported CPU architecture list:
 
 * [pan.baidu.com asenv.zip](https://pan.baidu.com/s/1NNNiSBCyYsdsvSknBKe3JQ)
 
->Check the page [as-study-platform](http://parai.github.io/as/autosar/2018/02/20/as-study-platform.html) for how to use asenv or how to setup the environment from zero by yourself.
+>Check the page [as-study-platform](http://autoas.github.io/as/autosar/2018/02/20/as-study-platform.html) for how to use asenv or how to setup the environment from zero by yourself.
 
 ## 8. AS USB2CAN device
 
