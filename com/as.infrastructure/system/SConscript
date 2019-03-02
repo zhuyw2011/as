@@ -17,6 +17,10 @@ if('SCHM' in MODULES):
     objs += Glob('SchM/*.c')
     asenv.Append(CPPPATH=['%s/SchM'%(cwd)])
 
+if('DEV' in MODULES):
+    objs += Glob('dev/*.c')
+    asenv.Append(CPPPATH=['%s/dev'%(cwd)])
+
 if('SG' in MODULES):
     objs += Glob('gui/Sg/*.c')
     asenv.Append(CPPPATH=['%s/gui/Sg'%(cwd)])

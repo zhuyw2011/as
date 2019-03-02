@@ -120,7 +120,7 @@ static SHELL_CONST ShellCmdT canIfCmd  = {
 		shellCanIf,
 		1,3,
 		"can",
-		"can info / can write hth canid#data_in_hex_string\n",
+		"can info / can write hth canid#data_in_hex_string",
 		"get can information or request send a CAN message\n"
 		"Example: can write 0 73f#11bb3344556677aa\n",
 		{NULL,NULL}

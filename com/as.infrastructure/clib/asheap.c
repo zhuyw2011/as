@@ -370,7 +370,7 @@ void *pvReturn = NULL;
 	}
 	#endif
 
-	configASSERT( ( ( ( uint32_t ) pvReturn ) & portBYTE_ALIGNMENT_MASK ) == 0 );
+	configASSERT( ( ( ( unsigned long ) pvReturn ) & portBYTE_ALIGNMENT_MASK ) == 0 );
 	return pvReturn;
 }
 /*-----------------------------------------------------------*/
@@ -608,7 +608,7 @@ void* palloc(size_t size)
 }
 #endif
 #ifdef USE_SHELL
-static int memFunc(int argc, char* argv[])
+static int freeFunc(int argc, char* argv[])
 {
 	SHELL_printf("%d%%(%d/%d) free!\n",
 			(int)(((uint64_t)xFreeBytesRemaining*(uint64_t)100)/(uint64_t)sizeof(ucHeap)),
@@ -617,15 +617,15 @@ static int memFunc(int argc, char* argv[])
 	return 0;
 }
 
-static SHELL_CONST ShellCmdT memCmd  = {
-	memFunc,
+static SHELL_CONST ShellCmdT freeCmd  = {
+	freeFunc,
 	0,0,
-	"mem",
-	"mem",
+	"free",
+	"free",
 	"show asheap memory usage information\n",
 	{NULL,NULL}
 };
-SHELL_CMD_EXPORT(memCmd);
+SHELL_CMD_EXPORT(freeCmd);
 #endif
 #endif /* USE_STDRT */
 #endif

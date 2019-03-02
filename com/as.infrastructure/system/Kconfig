@@ -52,6 +52,10 @@ config SHELL
 	default y
 	depends on !RTTHREAD
 
+config DEV
+	bool "Device Manager"
+	default y
+
 config FLASH_CMD
 	bool "Flash erase/write/read commad on shell"
 	default n
