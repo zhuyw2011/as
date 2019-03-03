@@ -109,12 +109,30 @@ static int asblk_close (const device_t* device)
 static int asblk_read  (const device_t* device, size_t pos, void *buffer, size_t size)
 {
 	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
-	return PciBlk_Read(blkid, size, pos, buffer);
+
+	while(size > 0)
+	{
+		PciBlk_Read(blkid,512,pos,buffer);
+		size--;
+		pos++;
+		buffer += 512;
+	}
+
+	return 0;
 }
 static int asblk_write (const device_t* device, size_t pos, const void *buffer, size_t size)
 {
 	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
-	return PciBlk_Write(blkid, size, pos, buffer);
+
+	while(size > 0)
+	{
+		PciBlk_Write(blkid,512,pos,buffer);
+		size--;
+		pos++;
+		buffer += 512;
+	}
+
+	return 0;
 }
 static int asblk_ctrl  (const device_t* device, int cmd,    void *args)
 {
@@ -177,7 +195,13 @@ static rt_size_t rt_asblk_read(rt_device_t dev, rt_off_t position, void *buffer,
     rt_mutex_take(&lock[blkid], RT_WAITING_FOREVER);
 
 
-	PciBlk_Read(blkid,size,position,buffer);
+	while(size > 0)
+	{
+		PciBlk_Read(blkid,512,position,buffer);
+		size--;
+		position++;
+		buffer += 512;
+	}
 
 	rt_mutex_release(&lock[blkid]);
 
@@ -197,8 +221,13 @@ static rt_size_t rt_asblk_write(rt_device_t dev, rt_off_t position, const void *
 
     rt_mutex_take(&lock[blkid], RT_WAITING_FOREVER);
 
-    PciBlk_Write(blkid,size,position,buffer);
-
+	while(size > 0)
+	{
+		PciBlk_Read(blkid,512,position,buffer);
+		size--;
+		position ++;
+		buffer += 512;
+	}
 	rt_mutex_release(&lock[blkid]);
 
     return doSize;
@@ -258,8 +287,6 @@ int PciBlk_Read(uint32_t blkid, uint32_t blksz, uint32_t blknbr, uint8_t* data)
 
 	asAssert(__iobase);
 
-	blksz = blksz*512;
-
 	Irq_Save(mask);
 	writel(__iobase+REG_BLKID, blkid);
 	writel(__iobase+REG_BLKSZ, blksz);
@@ -280,8 +307,6 @@ int PciBlk_Write(uint32_t blkid, uint32_t blksz, uint32_t blknbr, const uint8_t*
 	imask_t mask;
 
 	asAssert(__iobase);
-
-	blksz = blksz*512;
 
 	Irq_Save(mask);
 	writel(__iobase+REG_BLKID, blkid);
