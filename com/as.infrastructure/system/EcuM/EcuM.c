@@ -99,6 +99,9 @@
 #ifdef USE_LWEXT4
 extern void ext_mount(void);
 #endif
+#ifdef USE_DEV
+#include "device.h"
+#endif
 #ifdef USE_VFS
 extern void vfs_init(void);
 #endif
@@ -263,6 +266,9 @@ void EcuM_StartupTwo(void)
 	ext_mount();
 #endif
 #endif /* USE_STDRT */
+#ifdef USE_DEV
+	device_init();
+#endif
 #ifdef USE_VFS
 	vfs_init();
 #endif

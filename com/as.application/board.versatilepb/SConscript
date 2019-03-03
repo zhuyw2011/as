@@ -50,7 +50,7 @@ if((asenv['MODULES'] != None) and ('RTTHREAD' in asenv['MODULES'])):
     MODULES += ['CLIB_STDIO_PRINTF']
     MODULES += ['CLIB_STDIO_CAN']
 else:
-    MODULES += ['FATFS','LWEXT4','VFS',
+    MODULES += ['FATFS','LWEXT4','VFS','DEV',
        'CLIB_ASHEAP','CLIB_MISCLIB',
        'CLIB_MBOX','CLIB_QSORT',
        'CLIB_STDIO_PRINTF','CLIB_STDIO_CAN',

@@ -29,22 +29,180 @@
 #include "ext4_errno.h"
 #include "file_dev.h"
 #endif
-
+#ifdef USE_DEV
+#include "device.h"
+#endif
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_FATFS 0
 #define AS_LOG_EXTFS 0
+#define AS_LOG_BLKDEV 0
 /* Definitions of physical drive number for each drive */
 #define DEV_MMC		0	/* Example: Map MMC/SD card to physical drive 0 : default */
 #define DEV_RAM		1	/* Example: Map Ramdisk to physical drive 1 */
 #define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
-#define EXTFS_IMG	"ExtFs.img"
+#define EXTFS_IMG	"asblk1.img"
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
+#ifdef USE_DEV
+static int asblk_open  (const device_t* device);
+static int asblk_close (const device_t* device);
+static int asblk_read  (const device_t* device, size_t pos, void *buffer, size_t size);
+static int asblk_write (const device_t* device, size_t pos, const void *buffer, size_t size);
+static int asblk_ctrl  (const device_t* device, int cmd,    void *args);
+#endif
 /* ============================ [ DATAS     ] ====================================================== */
-const char* FATFS_IMG = "FatFs.img";
+const char* FATFS_IMG = "asblk0.img";
+#ifdef USE_DEV
+const device_t device_asblk0 = {
+	"asblk0",
+	{
+		asblk_open,
+		asblk_close,
+		asblk_read,
+		asblk_write,
+		asblk_ctrl,
+	},
+	(void*) 0
+};
+
+const device_t device_asblk1 = {
+	"asblk1",
+	{
+		asblk_open,
+		asblk_close,
+		asblk_read,
+		asblk_write,
+		asblk_ctrl,
+	},
+	(void*) 1
+};
+#endif
 /* ============================ [ LOCALS    ] ====================================================== */
+#ifdef USE_DEV
+static int asblk_open  (const device_t* device)
+{
+	char name[64];
+	FILE* fp;
+	uint8_t *data;
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
+
+	snprintf(name, sizeof(name), "asblk%d.img", blkid);
+	fp = fopen(name,"rb");
+	if(NULL == fp)
+	{
+		fp = fopen(name,"wb+");
+		asAssert(fp);
+		data = malloc(1024*1024);
+		asAssert(data);
+		memset(data, 0xFF, 1024*1024);
+		for(int i=0;i<32;i++)
+		{
+			fwrite(data,1,1024*1024,fp);
+		}
+		free(data);
+		fclose(fp);
+		ASLOG(BLKDEV,"simulation on new created 32Mb %s\n", name);
+	}
+	else
+	{
+		ASLOG(BLKDEV,"simulation on old %s\n", name);
+		fclose(fp);
+	}
+
+	return 0;
+}
+
+static int asblk_close (const device_t* device)
+{
+	return 0;
+}
+
+static int asblk_read  (const device_t* device, size_t pos, void *buffer, size_t size)
+{
+	int res = 0;
+	int len;
+	char name[64];
+	FILE* fp;
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
+
+	snprintf(name, sizeof(name), "asblk%d.img", blkid);
+	fp=fopen(name,"rb");
+	asAssert(fp);
+	fseek(fp,512*pos,SEEK_SET);
+	len=fread(buffer,sizeof(char),size*512,fp);
+	if(len!=size*512)
+	{
+		res= -1;
+	}
+	fclose(fp);
+	return res;
+}
+
+static int asblk_write (const device_t* device, size_t pos, const void *buffer, size_t size)
+{
+	int res = 0;
+	int len;
+	char name[64];
+	FILE* fp;
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
+
+	snprintf(name, sizeof(name), "asblk%d.img", blkid);
+	fp=fopen(name,"rb+");
+	asAssert(fp);
+	fseek(fp,512*pos,SEEK_SET);
+	len=fwrite(buffer,sizeof(char),size*512,fp);
+	if(len!=size*512)
+	{
+		res= -1;
+	}
+	fclose(fp);
+	return res;
+}
+
+static int asblk_ctrl  (const device_t* device, int cmd,    void *args)
+{
+	char name[64];
+	FILE* fp;
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
+	size_t size;
+	int ercd = 0;
+
+	snprintf(name, sizeof(name), "asblk%d.img", blkid);
+	switch(cmd)
+	{
+		case DEVICE_CTRL_GET_SECTOR_SIZE:
+			*(size_t*)args = 512;
+			break;
+		case DEVICE_CTRL_GET_BLOCK_SIZE:
+			*(size_t*)args = 4096;
+			break;
+		case DEVICE_CTRL_GET_SECTOR_COUNT:
+			fp = fopen(name,"rb");
+			asAssert(fp);
+			fseek(fp, 0L, SEEK_END);
+			size = ftell(fp);
+			fclose(fp);
+			*(size_t*)args = size/512;
+			break;
+		case DEVICE_CTRL_GET_DISK_SIZE:
+			fp = fopen(name,"rb");
+			asAssert(fp);
+			fseek(fp, 0L, SEEK_END);
+			size = ftell(fp);
+			fclose(fp);
+			*(size_t*)args = size;
+		break;
+		default:
+			ercd = EINVAL;
+			break;
+	}
+
+	return ercd;
+}
+#endif
 /* ============================ [ FUNCTIONS ] ====================================================== */
 #ifdef USE_FATFS
+#ifndef USE_DEV
 DSTATUS disk_status (
 	BYTE pdrv		/* Physical drive nmuber to identify the drive */
 )
@@ -237,8 +395,10 @@ DWORD get_fattime (void)
 	return time(0);
 }
 #endif
+#endif
 
 #ifdef USE_LWEXT4
+#ifndef USE_DEV
 void ext_mount(void)
 {
     int rc;
@@ -299,7 +459,7 @@ void ext_mount(void)
 
     ASLOG(EXTFS, "mount ext4 device " EXTFS_IMG " on '/' OK\n");
 }
-
+#endif
 int __weak fseeko (FILE *stream, off_t offset, int whence)
 {
 	return fseek(stream, offset, whence);

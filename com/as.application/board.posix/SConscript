@@ -77,7 +77,7 @@ if(os.getenv('VSOMEIP')=='YES'):
 else:
     MODULES += ['SD']
 
-MODULES += ['FATFS','LWEXT4','VFS','FTP']
+MODULES += ['FATFS','LWEXT4','VFS','FTP','DEV']
 
 if(IsPlatformWindows()):
     MODULES += ['CLIB_STRTOK_R']

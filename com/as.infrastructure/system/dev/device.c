@@ -84,6 +84,7 @@ int device_unregister(const device_t* device)
 		if(device == devL->dev)
 		{
 			TAILQ_REMOVE(&device_list, devL, entry);
+			free(devL);
 			break;
 		}
 	}

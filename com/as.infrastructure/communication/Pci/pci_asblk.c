@@ -14,9 +14,6 @@
  */
 #ifdef USE_PCI
 /* ============================ [ INCLUDES  ] ====================================================== */
-#ifdef USE_FATFS
-#include "diskio.h"
-#endif
 #include "Std_Types.h"
 #include "pci_core.h"
 #include "asdebug.h"
@@ -25,17 +22,11 @@
 #include "rthw.h"
 #endif
 
-#ifdef USE_LWEXT4
-#include <ext4.h>
-#include <ext4_mkfs.h>
-#include <ext4_config.h>
-#include <ext4_blockdev.h>
-#include <ext4_errno.h>
+#ifdef USE_DEV
+#include "device.h"
 #endif
 
 /* ============================ [ MACROS    ] ====================================================== */
-#define AS_LOG_FATFS 0
-#define AS_LOG_EXTFS 1
 /* Definitions of physical drive number for each drive */
 #define DEV_MMC		0	/* Example: Map MMC/SD card to physical drive 0 : default */
 #define DEV_RAM		1	/* Example: Map Ramdisk to physical drive 1 */
@@ -58,105 +49,102 @@ enum{
 	REG_CMD       = 0x18,
 };
 
-#define EXTFS_IMG	"ExtFs.img"
-#define EXT4_FILEDEV_BSIZE 4096
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
-#ifdef USE_LWEXT4
-static int blockdev_open(struct ext4_blockdev *bdev);
-static int blockdev_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id,
-			 uint32_t blk_cnt);
-static int blockdev_bwrite(struct ext4_blockdev *bdev, const void *buf,
-			  uint64_t blk_id, uint32_t blk_cnt);
-static int blockdev_close(struct ext4_blockdev *bdev);
-static int blockdev_lock(struct ext4_blockdev *bdev);
-static int blockdev_unlock(struct ext4_blockdev *bdev);
-#endif
-
 int PciBlk_Init(uint32_t blkid);
 int PciBlk_Read(uint32_t blkid, uint32_t blksz, uint32_t blknbr, uint8_t* data);
 int PciBlk_Write(uint32_t blkid, uint32_t blksz, uint32_t blknbr, const uint8_t* data);
 int PciBlk_Size(uint32_t blkid, uint32_t *size);
+
+static int asblk_open  (const device_t* device);
+static int asblk_close (const device_t* device);
+static int asblk_read  (const device_t* device, size_t pos, void *buffer, size_t size);
+static int asblk_write (const device_t* device, size_t pos, const void *buffer, size_t size);
+static int asblk_ctrl  (const device_t* device, int cmd,    void *args);
 /* ============================ [ DATAS     ] ====================================================== */
 static pci_dev *pdev = NULL;
 static void* __iobase= NULL;
-#ifdef USE_LWEXT4
-EXT4_BLOCKDEV_STATIC_INSTANCE(ext4_blkdev, EXT4_FILEDEV_BSIZE, 0, blockdev_open,
-			      blockdev_bread, blockdev_bwrite, blockdev_close,
-			      blockdev_lock, blockdev_unlock);
-#endif
 
 #ifdef RT_USING_DFS
 static struct rt_device devF[IMG_MAX];
 static struct rt_mutex lock[IMG_MAX];
 static struct rt_semaphore sem[IMG_MAX];
 #endif /* RT_USING_DFS */
+
+const device_t device_asblk0 = {
+	"asblk0",
+	{
+		asblk_open,
+		asblk_close,
+		asblk_read,
+		asblk_write,
+		asblk_ctrl,
+	},
+	(void*) 0
+};
+
+const device_t device_asblk1 = {
+	"asblk1",
+	{
+		asblk_open,
+		asblk_close,
+		asblk_read,
+		asblk_write,
+		asblk_ctrl,
+	},
+	(void*) 1
+};
 /* ============================ [ LOCALS    ] ====================================================== */
-#ifdef USE_LWEXT4
-static int blockdev_open(struct ext4_blockdev *bdev)
+
+static int asblk_open  (const device_t* device)
 {
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
+	return PciBlk_Init(blkid);
+}
+
+static int asblk_close (const device_t* device)
+{
+	return 0;
+}
+static int asblk_read  (const device_t* device, size_t pos, void *buffer, size_t size)
+{
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
+	return PciBlk_Read(blkid, size, pos, buffer);
+}
+static int asblk_write (const device_t* device, size_t pos, const void *buffer, size_t size)
+{
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
+	return PciBlk_Write(blkid, size, pos, buffer);
+}
+static int asblk_ctrl  (const device_t* device, int cmd,    void *args)
+{
+	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
 	uint32_t size;
+	int ercd = 0;
 
-	PciBlk_Init(IMG_EXT4);
-
-	PciBlk_Size(IMG_EXT4, &size);
-
-	bdev->part_offset = 0;
-	bdev->part_size = size;
-	bdev->bdif->ph_bcnt = bdev->part_size / bdev->bdif->ph_bsize;
-
-	return 0;
-
-}
-
-static int blockdev_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id,
-			 uint32_t blk_cnt)
-{
-	while(blk_cnt > 0)
+	switch(cmd)
 	{
-		PciBlk_Read(IMG_EXT4,bdev->bdif->ph_bsize,blk_id,buf);
-		blk_cnt--;
-		blk_id ++;
-		buf += bdev->bdif->ph_bsize;
+		case DEVICE_CTRL_GET_SECTOR_SIZE:
+			*(size_t*)args = 512;
+			break;
+		case DEVICE_CTRL_GET_BLOCK_SIZE:
+			*(size_t*)args = 4096;
+			break;
+		case DEVICE_CTRL_GET_SECTOR_COUNT:
+			ercd = PciBlk_Size(blkid, &size);
+			*(size_t*)args = size/512;
+			break;
+		case DEVICE_CTRL_GET_DISK_SIZE:
+			ercd = PciBlk_Size(blkid, &size);
+			*(size_t*)args = size;
+		break;
+		default:
+			ercd = EINVAL;
+			break;
 	}
-	return 0;
-}
 
-
-static int blockdev_bwrite(struct ext4_blockdev *bdev, const void *buf,
-			  uint64_t blk_id, uint32_t blk_cnt)
-{
-	while(blk_cnt > 0)
-	{
-		PciBlk_Write(IMG_EXT4,bdev->bdif->ph_bsize,blk_id,buf);
-		blk_cnt--;
-        blk_id++;
-		buf += bdev->bdif->ph_bsize;
-	}
-	return 0;
+	return ercd;
 }
-
-static int blockdev_close(struct ext4_blockdev *bdev)
-{
-	return 0;
-}
-
-static int blockdev_lock(struct ext4_blockdev *bdev)
-{
-	return 0;
-}
-
-static int blockdev_unlock(struct ext4_blockdev *bdev)
-{
-	return 0;
-}
-
-/******************************************************************************/
-struct ext4_blockdev *ext4_blockdev_get(void)
-{
-	return &ext4_blkdev;
-}
-#endif
 
 #ifdef RT_USING_DFS
 static rt_err_t rt_asblk_init_internal(rt_device_t dev)
@@ -188,13 +176,8 @@ static rt_size_t rt_asblk_read(rt_device_t dev, rt_off_t position, void *buffer,
 
     rt_mutex_take(&lock[blkid], RT_WAITING_FOREVER);
 
-	while(size > 0)
-	{
-		PciBlk_Read(blkid,512,position,buffer);
-		size--;
-        position ++;
-		buffer += 512;
-	}
+
+	PciBlk_Read(blkid,size,position,buffer);
 
 	rt_mutex_release(&lock[blkid]);
 
@@ -214,13 +197,7 @@ static rt_size_t rt_asblk_write(rt_device_t dev, rt_off_t position, const void *
 
     rt_mutex_take(&lock[blkid], RT_WAITING_FOREVER);
 
-	while(size > 0)
-	{
-		PciBlk_Write(blkid,512,position,buffer);
-		size--;
-        position++;
-		buffer += 512;
-	}
+    PciBlk_Write(blkid,size,position,buffer);
 
 	rt_mutex_release(&lock[blkid]);
 
@@ -281,6 +258,8 @@ int PciBlk_Read(uint32_t blkid, uint32_t blksz, uint32_t blknbr, uint8_t* data)
 
 	asAssert(__iobase);
 
+	blksz = blksz*512;
+
 	Irq_Save(mask);
 	writel(__iobase+REG_BLKID, blkid);
 	writel(__iobase+REG_BLKSZ, blksz);
@@ -301,6 +280,8 @@ int PciBlk_Write(uint32_t blkid, uint32_t blksz, uint32_t blknbr, const uint8_t*
 	imask_t mask;
 
 	asAssert(__iobase);
+
+	blksz = blksz*512;
 
 	Irq_Save(mask);
 	writel(__iobase+REG_BLKID, blkid);
@@ -332,225 +313,6 @@ int PciBlk_Size(uint32_t blkid, uint32_t *size)
 
 	return 0;
 }
-#ifndef USE_STDRT
-#ifdef USE_FATFS
-DSTATUS disk_status (
-	BYTE pdrv		/* Physical drive nmuber to identify the drive */
-)
-{
-	DSTATUS stat = STA_NOINIT;
-
-	ASLOG(FATFS,"%s %d\n",__func__,pdrv);
-
-	switch (pdrv) {
-	case DEV_RAM :
-		break;
-
-	case DEV_MMC :
-		stat = RES_OK;
-		break;
-
-	case DEV_USB :
-		break;
-	}
-	return stat;
-}
-
-DSTATUS disk_initialize (
-	BYTE pdrv				/* Physical drive nmuber to identify the drive */
-)
-{
-	DSTATUS stat = STA_NOINIT;
-	ASLOG(FATFS,"%s %d\n",__func__,pdrv);
-	switch (pdrv) {
-	case DEV_RAM :
-		break;
-
-	case DEV_MMC :
-	{
-		if( 0 == PciBlk_Init(IMG_FATFS))
-		{
-			stat = 0;
-		}
-		else
-		{
-			stat = STA_NODISK;
-		}
-		break;
-	}
-	case DEV_USB :
-		break;
-	}
-	return stat;
-}
-
-DRESULT disk_read (
-	BYTE pdrv,		/* Physical drive nmuber to identify the drive */
-	BYTE *buff,		/* Data buffer to store read data */
-	DWORD sector,	/* Start sector in LBA */
-	UINT count		/* Number of sectors to read */
-)
-{
-	DRESULT res = RES_PARERR;
-	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
-	switch (pdrv) {
-	case DEV_RAM :
-		break;
-
-	case DEV_MMC :
-	{
-		res = RES_OK;
-		while((RES_OK == res) && (count > 0))
-		{
-			if(0 != PciBlk_Read(IMG_FATFS,512,sector,buff))
-			{
-				res = RES_ERROR;
-			}
-			count --;
-			buff += 512;
-			sector ++;
-		};
-		break;
-	}
-
-	case DEV_USB :
-		break;
-	}
-
-	return res;
-}
-
-DRESULT disk_write (
-	BYTE pdrv,			/* Physical drive nmuber to identify the drive */
-	const BYTE *buff,	/* Data to be written */
-	DWORD sector,		/* Start sector in LBA */
-	UINT count			/* Number of sectors to write */
-)
-{
-	DRESULT res = RES_PARERR;
-	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
-	switch (pdrv) {
-	case DEV_RAM :
-		break;
-
-	case DEV_MMC :
-	{
-		res = RES_OK;
-		while((RES_OK == res) && (count > 0))
-		{
-			if(0 != PciBlk_Write(IMG_FATFS,512,sector,buff))
-			{
-				res = RES_ERROR;
-			}
-			count --;
-			buff += 512;
-			sector++;
-		};
-		break;
-	}
-	case DEV_USB :
-		break;
-	}
-
-	return res;
-}
-
-DRESULT disk_ioctl (
-	BYTE pdrv,		/* Physical drive nmuber (0..) */
-	BYTE cmd,		/* Control code */
-	void *buff		/* Buffer to send/receive control data */
-)
-{
-	DRESULT res = RES_PARERR;
-	ASLOG(FATFS,"%s %d %d\n",__func__,pdrv,cmd);
-	switch (pdrv) {
-	case DEV_RAM :
-		break;
-
-	case DEV_MMC :
-	{
-		switch (cmd) {
-		case CTRL_SYNC:
-			res = RES_OK;
-			break;
-
-		case GET_SECTOR_COUNT:
-		{
-			if(0 == PciBlk_Size(IMG_FATFS,buff))
-			{
-				*(DWORD*)buff = *(DWORD*)buff/512;
-				res = RES_OK;
-			}
-			break;
-		}
-		case GET_SECTOR_SIZE:
-		{
-			*(DWORD*)buff = 512;
-			res = RES_OK;
-			break;
-		}
-		case GET_BLOCK_SIZE:
-			if(0 == PciBlk_Size(IMG_FATFS,buff))
-			{
-				res = RES_OK;
-			}
-			break;
-		}
-		break;
-	}
-	case DEV_USB :
-		break;
-	}
-
-	return res;
-}
-
-DWORD get_fattime (void)
-{
-	return 0;
-}
-
-#endif /* USE_FATFS */
-#endif /* USE_STDRT */
-
-#ifdef USE_LWEXT4
-void ext_mount(void)
-{
-	int rc;
-
-	rc = ext4_device_register(&ext4_blkdev, EXTFS_IMG);
-	if(rc != EOK)
-	{
-		ASLOG(EXTFS, "register ext4 device failed\n");
-	}
-
-	rc = ext4_mount(EXTFS_IMG, "/", false);
-	if (rc != EOK)
-	{
-		static struct ext4_fs fs;
-		static struct ext4_mkfs_info info = {
-			.block_size = EXT4_FILEDEV_BSIZE,
-			.journal = true,
-		};
-		ASWARNING("ExtFs is invalid, do mkfs!\n");
-		rc = ext4_mkfs(&fs, &ext4_blkdev, &info, F_SET_EXT4);
-		if (rc != EOK)
-		{
-			printf("ext4_mkfs error: %d\n", rc);
-		}
-		else
-		{
-			rc = ext4_mount(EXTFS_IMG, "/", false);
-			if (rc != EOK)
-			{
-				ASLOG(EXTFS, "mount ext4 device failed\n");
-			}
-		}
-	}
-
-	ASLOG(EXTFS, "mount ext4 device " EXTFS_IMG " on / OK\n");
-}
-#endif
 
 #ifdef RT_USING_DFS
 void rt_hw_asblk_init(int blkid)

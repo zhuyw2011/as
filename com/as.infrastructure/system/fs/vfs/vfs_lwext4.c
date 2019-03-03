@@ -16,14 +16,70 @@
 /* ============================ [ INCLUDES  ] ====================================================== */
 #include "vfs.h"
 #include "ext4.h"
+#include "ext4_mkfs.h"
 #include "asdebug.h"
+#include "device.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_LWEXT 0
+#define AS_LOG_LWEXTE 1
 #define TO_LWEXT_PATH(f) (&((f)[4]))
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern const struct vfs_filesystem_ops lwext_ops;
+extern const device_t device_asblk1;
+
+static int blockdev_open(struct ext4_blockdev *bdev);
+static int blockdev_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id,
+			 uint32_t blk_cnt);
+static int blockdev_bwrite(struct ext4_blockdev *bdev, const void *buf,
+			  uint64_t blk_id, uint32_t blk_cnt);
+static int blockdev_close(struct ext4_blockdev *bdev);
+static int blockdev_lock(struct ext4_blockdev *bdev);
+static int blockdev_unlock(struct ext4_blockdev *bdev);
 /* ============================ [ DATAS     ] ====================================================== */
+static const device_t* lwext_device_table[CONFIG_EXT4_BLOCKDEVS_COUNT] = {
+	&device_asblk1,
+};
+
+static size_t disk_sector_size[CONFIG_EXT4_BLOCKDEVS_COUNT] = {0};
+
+EXT4_BLOCKDEV_STATIC_INSTANCE(ext4_blkdev0, 4096, 0, blockdev_open,
+			      blockdev_bread, blockdev_bwrite, blockdev_close,
+			      blockdev_lock, blockdev_unlock);
+
+#if CONFIG_EXT4_BLOCKDEVS_COUNT > 1
+EXT4_BLOCKDEV_STATIC_INSTANCE(ext4_blkdev1, 4096, 0, blockdev_open,
+			      blockdev_bread, blockdev_bwrite, blockdev_close,
+			      blockdev_lock, blockdev_unlock);
+#endif
+#if CONFIG_EXT4_BLOCKDEVS_COUNT > 2
+EXT4_BLOCKDEV_STATIC_INSTANCE(ext4_blkdev2, 4096, 0, blockdev_open,
+			      blockdev_bread, blockdev_bwrite, blockdev_close,
+			      blockdev_lock, blockdev_unlock);
+#endif
+#if CONFIG_EXT4_BLOCKDEVS_COUNT > 3
+EXT4_BLOCKDEV_STATIC_INSTANCE(ext4_blkdev3, 4096, 0, blockdev_open,
+			      blockdev_bread, blockdev_bwrite, blockdev_close,
+			      blockdev_lock, blockdev_unlock);
+#endif
+
+#if CONFIG_EXT4_BLOCKDEVS_COUNT > 4
+#error vfs_lwext4 by default support only 4 partitions!
+#endif
+
+static struct ext4_blockdev * const ext4_blkdev_list[CONFIG_EXT4_BLOCKDEVS_COUNT] =
+{
+	&ext4_blkdev0,
+#if CONFIG_EXT4_BLOCKDEVS_COUNT > 1
+	&ext4_blkdev1,
+#endif
+#if CONFIG_EXT4_BLOCKDEVS_COUNT > 2
+	&ext4_blkdev2,
+#endif
+#if CONFIG_EXT4_BLOCKDEVS_COUNT > 3
+	&ext4_blkdev3,
+#endif
+};
 /* ============================ [ LOCALS    ] ====================================================== */
 static VFS_FILE* lwext_fopen (const char *filename, const char *opentype)
 {
@@ -212,7 +268,7 @@ static VFS_DIR * lwext_opendir (const char *dirname)
 				free(dir->priv);
 				free(dir);
 				dir = NULL;
-				ASLOG(LWEXT, "opendir failed!(%d)\n", r);
+				ASLOG(LWEXT, "opendir(%s) failed!(%d)\n", p, r);
 			}
 		}
 		else
@@ -222,6 +278,7 @@ static VFS_DIR * lwext_opendir (const char *dirname)
 		}
 	}
 
+	asAssert(dir);
 	return dir;
 
 }
@@ -316,6 +373,163 @@ static int lwext_rename (const char *oldname, const char *newname)
 	return r;
 }
 
+
+
+void ext_mount(void)
+{
+	int rc;
+	struct ext4_blockdev * bd;
+	const device_t* device = lwext_device_table[0];
+	bd = ext4_blkdev_list[0];
+
+	rc = ext4_device_register(bd, device->name);
+	if(rc != EOK)
+	{
+		ASLOG(ERROR, "register ext4 device failed\n");
+	}
+
+	rc = ext4_mount(device->name, "/", false);
+	if (rc != EOK)
+	{
+		static struct ext4_fs fs;
+		static struct ext4_mkfs_info info = {
+			.block_size = 4096,
+			.journal = TRUE,
+		};
+
+		ASWARNING("%s is invalid, do mkfs!\n", device->name);
+
+		rc = ext4_mkfs(&fs, bd, &info, F_SET_EXT4);
+		if (rc != EOK)
+		{
+			ASLOG(ERROR,"ext4_mkfs error: %d\n", rc);
+		}
+		else
+		{
+			rc = ext4_mount(device->name, "/", false);
+			if (rc != EOK)
+			{
+				ASLOG(ERROR, "mount ext4 device failed\n");
+			}
+		}
+	}
+
+	ASLOG(LWEXT, "mount ext4 device %s on '/' OK\n", device->name);
+}
+
+
+static int get_bdev(struct ext4_blockdev * bdev)
+{
+	int index;
+	int ret = -1;
+
+	for (index = 0; index < CONFIG_EXT4_BLOCKDEVS_COUNT; index ++)
+	{
+		if (ext4_blkdev_list[index] == bdev){
+			ret = index;
+			break;
+		}
+	}
+
+	return ret;
+}
+
+static int blockdev_open(struct ext4_blockdev *bdev)
+{
+	size_t size;
+	int index;
+	int ret = -1;
+	const device_t *device;
+
+	index = get_bdev(bdev);
+
+	if(index >= 0)
+	{
+		device = lwext_device_table[index];
+		if( (device != NULL) &&
+			(device->ops.open != NULL) &&
+			(device->ops.ctrl != NULL) )
+		{
+			ret = device->ops.open(device);
+			ret += device->ops.ctrl(device, DEVICE_CTRL_GET_SECTOR_SIZE, &disk_sector_size[index]);
+			ret += device->ops.ctrl(device, DEVICE_CTRL_GET_DISK_SIZE, &size);
+		}
+	}
+
+	if(0 == ret)
+	{
+		bdev->part_offset = 0;
+		bdev->part_size = size;
+		bdev->bdif->ph_bcnt = bdev->part_size / bdev->bdif->ph_bsize;
+	}
+
+	return ret;
+
+}
+
+static int blockdev_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id,
+			 uint32_t blk_cnt)
+{
+	int index;
+	int ret = -1;
+	const device_t *device;
+
+	index = get_bdev(bdev);
+
+	if(index >= 0)
+	{
+		device = lwext_device_table[index];
+		if( (device != NULL) &&
+			(device->ops.read != NULL) )
+		{
+			ret = device->ops.read(device,
+					blk_id*(bdev->bdif->ph_bsize/disk_sector_size[index]),
+					buf, blk_cnt*(bdev->bdif->ph_bsize/disk_sector_size[index]));
+		}
+	}
+
+	return ret;
+}
+
+
+static int blockdev_bwrite(struct ext4_blockdev *bdev, const void *buf,
+			  uint64_t blk_id, uint32_t blk_cnt)
+{
+	int index;
+	int ret = -1;
+	const device_t *device;
+
+	index = get_bdev(bdev);
+
+	if(index >= 0)
+	{
+		device = lwext_device_table[index];
+		if( (device != NULL) &&
+			(device->ops.write != NULL) )
+		{
+			ret = device->ops.write(device,
+					blk_id*(bdev->bdif->ph_bsize/disk_sector_size[index]),
+					buf, blk_cnt*(bdev->bdif->ph_bsize/disk_sector_size[index]));
+		}
+	}
+
+	return ret;
+}
+
+static int blockdev_close(struct ext4_blockdev *bdev)
+{
+	return 0;
+}
+
+static int blockdev_lock(struct ext4_blockdev *bdev)
+{
+	return 0;
+}
+
+static int blockdev_unlock(struct ext4_blockdev *bdev)
+{
+	return 0;
+}
 /* ============================ [ FUNCTIONS ] ====================================================== */
 const struct vfs_filesystem_ops lwext_ops =
 {

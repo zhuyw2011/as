@@ -1,12 +1,12 @@
 menu "File System"
 config FATFS
 	bool "FATFS File System"
-	depends on FATFS_DRV
+	depends on FATFS_DRV && DEV
 	default y
 
 config LWEXT4
 	bool "LWEXT4 File System"
-	depends on LWEXT4_DRV
+	depends on LWEXT4_DRV && DEV
 	default y
 
 config VFS

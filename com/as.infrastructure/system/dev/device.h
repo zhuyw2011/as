@@ -21,6 +21,11 @@
 #include <sys/queue.h>
 #include <errno.h>
 /* ============================ [ MACROS    ] ====================================================== */
+/* controls for block devices */
+#define DEVICE_CTRL_GET_SECTOR_SIZE  0
+#define DEVICE_CTRL_GET_BLOCK_SIZE   1
+#define DEVICE_CTRL_GET_SECTOR_COUNT 2
+#define DEVICE_CTRL_GET_DISK_SIZE    3
 /* ============================ [ TYPES     ] ====================================================== */
 typedef struct device device_t;
 
@@ -35,8 +40,8 @@ typedef struct
 
 struct device
 {
-	const device_ops_t ops;
 	const char* name;
+	const device_ops_t ops;
 	void* priv;
 };
 /* ============================ [ DECLARES  ] ====================================================== */

@@ -18,6 +18,7 @@
 #undef _WIN32
 #endif
 #include "ff.h"
+#include "diskio.h"
 #ifdef __WINDOWS__
 #define _WIN32
 #endif
@@ -32,17 +33,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include "asdebug.h"
+#include "device.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_FATFS 0
 #define TO_FATFS_PATH(f) (&((f)[5]))
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern const struct vfs_filesystem_ops fatfs_ops;
+extern const device_t device_asblk0;
 /* ============================ [ DATAS     ] ====================================================== */
 /* dirent that will be given to callers;
  * note: both APIs assume that only one dirent ever exists
  */
 static vfs_dirent_t dir_ent;
+
+static const device_t* fatfs_device_table[FF_VOLUMES] = {
+	&device_asblk0,
+};
 /* ============================ [ LOCALS    ] ====================================================== */
 static VFS_FILE* fatfs_fopen (const char *filename, const char *opentype)
 {
@@ -426,4 +433,137 @@ const struct vfs_filesystem_ops fatfs_ops =
 	.rmdir = fatfs_rmdir,
 	.rename = fatfs_rename
 };
+
+
+DSTATUS disk_status (
+	BYTE pdrv		/* Physical drive nmuber to identify the drive */
+)
+{
+	DSTATUS stat = STA_NOINIT;
+	const device_t* device;
+
+	if(pdrv < FF_VOLUMES)
+	{
+		device = fatfs_device_table[pdrv];
+		if(device != NULL)
+		{
+			stat = RES_OK;
+		}
+	}
+	return stat;
+}
+
+
+DSTATUS disk_initialize (
+	BYTE pdrv				/* Physical drive nmuber to identify the drive */
+)
+{
+	DSTATUS stat = STA_NOINIT;
+	const device_t* device;
+
+	ASLOG(FATFS,"%s %d\n",__func__,pdrv);
+
+	if(pdrv < FF_VOLUMES)
+	{
+		device = fatfs_device_table[pdrv];
+		if((device != NULL) && (device->ops.open != NULL))
+		{
+			stat = device->ops.open(device);
+		}
+	}
+	return stat;
+}
+
+DRESULT disk_read (
+	BYTE pdrv,		/* Physical drive nmuber to identify the drive */
+	BYTE *buff,		/* Data buffer to store read data */
+	DWORD sector,	/* Start sector in LBA */
+	UINT count		/* Number of sectors to read */
+)
+{
+	DRESULT res = RES_PARERR;
+	const device_t* device;
+	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
+
+	if(pdrv < FF_VOLUMES)
+	{
+		device = fatfs_device_table[pdrv];
+		if((device != NULL) && (device->ops.read != NULL))
+		{
+			res = (DRESULT)device->ops.read(device, sector, buff, count);
+		}
+	}
+	return res;
+}
+
+DRESULT disk_write (
+	BYTE pdrv,			/* Physical drive nmuber to identify the drive */
+	const BYTE *buff,	/* Data to be written */
+	DWORD sector,		/* Start sector in LBA */
+	UINT count			/* Number of sectors to write */
+)
+{
+	DRESULT res = RES_PARERR;
+	const device_t* device;
+	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
+
+	if(pdrv < FF_VOLUMES)
+	{
+		device = fatfs_device_table[pdrv];
+		if((device != NULL) && (device->ops.write != NULL))
+		{
+			res = (DRESULT)device->ops.write(device, sector, buff, count);
+		}
+	}
+
+	return res;
+}
+
+DRESULT disk_ioctl (
+	BYTE pdrv,		/* Physical drive nmuber (0..) */
+	BYTE cmd,		/* Control code */
+	void *buff		/* Buffer to send/receive control data */
+)
+{
+	DRESULT res = RES_PARERR;
+	const device_t* device;
+	size_t sz;
+	ASLOG(FATFS,"%s %d %d\n",__func__,pdrv,cmd);
+
+	if(pdrv < FF_VOLUMES)
+	{
+		device = fatfs_device_table[pdrv];
+		if((device != NULL) && (device->ops.ctrl != NULL))
+		{
+			switch (cmd) {
+				case CTRL_SYNC:
+					res = RES_OK;
+					break;
+
+				case GET_SECTOR_COUNT:
+				{
+					res = (DRESULT)device->ops.ctrl(device, DEVICE_CTRL_GET_SECTOR_COUNT, &sz);
+					*(DWORD*)buff = sz;
+					break;
+				}
+				case GET_SECTOR_SIZE:
+					res = (DRESULT)device->ops.ctrl(device, DEVICE_CTRL_GET_SECTOR_SIZE, &sz);
+					*(DWORD*)buff = sz;
+					break;
+
+				case GET_BLOCK_SIZE:
+					res = (DRESULT)device->ops.ctrl(device, DEVICE_CTRL_GET_BLOCK_SIZE, &sz);
+					*(DWORD*)buff = sz;
+					break;
+				}
+		}
+	}
+
+	return res;
+}
+
+DWORD get_fattime (void)
+{
+	return 0;
+}
 #endif
