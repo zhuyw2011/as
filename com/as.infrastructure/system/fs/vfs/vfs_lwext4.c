@@ -20,13 +20,12 @@
 #include "asdebug.h"
 #include "device.h"
 /* ============================ [ MACROS    ] ====================================================== */
-#define AS_LOG_LWEXT 0
+#define AS_LOG_LWEXT  0
 #define AS_LOG_LWEXTE 1
-#define TO_LWEXT_PATH(f) (&((f)[4]))
+#define TO_LWEXT_PATH(f) (&((f)[0]))
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern const struct vfs_filesystem_ops lwext_ops;
-extern const device_t device_asblk1;
 
 static int blockdev_open(struct ext4_blockdev *bdev);
 static int blockdev_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id,
@@ -37,9 +36,7 @@ static int blockdev_close(struct ext4_blockdev *bdev);
 static int blockdev_lock(struct ext4_blockdev *bdev);
 static int blockdev_unlock(struct ext4_blockdev *bdev);
 /* ============================ [ DATAS     ] ====================================================== */
-static const device_t* lwext_device_table[CONFIG_EXT4_BLOCKDEVS_COUNT] = {
-	&device_asblk1,
-};
+static const device_t* lwext_device_table[CONFIG_EXT4_BLOCKDEVS_COUNT];
 
 static size_t disk_sector_size[CONFIG_EXT4_BLOCKDEVS_COUNT] = {0};
 
@@ -373,7 +370,51 @@ static int lwext_rename (const char *oldname, const char *newname)
 	return r;
 }
 
+static int get_dev_index_or_alloc(const device_t * device)
+{
+	int index;
 
+	for (index = 0; index < CONFIG_EXT4_BLOCKDEVS_COUNT; index ++)
+	{
+		if(lwext_device_table[index] == device)
+		{
+			break;
+		}
+		else if(NULL == lwext_device_table[index])
+		{
+			lwext_device_table[index] = device;
+			break;
+		}
+	}
+
+	return index;
+}
+
+static int lwext_mount (const device_t* device, const char* mount_point)
+{
+	int ercd = 0;
+	int index;
+	struct ext4_blockdev * bd;
+
+
+	index = get_dev_index_or_alloc(device);
+
+	if(index < CONFIG_EXT4_BLOCKDEVS_COUNT)
+	{
+		bd = ext4_blkdev_list[index];
+		ercd = ext4_device_register(bd, device->name);
+		if(0 == ercd)
+		{
+			ercd = ext4_mount(device->name, mount_point, false);
+		}
+	}
+	else
+	{
+		ercd = -1;
+	}
+
+	return ercd;
+}
 
 void ext_mount(void)
 {
@@ -533,7 +574,7 @@ static int blockdev_unlock(struct ext4_blockdev *bdev)
 /* ============================ [ FUNCTIONS ] ====================================================== */
 const struct vfs_filesystem_ops lwext_ops =
 {
-	.name = "/ext",
+	.name = "ext",
 	.fopen = lwext_fopen,
 	.fclose = lwext_fclose,
 	.fread = lwext_fread,
@@ -549,6 +590,7 @@ const struct vfs_filesystem_ops lwext_ops =
 	.chdir = lwext_chdir,
 	.mkdir = lwext_mkdir,
 	.rmdir = lwext_rmdir,
-	.rename = lwext_rename
+	.rename = lwext_rename,
+	.mount = lwext_mount
 };
 #endif

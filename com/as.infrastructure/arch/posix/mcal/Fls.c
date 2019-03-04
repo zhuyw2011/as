@@ -158,13 +158,7 @@
 #define FLASH_NON_CORRECTABLE_ERROR 0x1
 
 #if defined(USE_VFS)
-#if defined(USE_FATFS)
-#define FLASH_IMG "/vfat/Flash.img"
-#elif defined(USE_LWEXT4)
-#define FLASH_IMG "/ext/Flash.img"
-#else
-#error no supported vfs file system
-#endif
+#define FLASH_IMG "/Flash.img"
 #else
 #define FLASH_IMG "Flash.img"
 #define vfs_fopen  fopen

@@ -26,6 +26,7 @@
 #endif
 #include <time.h>
 #include <errno.h>
+#include "device.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #ifndef S_IRWXG
 #define S_IRWXG              00070
@@ -98,6 +99,8 @@ struct vfs_filesystem_ops
     int (*mkdir) (const char *filename, uint32_t mode);
     int (*rmdir) (const char *filename);
     int (*rename) (const char *oldname, const char *newname);
+
+    int (*mount) (const device_t* device, const char* mount_point);
 };
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
@@ -127,4 +130,7 @@ int vfs_rename (const char *oldname, const char *newname);
 char* vfs_find(const char* file);
 
 int vfs_fprintf (VFS_FILE* fp, const char* fmt, ...);
+
+void vfs_init(void);
+int vfs_mount (const device_t* device, const char* type, const char* mount_point);
 #endif /* _VFS_H */

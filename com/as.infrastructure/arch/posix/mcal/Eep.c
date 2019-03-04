@@ -87,13 +87,7 @@
 #define MODULE_NAME 	"/driver/Eep"
 
 #if defined(USE_VFS)
-#if defined(USE_FATFS)
-#define EEPROM_IMG "/vfat/Eeprom.img"
-#elif defined(USE_LWEXT4)
-#define EEPROM_IMG "/ext/Eeprom.img"
-#else
-#error no supported vfs file system
-#endif
+#define EEPROM_IMG "/Eeprom.img"
 #else
 #define EEPROM_IMG "Eeprom.img"
 #define vfs_fopen  fopen

@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <sys/queue.h>
 #include "asdebug.h"
 #ifdef USE_SHELL
 #include "shell.h"
@@ -28,7 +29,22 @@
 #ifndef VFS_FPRINTF_BUFFER_SIZE
 #define VFS_FPRINTF_BUFFER_SIZE 512
 #endif
+
+#ifndef VFS_LOCK
+#define VFS_LOCK() do { imask_t mask; Irq_Save(mask)
+#endif
+
+#ifndef VFS_UNLOCK
+#define VFS_UNLOCK() Irq_Restore(mask); } while(0)
+#endif
 /* ============================ [ TYPES     ] ====================================================== */
+typedef struct vfs_mount_s
+{
+	const char* mount_point;
+	const struct vfs_filesystem_ops* ops;
+	const device_t* device;
+	TAILQ_ENTRY(vfs_mount_s) entry;
+} vfs_mount_t;
 /* ============================ [ DECLARES  ] ====================================================== */
 #ifdef USE_FATFS
 extern const struct vfs_filesystem_ops fatfs_ops;
@@ -39,24 +55,6 @@ extern const struct vfs_filesystem_ops lwext_ops;
 #if defined(__WINDOWS__) || defined(__LINUX__)
 extern const struct vfs_filesystem_ops hofs_ops;
 #endif
-static VFS_FILE* lvfs_fopen (const char *filename, const char *opentype);
-static int lvfs_fclose (VFS_FILE* stream);
-static int lvfs_fread (void *data, size_t size, size_t count, VFS_FILE *stream);
-static int lvfs_fwrite (const void *data, size_t size, size_t count, VFS_FILE *stream);
-static int lvfs_fflush (VFS_FILE *stream);
-static int lvfs_fseek (VFS_FILE *stream, long int offset, int whence);
-static size_t lvfs_ftell (VFS_FILE *stream);
-static int lvfs_unlink (const char *filename);
-static int lvfs_stat (const char *filename, vfs_stat_t *buf);
-
-static VFS_DIR * lvfs_opendir (const char *dirname);
-static vfs_dirent_t * lvfs_readdir (VFS_DIR *dirstream);
-static int lvfs_closedir (VFS_DIR *dirstream);
-
-static int lvfs_chdir (const char *filename);
-static int lvfs_mkdir (const char *filename, uint32_t mode);
-static int lvfs_rmdir (const char *filename);
-static int lvfs_rename (const char *oldname, const char *newname);
 
 #ifdef USE_SHELL
 static int lsFunc(int argc, char* argv[]);
@@ -69,27 +67,6 @@ static int catFunc(int argc, char* argv[]);
 static int hexdumpFunc(int argc, char* argv[]);
 #endif
 /* ============================ [ DATAS     ] ====================================================== */
-static const struct vfs_filesystem_ops lvfs_ops =
-{
-	.name = "/",
-	.fopen = lvfs_fopen,
-	.fclose = lvfs_fclose,
-	.fread = lvfs_fread,
-	.fwrite = lvfs_fwrite,
-	.fflush = lvfs_fflush,
-	.fseek = lvfs_fseek,
-	.ftell = lvfs_ftell,
-	.unlink = lvfs_unlink,
-	.stat = lvfs_stat,
-	.opendir = lvfs_opendir,
-	.readdir = lvfs_readdir,
-	.closedir = lvfs_closedir,
-	.chdir = lvfs_chdir,
-	.mkdir = lvfs_mkdir,
-	.rmdir = lvfs_rmdir,
-	.rename = lvfs_rename
-};
-
 static const struct vfs_filesystem_ops* vfs_ops[] =
 {
 #ifdef USE_FATFS
@@ -101,10 +78,10 @@ static const struct vfs_filesystem_ops* vfs_ops[] =
 #if defined(__WINDOWS__) || defined(__LINUX__)
 	&hofs_ops,
 #endif
-	/* must be the last one */
-	&lvfs_ops,
 	NULL
 };
+
+static TAILQ_HEAD(vfs_mount_head, vfs_mount_s) vfs_mount_list = TAILQ_HEAD_INITIALIZER(vfs_mount_list);
 
 static char vfs_cwd[FILENAME_MAX] = "/";
 
@@ -243,80 +220,15 @@ static char* serach(char* const p, const char* file)
 	return NULL;
 }
 
-static VFS_FILE* lvfs_fopen (const char *filename, const char *opentype)
+static const struct vfs_filesystem_ops* search_ops(const char *type)
 {
-	(void)filename;
-	(void)opentype;
-
-	return NULL;
-}
-
-static int lvfs_fclose (VFS_FILE* stream)
-{
-	(void)stream;
-
-	return EACCES;
-}
-
-static int lvfs_fread (void *data, size_t size, size_t count, VFS_FILE *stream)
-{
-	(void)data;
-	(void)size;
-	(void)count;
-	(void)stream;
-
-	return EACCES;
-}
-
-static int lvfs_fwrite (const void *data, size_t size, size_t count, VFS_FILE *stream)
-{
-	(void)data;
-	(void)size;
-	(void)count;
-	(void)stream;
-
-	return EACCES;
-}
-
-static int lvfs_fflush (VFS_FILE *stream)
-{
-	(void)stream;
-
-	return EACCES;
-}
-
-static int lvfs_fseek (VFS_FILE *stream, long int offset, int whence)
-{
-	(void)stream;
-	(void)offset;
-	(void)whence;
-
-	return EACCES;
-}
-
-static size_t lvfs_ftell (VFS_FILE *stream)
-{
-	(void)stream;
-	return 0;
-}
-
-static int lvfs_unlink (const char *filename)
-{
-	(void)filename;
-
-	return EACCES;
-}
-
-static int lvfs_stat (const char *filename, vfs_stat_t *buf)
-{
-	int r = 0;
 	const struct vfs_filesystem_ops *ops, **o;
 
 	o = vfs_ops;
 	ops = NULL;
 	while(*o != NULL)
 	{
-		if(0 == strcmp((*o)->name, filename))
+		if(0 == strcmp((*o)->name, type))
 		{
 			ops = *o;
 			break;
@@ -324,118 +236,37 @@ static int lvfs_stat (const char *filename, vfs_stat_t *buf)
 		o++;
 	}
 
-	if(NULL != ops)
-	{
-		buf->st_mode = S_IFDIR;
-		buf->st_size = 0;
-	}
-	else
-	{
-		r = ENOENT;
-	}
-
-	return r;
-}
-
-static VFS_DIR * lvfs_opendir (const char *dirname)
-{
-	VFS_DIR* dir;
-
-	dir = malloc(sizeof(VFS_DIR));
-
-	if(NULL != dir)
-	{
-		dir->fops = &lvfs_ops;
-		dir->priv = vfs_ops;
-	}
-
-	return dir;
-
-}
-
-static vfs_dirent_t * lvfs_readdir (VFS_DIR *dirstream)
-{
-	static vfs_dirent_t dirent;
-	const struct vfs_filesystem_ops** ops;
-
-	ops = dirstream->priv;
-
-	if((&lvfs_ops) != (*ops))
-	{
-		dirent.d_namlen = strlen((*ops)->name)-1;
-		strcpy(dirent.d_name, &(*ops)->name[1]);
-		dirstream->priv = ops+1;
-
-		return &dirent;
-	}
-
-	return NULL;
-
-}
-
-static int lvfs_closedir (VFS_DIR *dirstream)
-{
-	free(dirstream);
-
-	return 0;
-}
-
-static int lvfs_chdir (const char *filename)
-{
-	int r = EACCES;
-
-	if(('/'==filename[0]) && ('\0'==filename[1]))
-	{
-		r = 0;
-	}
-
-	return r;
-}
-
-static int lvfs_mkdir (const char *filename, uint32_t mode)
-{
-	(void)filename;
-	(void)mode;
-
-	return EACCES;
-}
-
-static int lvfs_rmdir (const char *filename)
-{
-	(void)filename;
-
-	return EACCES;
-}
-
-static int lvfs_rename (const char *oldname, const char *newname)
-{
-	(void)oldname;
-	(void)newname;
-
-	return EACCES;
-}
-
-static const struct vfs_filesystem_ops* search_ops(const char *filename)
-{
-	const struct vfs_filesystem_ops *ops, **o;
-	size_t fslen;
-
-	o = vfs_ops;
-	ops = NULL;
-	while(*o != NULL)
-	{
-		fslen = strlen((*o)->name);
-		if(0 == strncmp((*o)->name, filename, fslen))
-		{
-			ops = *o;
-			break;
-		}
-		o++;
-	}
-
-	ASLOG(VFS, "search_ops(%s) = %s\n", filename, (NULL != ops) ? ops->name : NULL);
+	ASLOG(VFS, "search_ops(%s) = %s\n", type, (NULL != ops) ? ops->name : NULL);
 
 	return ops;
+}
+
+static const vfs_mount_t* search_mnt(const char *filepath)
+{
+	const vfs_mount_t *mnt, *m;
+	int len;
+	int best = 0;
+
+	mnt = NULL;
+
+	VFS_LOCK();
+	TAILQ_FOREACH(m, &vfs_mount_list, entry)
+	{
+		len = strlen(m->mount_point);
+		if(0 == strncmp(m->mount_point, filepath, len))
+		{
+			if(best< len)
+			{
+				mnt = m;
+				best = len;
+			}
+		}
+	}
+	VFS_UNLOCK();
+
+	ASLOG(VFS, "search_mnt(%s) = %s\n", filepath, (NULL != mnt) ? mnt->mount_point : NULL);
+
+	return mnt;
 }
 
 static char* relpath(const char * path)
@@ -792,7 +623,7 @@ static int hexdumpFunc(int argc, char* argv[])
 VFS_FILE* vfs_fopen (const char *filename, const char *opentype)
 {
 	char* abspath;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 	VFS_FILE* file = NULL;
 
 	ASLOG(VFS, "fopen(%s,%s)\n", filename, opentype);
@@ -801,10 +632,10 @@ VFS_FILE* vfs_fopen (const char *filename, const char *opentype)
 
 	if(NULL != abspath)
 	{
-		ops = search_ops(abspath);
-		if(NULL != ops)
+		mnt = search_mnt(abspath);
+		if(NULL != mnt)
 		{
-			file = ops->fopen(abspath, opentype);
+			file = mnt->ops->fopen(abspath, opentype);
 		}
 		free(abspath);
 	}
@@ -853,7 +684,7 @@ int vfs_unlink (const char *filename)
 {
 	char* abspath;
 	int rc = EACCES;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 
 	ASLOG(VFS, "unlink(%s)\n", filename);
 
@@ -861,10 +692,10 @@ int vfs_unlink (const char *filename)
 
 	if(NULL != abspath)
 	{
-		ops = search_ops(abspath);
-		if(NULL != ops)
+		mnt = search_mnt(abspath);
+		if(NULL != mnt)
 		{
-			rc = ops->unlink(abspath);
+			rc = mnt->ops->unlink(abspath);
 		}
 		free(abspath);
 	}
@@ -877,7 +708,7 @@ int vfs_stat (const char *filename, vfs_stat_t *buf)
 {
 	char* abspath;
 	int rc = EACCES;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 
 	ASLOG(VFS, "stat(%s)\n", filename);
 
@@ -885,10 +716,10 @@ int vfs_stat (const char *filename, vfs_stat_t *buf)
 
 	if(NULL != abspath)
 	{
-		ops = search_ops(abspath);
-		if(NULL != ops)
+		mnt = search_mnt(abspath);
+		if(NULL != mnt)
 		{
-			rc = ops->stat(abspath, buf);
+			rc = mnt->ops->stat(abspath, buf);
 		}
 		free(abspath);
 	}
@@ -900,7 +731,7 @@ ELF_EXPORT_ALIAS(vfs_stat,"stat");
 VFS_DIR * vfs_opendir (const char *dirname)
 {
 	char* abspath;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 	VFS_DIR* dir = NULL;
 
 	ASLOG(VFS, "opendir(%s)\n", dirname);
@@ -909,10 +740,10 @@ VFS_DIR * vfs_opendir (const char *dirname)
 
 	if(NULL != abspath)
 	{
-		ops = search_ops(abspath);
-		if(NULL != ops)
+		mnt = search_mnt(abspath);
+		if(NULL != mnt)
 		{
-			dir = ops->opendir(abspath);
+			dir = mnt->ops->opendir(abspath);
 		}
 		free(abspath);
 	}
@@ -937,7 +768,7 @@ int vfs_chdir (const char *filename)
 {
 	char* abspath;
 	int rc = EACCES;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 
 	ASLOG(VFS, "chdir(%s)\n", filename);
 
@@ -945,10 +776,10 @@ int vfs_chdir (const char *filename)
 
 	if(NULL != abspath)
 	{
-		ops = search_ops(abspath);
-		if(NULL != ops)
+		mnt = search_mnt(abspath);
+		if(NULL != mnt)
 		{
-			rc = ops->chdir(abspath);
+			rc = mnt->ops->chdir(abspath);
 			if(0 == rc)
 			{
 				strncpy(vfs_cwd, abspath, FILENAME_MAX);
@@ -991,7 +822,7 @@ int vfs_mkdir (const char *filename, uint32_t mode)
 {
 	char* abspath;
 	int rc = EACCES;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 
 	ASLOG(VFS, "mkdir(%s, 0x%x)\n", filename, mode);
 
@@ -999,10 +830,10 @@ int vfs_mkdir (const char *filename, uint32_t mode)
 
 	if(NULL != abspath)
 	{
-		ops = search_ops(abspath);
-		if(NULL != ops)
+		mnt = search_mnt(abspath);
+		if(NULL != mnt)
 		{
-			rc = ops->mkdir(abspath, mode);
+			rc = mnt->ops->mkdir(abspath, mode);
 		}
 		free(abspath);
 	}
@@ -1015,7 +846,7 @@ int  vfs_rmdir (const char *filename)
 {
 	char* abspath;
 	int rc = EACCES;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 
 	ASLOG(VFS, "rmdir(%s)\n", filename);
 
@@ -1023,10 +854,10 @@ int  vfs_rmdir (const char *filename)
 
 	if(NULL != abspath)
 	{
-		ops = search_ops(abspath);
-		if(NULL != ops)
+		mnt = search_mnt(abspath);
+		if(NULL != mnt)
 		{
-			rc = ops->rmdir(abspath);
+			rc = mnt->ops->rmdir(abspath);
 		}
 		free(abspath);
 	}
@@ -1040,7 +871,7 @@ int vfs_rename (const char *oldname, const char *newname)
 	char* abspath_old;
 	char* abspath_new;
 	int rc = EACCES;
-	const struct vfs_filesystem_ops *ops;
+	const vfs_mount_t *mnt;
 
 	ASLOG(VFS, "rename(%s,%s)\n", oldname, newname);
 
@@ -1051,10 +882,10 @@ int vfs_rename (const char *oldname, const char *newname)
 	{
 		if(NULL != abspath_new)
 		{
-			ops = search_ops(abspath_old);
-			if(NULL != ops)
+			mnt = search_mnt(abspath_old);
+			if(NULL != mnt)
 			{
-				rc = ops->rename(abspath_old,abspath_new);
+				rc = mnt->ops->rename(abspath_old,abspath_new);
 			}
 			free(abspath_new);
 		}
@@ -1130,8 +961,85 @@ void vfs_init(void)
 	SHELL_AddCmd(&catVfsCmd);
 	SHELL_AddCmd(&hexdumpVfsCmd);
 #endif
-
 #endif
+
+	TAILQ_INIT(&vfs_mount_list);
+}
+
+int vfs_mount (const device_t* device, const char* type, const char* mount_point)
+{
+	int ercd = 0;
+	vfs_mount_t* m;
+	VFS_DIR* dir;
+	const struct vfs_filesystem_ops* ops;
+
+	VFS_LOCK();
+	TAILQ_FOREACH(m, &vfs_mount_list, entry)
+	{
+		if(0 == strcmp(m->mount_point, mount_point))
+		{
+			ercd = EEXIST;
+			break;
+		}
+	}
+	VFS_UNLOCK();
+
+	if(0 == ercd)
+	{
+		if(0 != strcmp(mount_point, "/"))
+		{
+			dir = vfs_opendir(mount_point);
+			if(dir != NULL)
+			{
+				vfs_closedir(dir);
+			}
+			else
+			{
+				ercd = ENOENT;
+			}
+		}
+	}
+
+	if(0 == ercd)
+	{
+		m = malloc(strlen(mount_point)+1+sizeof(vfs_mount_t));
+		if(m != NULL)
+		{
+			ops = search_ops(type);
+			if(NULL == ops)
+			{
+				ercd = EINVAL;
+			}
+			else
+			{
+				ercd = ops->mount(device, mount_point);
+				if(0 == ercd)
+				{
+					m->mount_point = (const char*)((unsigned long)m+sizeof(vfs_mount_t));
+					strcpy((char*)m->mount_point, mount_point);
+					m->device = device;
+					m->ops = ops;
+
+					VFS_LOCK();
+					TAILQ_INSERT_TAIL(&vfs_mount_list, m, entry);
+					VFS_UNLOCK();
+				}
+				else
+				{
+					free(m);
+				}
+			}
+		}
+		else
+		{
+			ercd = ENOMEM;
+		}
+	}
+
+	ASLOG(VFS, "mount device %s on %s %s\n", device->name, mount_point,
+			(0==ercd)?"okay":"failed");
+
+	return ercd;
 }
 
 #if !defined(__WINDOWS__) && !defined(__LINUX__) && defined (__GNUC__)

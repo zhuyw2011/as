@@ -292,7 +292,7 @@ static int host_rename (const char *oldname, const char *newname)
 /* ============================ [ FUNCTIONS ] ====================================================== */
 const struct vfs_filesystem_ops hofs_ops =
 {
-	.name = "/host",
+	.name = "host",
 	.fopen = host_fopen,
 	.fclose = host_fclose,
 	.fread = host_fread,

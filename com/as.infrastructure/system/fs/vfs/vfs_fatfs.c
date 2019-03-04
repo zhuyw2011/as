@@ -36,20 +36,18 @@
 #include "device.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_FATFS 0
-#define TO_FATFS_PATH(f) (&((f)[5]))
+#define TO_FATFS_PATH(f) (&((f)[4]))
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern const struct vfs_filesystem_ops fatfs_ops;
-extern const device_t device_asblk0;
 /* ============================ [ DATAS     ] ====================================================== */
 /* dirent that will be given to callers;
  * note: both APIs assume that only one dirent ever exists
  */
 static vfs_dirent_t dir_ent;
 
-static const device_t* fatfs_device_table[FF_VOLUMES] = {
-	&device_asblk0,
-};
+static FATFS fatfs_FatFS[FF_VOLUMES];
+static const device_t* fatfs_device_table[FF_VOLUMES];
 /* ============================ [ LOCALS    ] ====================================================== */
 static VFS_FILE* fatfs_fopen (const char *filename, const char *opentype)
 {
@@ -412,10 +410,50 @@ static int fatfs_rename (const char *oldname, const char *newname)
 	return EACCES;
 }
 
+static int get_dev_index_or_alloc(const device_t * device)
+{
+	int index;
+
+	for (index = 0; index < FF_VOLUMES; index ++)
+	{
+		if(fatfs_device_table[index] == device)
+		{
+			break;
+		}
+		else if(NULL == fatfs_device_table[index])
+		{
+			fatfs_device_table[index] = device;
+			break;
+		}
+	}
+
+	return index;
+}
+
+static int fatfs_mount (const device_t* device, const char* mount_point)
+{
+	int ercd;
+	int index;
+	char mp[2] = "0";
+
+	index = get_dev_index_or_alloc(device);
+
+	if(index < FF_VOLUMES)
+	{
+		mp[0] += index;
+		ercd = f_mount(&fatfs_FatFS[index], mp, 1);
+	}
+	else
+	{
+		ercd = -1;
+	}
+
+	return ercd;
+}
 /* ============================ [ FUNCTIONS ] ====================================================== */
 const struct vfs_filesystem_ops fatfs_ops =
 {
-	.name = "/vfat",
+	.name = "vfat",
 	.fopen = fatfs_fopen,
 	.fclose = fatfs_fclose,
 	.fread = fatfs_fread,
@@ -431,7 +469,8 @@ const struct vfs_filesystem_ops fatfs_ops =
 	.chdir = fatfs_chdir,
 	.mkdir = fatfs_mkdir,
 	.rmdir = fatfs_rmdir,
-	.rename = fatfs_rename
+	.rename = fatfs_rename,
+	.mount = fatfs_mount
 };
 
 

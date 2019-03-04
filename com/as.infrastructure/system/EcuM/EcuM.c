@@ -96,14 +96,11 @@
 #if defined(USE_SCHM)
 #include "SchM.h"
 #endif
-#ifdef USE_LWEXT4
-extern void ext_mount(void);
-#endif
 #ifdef USE_DEV
 #include "device.h"
 #endif
 #ifdef USE_VFS
-extern void vfs_init(void);
+#include "vfs.h"
 #endif
 //#define USE_LDEBUG_PRINTF
 #include "asdebug.h"
@@ -114,9 +111,6 @@ extern void vfs_init(void);
 /* ----------------------------[private variables]---------------------------*/
 
 EcuM_GlobalType EcuM_World;
-#ifdef USE_FATFS
-static FATFS FatFs;		/* FatFs work area needed for each volume */
-#endif
 /* ----------------------------[private functions]---------------------------*/
 
 /* ----------------------------[public functions]----------------------------*/
@@ -238,40 +232,28 @@ void EcuM_StartupTwo(void)
 	}
 #endif
 
-#ifndef USE_STDRT
-#ifdef USE_FATFS
-	{
-		FRESULT rc;
-		rc = f_mount(&FatFs, "", 1);
-		if(FR_OK != rc)
-		{
-			ASWARNING("FatFs is invalid, do mkfs!\n");
-			rc = f_mkfs("", FM_ANY, 0, FatFs.win, sizeof(FatFs.win));
-			if(FR_OK != rc)
-			{
-				ASLOG(ERROR, "FatFS mkfs failed with error code %d\n", rc);
-			}
-			else
-			{
-				rc = f_mount(&FatFs, "", 1);
-				if(FR_OK != rc)
-				{
-					ASLOG(ERROR, "FatFS mount failed with error code %d\n", rc);
-				}
-			}
-		}
-	}
-#endif
-#ifdef USE_LWEXT4
-	ext_mount();
-#endif
-#endif /* USE_STDRT */
 #ifdef USE_DEV
 	device_init();
 #endif
 #ifdef USE_VFS
 	vfs_init();
+#ifdef USE_LWEXT4
+	extern const device_t device_asblk1;
+	vfs_mount(&device_asblk1, "ext", "/");
 #endif
+#ifdef USE_FATFS
+	#ifdef USE_LWEXT4
+	#define FATFS_MP "/dos"
+	vfs_mkdir(FATFS_MP, 0777);
+	#else
+	#define FATFS_MP "/"
+	#endif
+	extern const device_t device_asblk0;
+	vfs_mount(&device_asblk0, "vfat", FATFS_MP);
+#endif
+#endif
+
+
 
 	// Initialize drivers that don't need NVRAM data
 	EcuM_AL_DriverInitTwo(EcuM_World.config);
