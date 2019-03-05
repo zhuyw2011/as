@@ -396,7 +396,6 @@ static int lwext_mount (const device_t* device, const char* mount_point)
 	int index;
 	struct ext4_blockdev * bd;
 
-
 	index = get_dev_index_or_alloc(device);
 
 	if(index < CONFIG_EXT4_BLOCKDEVS_COUNT)
@@ -407,6 +406,12 @@ static int lwext_mount (const device_t* device, const char* mount_point)
 		{
 			ercd = ext4_mount(device->name, mount_point, false);
 		}
+
+		if(ercd != 0)
+		{
+			(void)ext4_device_unregister(device->name);
+			lwext_device_table[index] = NULL;
+		}
 	}
 	else
 	{
@@ -416,48 +421,48 @@ static int lwext_mount (const device_t* device, const char* mount_point)
 	return ercd;
 }
 
-void ext_mount(void)
+static int lwext_mkfs (const device_t* device)
 {
-	int rc;
+	int ercd = 0;
+	int index;
 	struct ext4_blockdev * bd;
-	const device_t* device = lwext_device_table[0];
-	bd = ext4_blkdev_list[0];
+	struct ext4_fs* fs;
+	struct ext4_mkfs_info* info;
 
-	rc = ext4_device_register(bd, device->name);
-	if(rc != EOK)
+	index = get_dev_index_or_alloc(device);
+
+	if(index < CONFIG_EXT4_BLOCKDEVS_COUNT)
 	{
-		ASLOG(ERROR, "register ext4 device failed\n");
-	}
-
-	rc = ext4_mount(device->name, "/", false);
-	if (rc != EOK)
-	{
-		static struct ext4_fs fs;
-		static struct ext4_mkfs_info info = {
-			.block_size = 4096,
-			.journal = TRUE,
-		};
-
-		ASWARNING("%s is invalid, do mkfs!\n", device->name);
-
-		rc = ext4_mkfs(&fs, bd, &info, F_SET_EXT4);
-		if (rc != EOK)
+		bd = ext4_blkdev_list[index];
+		ercd = ext4_device_register(bd, device->name);
+		if(0 == ercd)
 		{
-			ASLOG(ERROR,"ext4_mkfs error: %d\n", rc);
-		}
-		else
-		{
-			rc = ext4_mount(device->name, "/", false);
-			if (rc != EOK)
+			fs = malloc(sizeof(struct ext4_fs)+sizeof(struct ext4_mkfs_info));
+			if(fs != NULL)
 			{
-				ASLOG(ERROR, "mount ext4 device failed\n");
+				info = (struct ext4_mkfs_info*)(fs+1);
+				info->block_size = 4096,
+				info->journal = TRUE,
+				ercd = ext4_mkfs(fs, bd, info, F_SET_EXT4);
+
+				free(fs);
 			}
+			else
+			{
+				ercd = ENOMEM;
+			}
+
+			(void)ext4_device_unregister(device->name);
+			lwext_device_table[index] = NULL;
 		}
 	}
+	else
+	{
+		ercd = -1;
+	}
 
-	ASLOG(LWEXT, "mount ext4 device %s on '/' OK\n", device->name);
+	return ercd;
 }
-
 
 static int get_bdev(struct ext4_blockdev * bdev)
 {
@@ -591,6 +596,7 @@ const struct vfs_filesystem_ops lwext_ops =
 	.mkdir = lwext_mkdir,
 	.rmdir = lwext_rmdir,
 	.rename = lwext_rename,
-	.mount = lwext_mount
+	.mount = lwext_mount,
+	.mkfs = lwext_mkfs
 };
 #endif

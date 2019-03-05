@@ -22,7 +22,7 @@
 
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_HOFS 0
-#define TO_HOFS_PATH(f) ( (((f)[5])=='/')? (&((f)[6])) : (&((f)[5])) )
+#define TO_HOFS_PATH(f) ( (((f)[strlen(mnt->mount_point)])=='/')? (&((f)[strlen(mnt->mount_point)+1])) : (&((f)[strlen(mnt->mount_point)])) )
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern const struct vfs_filesystem_ops hofs_ops;
@@ -182,7 +182,7 @@ static VFS_DIR * host_opendir (const vfs_mount_t* mnt, const char *dirname)
 
 }
 
-static vfs_dirent_t * host_readdir (const vfs_mount_t* mnt, VFS_DIR *dirstream)
+static vfs_dirent_t * host_readdir (VFS_DIR *dirstream)
 {
 	const struct dirent * rentry;
 	vfs_dirent_t * rdirent;
@@ -289,6 +289,31 @@ static int host_rename (const vfs_mount_t* mnt, const char *oldname, const char 
 	return r;
 }
 
+static int host_mount (const device_t* device, const char* mount_point)
+{
+	(void)device;
+	(void)mount_point;
+	return 0;
+}
+
+static int host_mkfs (const device_t* device)
+{
+	(void)device;
+	return 0;
+}
+
+
+const device_t device_ashost = {
+	"host",
+	{
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+	},
+	(void*) 1
+};
 /* ============================ [ FUNCTIONS ] ====================================================== */
 const struct vfs_filesystem_ops hofs_ops =
 {
@@ -308,6 +333,8 @@ const struct vfs_filesystem_ops hofs_ops =
 	.chdir = host_chdir,
 	.mkdir = host_mkdir,
 	.rmdir = host_rmdir,
-	.rename = host_rename
+	.rename = host_rename,
+	.mount = host_mount,
+	.mkfs = host_mkfs
 };
 #endif

@@ -543,6 +543,34 @@ static int fatfs_mount (const device_t* device, const char* mount_point)
 	{
 		mp[0] += index;
 		ercd = f_mount(&fatfs_FatFS[index], mp, 1);
+
+		if(0 != ercd)
+		{
+			fatfs_device_table[index] = NULL;
+		}
+	}
+	else
+	{
+		ercd = -1;
+	}
+
+	return ercd;
+}
+
+static int fatfs_mkfs (const device_t* device)
+{
+	int ercd;
+	int index;
+	char mp[2] = "0";
+
+	index = get_dev_index_or_alloc(device);
+
+	if(index < FF_VOLUMES)
+	{
+		mp[0] += index;
+		ercd = f_mkfs(mp, FM_ANY, 0, fatfs_FatFS[index].win, sizeof(fatfs_FatFS[index].win));
+
+		fatfs_device_table[index] = NULL;
 	}
 	else
 	{
@@ -571,7 +599,8 @@ const struct vfs_filesystem_ops fatfs_ops =
 	.mkdir = fatfs_mkdir,
 	.rmdir = fatfs_rmdir,
 	.rename = fatfs_rename,
-	.mount = fatfs_mount
+	.mount = fatfs_mount,
+	.mkfs = fatfs_mkfs
 };
 
 

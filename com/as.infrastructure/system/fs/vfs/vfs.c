@@ -1035,6 +1035,24 @@ int vfs_mount (const device_t* device, const char* type, const char* mount_point
 	return ercd;
 }
 
+int vfs_mkfs (const device_t* device, const char* type)
+{
+	int ercd = 0;
+	const struct vfs_filesystem_ops* ops;
+
+	ops = search_ops(type);
+	if(NULL == ops)
+	{
+		ercd = EINVAL;
+	}
+	else
+	{
+		ercd = ops->mkfs(device);
+	}
+
+	return ercd;
+}
+
 #if !defined(__WINDOWS__) && !defined(__LINUX__) && defined (__GNUC__)
 FILE* fopen (const char *filename, const char *opentype) __attribute__((weak, alias("vfs_fopen")));
 int fclose (FILE* stream) __attribute__((weak, alias("vfs_fclose")));

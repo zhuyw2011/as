@@ -108,6 +108,7 @@ struct vfs_filesystem_ops
     int (*rename) (const vfs_mount_t* mnt, const char *oldname, const char *newname);
 
     int (*mount) (const device_t* device, const char* mount_point);
+    int (*mkfs)  (const device_t* device);
 };
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
@@ -140,4 +141,5 @@ int vfs_fprintf (VFS_FILE* fp, const char* fmt, ...);
 
 void vfs_init(void);
 int vfs_mount (const device_t* device, const char* type, const char* mount_point);
+int vfs_mkfs (const device_t* device, const char* type);
 #endif /* _VFS_H */
