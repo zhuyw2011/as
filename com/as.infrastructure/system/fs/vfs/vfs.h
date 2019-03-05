@@ -43,6 +43,13 @@
 #define VFS_ISDIR(st_mode) S_ISDIR(st_mode)
 #define VFS_ISREG(st_mode) S_ISREG(st_mode)
 /* ============================ [ TYPES     ] ====================================================== */
+typedef struct vfs_mount_s
+{
+	const char* mount_point;
+	const struct vfs_filesystem_ops* ops;
+	const device_t* device;
+	TAILQ_ENTRY(vfs_mount_s) entry;
+} vfs_mount_t;
 
 struct vfs_filesystem_ops fops;
 
@@ -80,7 +87,7 @@ struct vfs_filesystem_ops
     const char *name;
 
     /* operations for file */
-    VFS_FILE* (*fopen) (const char *filename, const char *opentype);
+    VFS_FILE* (*fopen) (const vfs_mount_t* mnt, const char *filename, const char *opentype);
     int (*fclose) (VFS_FILE* stream);
     int (*fread) (void *data, size_t size, size_t count, VFS_FILE *stream);
     int (*fwrite) (const void *data, size_t size, size_t count, VFS_FILE *stream);
@@ -88,17 +95,17 @@ struct vfs_filesystem_ops
     int (*fseek) (VFS_FILE *stream, long int offset, int whence);
 	size_t (*ftell)  (VFS_FILE *stream);
 
-    int (*unlink) (const char *filename);
-    int (*stat) (const char *filename, vfs_stat_t *buf);
+    int (*unlink) (const vfs_mount_t* mnt, const char *filename);
+    int (*stat) (const vfs_mount_t* mnt, const char *filename, vfs_stat_t *buf);
 
-    VFS_DIR * (*opendir) (const char *dirname);
+    VFS_DIR * (*opendir) (const vfs_mount_t* mnt, const char *dirname);
     vfs_dirent_t * (*readdir) (VFS_DIR *dirstream);
     int (*closedir) (VFS_DIR *dirstream);
 
-    int (*chdir) (const char *filename);
-    int (*mkdir) (const char *filename, uint32_t mode);
-    int (*rmdir) (const char *filename);
-    int (*rename) (const char *oldname, const char *newname);
+    int (*chdir) (const vfs_mount_t* mnt, const char *filename);
+    int (*mkdir) (const vfs_mount_t* mnt, const char *filename, uint32_t mode);
+    int (*rmdir) (const vfs_mount_t* mnt, const char *filename);
+    int (*rename) (const vfs_mount_t* mnt, const char *oldname, const char *newname);
 
     int (*mount) (const device_t* device, const char* mount_point);
 };

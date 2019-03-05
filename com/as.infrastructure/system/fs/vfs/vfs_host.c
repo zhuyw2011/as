@@ -28,7 +28,7 @@
 extern const struct vfs_filesystem_ops hofs_ops;
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ LOCALS    ] ====================================================== */
-static VFS_FILE* host_fopen (const char *filename, const char *opentype)
+static VFS_FILE* host_fopen (const vfs_mount_t* mnt, const char *filename, const char *opentype)
 {
 	VFS_FILE *f;
 
@@ -107,7 +107,7 @@ static size_t host_ftell (VFS_FILE *stream)
 	return ftell((FILE*)(stream->priv));
 }
 
-static int host_unlink (const char *filename)
+static int host_unlink (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
@@ -118,7 +118,7 @@ static int host_unlink (const char *filename)
 	return r;
 }
 
-static int host_stat (const char *filename, vfs_stat_t *buf)
+static int host_stat (const vfs_mount_t* mnt, const char *filename, vfs_stat_t *buf)
 {
 	int r = ENOENT;
 
@@ -146,7 +146,7 @@ static int host_stat (const char *filename, vfs_stat_t *buf)
 	return r;
 }
 
-static VFS_DIR * host_opendir (const char *dirname)
+static VFS_DIR * host_opendir (const vfs_mount_t* mnt, const char *dirname)
 {
 	VFS_DIR* dir;
 
@@ -182,7 +182,7 @@ static VFS_DIR * host_opendir (const char *dirname)
 
 }
 
-static vfs_dirent_t * host_readdir (VFS_DIR *dirstream)
+static vfs_dirent_t * host_readdir (const vfs_mount_t* mnt, VFS_DIR *dirstream)
 {
 	const struct dirent * rentry;
 	vfs_dirent_t * rdirent;
@@ -226,7 +226,7 @@ static int host_closedir (VFS_DIR *dirstream)
 	return r;
 }
 
-static int host_chdir (const char *filename)
+static int host_chdir (const vfs_mount_t* mnt, const char *filename)
 {
 
 	int r = ENOTDIR;
@@ -253,7 +253,7 @@ static int host_chdir (const char *filename)
 
 }
 
-static int host_mkdir (const char *filename, uint32_t mode)
+static int host_mkdir (const vfs_mount_t* mnt, const char *filename, uint32_t mode)
 {
 	int r;
 
@@ -267,7 +267,7 @@ static int host_mkdir (const char *filename, uint32_t mode)
 	return r;
 }
 
-static int host_rmdir (const char *filename)
+static int host_rmdir (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
@@ -278,7 +278,7 @@ static int host_rmdir (const char *filename)
 	return r;
 }
 
-static int host_rename (const char *oldname, const char *newname)
+static int host_rename (const vfs_mount_t* mnt, const char *oldname, const char *newname)
 {
 	int r;
 

@@ -78,7 +78,7 @@ static struct ext4_blockdev * const ext4_blkdev_list[CONFIG_EXT4_BLOCKDEVS_COUNT
 #endif
 };
 /* ============================ [ LOCALS    ] ====================================================== */
-static VFS_FILE* lwext_fopen (const char *filename, const char *opentype)
+static VFS_FILE* lwext_fopen (const vfs_mount_t* mnt, const char *filename, const char *opentype)
 {
 	VFS_FILE *f;
 	int r;
@@ -177,7 +177,7 @@ static size_t lwext_ftell (VFS_FILE *stream)
 	return ext4_ftell(stream->priv);
 }
 
-static int lwext_unlink (const char *filename)
+static int lwext_unlink (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
@@ -188,7 +188,7 @@ static int lwext_unlink (const char *filename)
 	return r;
 }
 
-static int lwext_stat (const char *filename, vfs_stat_t *buf)
+static int lwext_stat (const vfs_mount_t* mnt, const char *filename, vfs_stat_t *buf)
 {
 	int r = ENOENT;
 
@@ -232,7 +232,7 @@ static int lwext_stat (const char *filename, vfs_stat_t *buf)
 	return r;
 }
 
-static VFS_DIR * lwext_opendir (const char *dirname)
+static VFS_DIR * lwext_opendir (const vfs_mount_t* mnt, const char *dirname)
 {
 	VFS_DIR* dir;
 
@@ -317,7 +317,7 @@ static int lwext_closedir (VFS_DIR *dirstream)
 	return 0;
 }
 
-static int lwext_chdir (const char *filename)
+static int lwext_chdir (const vfs_mount_t* mnt, const char *filename)
 {
 
 	int r = ENOTDIR;
@@ -337,7 +337,7 @@ static int lwext_chdir (const char *filename)
 
 }
 
-static int lwext_mkdir (const char *filename, uint32_t mode)
+static int lwext_mkdir (const vfs_mount_t* mnt, const char *filename, uint32_t mode)
 {
 	int r;
 
@@ -348,7 +348,7 @@ static int lwext_mkdir (const char *filename, uint32_t mode)
 	return r;
 }
 
-static int lwext_rmdir (const char *filename)
+static int lwext_rmdir (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
@@ -359,7 +359,7 @@ static int lwext_rmdir (const char *filename)
 	return r;
 }
 
-static int lwext_rename (const char *oldname, const char *newname)
+static int lwext_rename (const vfs_mount_t* mnt, const char *oldname, const char *newname)
 {
 	int r;
 

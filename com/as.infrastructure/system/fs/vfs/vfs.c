@@ -38,13 +38,6 @@
 #define VFS_UNLOCK() Irq_Restore(mask); } while(0)
 #endif
 /* ============================ [ TYPES     ] ====================================================== */
-typedef struct vfs_mount_s
-{
-	const char* mount_point;
-	const struct vfs_filesystem_ops* ops;
-	const device_t* device;
-	TAILQ_ENTRY(vfs_mount_s) entry;
-} vfs_mount_t;
 /* ============================ [ DECLARES  ] ====================================================== */
 #ifdef USE_FATFS
 extern const struct vfs_filesystem_ops fatfs_ops;
@@ -635,7 +628,7 @@ VFS_FILE* vfs_fopen (const char *filename, const char *opentype)
 		mnt = search_mnt(abspath);
 		if(NULL != mnt)
 		{
-			file = mnt->ops->fopen(abspath, opentype);
+			file = mnt->ops->fopen(mnt, abspath, opentype);
 		}
 		free(abspath);
 	}
@@ -695,7 +688,7 @@ int vfs_unlink (const char *filename)
 		mnt = search_mnt(abspath);
 		if(NULL != mnt)
 		{
-			rc = mnt->ops->unlink(abspath);
+			rc = mnt->ops->unlink(mnt, abspath);
 		}
 		free(abspath);
 	}
@@ -719,7 +712,7 @@ int vfs_stat (const char *filename, vfs_stat_t *buf)
 		mnt = search_mnt(abspath);
 		if(NULL != mnt)
 		{
-			rc = mnt->ops->stat(abspath, buf);
+			rc = mnt->ops->stat(mnt, abspath, buf);
 		}
 		free(abspath);
 	}
@@ -743,7 +736,7 @@ VFS_DIR * vfs_opendir (const char *dirname)
 		mnt = search_mnt(abspath);
 		if(NULL != mnt)
 		{
-			dir = mnt->ops->opendir(abspath);
+			dir = mnt->ops->opendir(mnt, abspath);
 		}
 		free(abspath);
 	}
@@ -779,7 +772,7 @@ int vfs_chdir (const char *filename)
 		mnt = search_mnt(abspath);
 		if(NULL != mnt)
 		{
-			rc = mnt->ops->chdir(abspath);
+			rc = mnt->ops->chdir(mnt, abspath);
 			if(0 == rc)
 			{
 				strncpy(vfs_cwd, abspath, FILENAME_MAX);
@@ -833,7 +826,7 @@ int vfs_mkdir (const char *filename, uint32_t mode)
 		mnt = search_mnt(abspath);
 		if(NULL != mnt)
 		{
-			rc = mnt->ops->mkdir(abspath, mode);
+			rc = mnt->ops->mkdir(mnt, abspath, mode);
 		}
 		free(abspath);
 	}
@@ -857,7 +850,7 @@ int  vfs_rmdir (const char *filename)
 		mnt = search_mnt(abspath);
 		if(NULL != mnt)
 		{
-			rc = mnt->ops->rmdir(abspath);
+			rc = mnt->ops->rmdir(mnt, abspath);
 		}
 		free(abspath);
 	}
@@ -885,7 +878,7 @@ int vfs_rename (const char *oldname, const char *newname)
 			mnt = search_mnt(abspath_old);
 			if(NULL != mnt)
 			{
-				rc = mnt->ops->rename(abspath_old,abspath_new);
+				rc = mnt->ops->rename(mnt, abspath_old, abspath_new);
 			}
 			free(abspath_new);
 		}

@@ -36,7 +36,18 @@
 #include "device.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #define AS_LOG_FATFS 0
-#define TO_FATFS_PATH(f) (&((f)[4]))
+#define TO_FATFS_PATH(f) fatfsP
+#define BEGIN_FATFS_PATH(f) do { char cache[2]; \
+	char* fatfsP = to_fatfs_path(mnt, f, cache)
+#define ENDOF_FATFS_PATH(f) restore_fatfs_path(mnt, f, cache); } while(0)
+
+#define TO_FATFS_PATHA(f) fatfsPA
+#define TO_FATFS_PATHB(f) fatfsPB
+#define BEGIN_FATFS_PATHAB(a,b) do { char cachea[2], cacheb[2]; \
+	char* fatfsPA = to_fatfs_path(mnt, a, cachea); \
+	char* fatfsPB = to_fatfs_path(mnt, b, cacheb)
+#define ENDOF_FATFS_PATHAB(a,b) restore_fatfs_path(mnt, a, cachea); \
+	restore_fatfs_path(mnt, b, cacheb); } while(0)
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern const struct vfs_filesystem_ops fatfs_ops;
@@ -49,7 +60,87 @@ static vfs_dirent_t dir_ent;
 static FATFS fatfs_FatFS[FF_VOLUMES];
 static const device_t* fatfs_device_table[FF_VOLUMES];
 /* ============================ [ LOCALS    ] ====================================================== */
-static VFS_FILE* fatfs_fopen (const char *filename, const char *opentype)
+static int get_dev_index(const device_t * device)
+{
+	int index;
+
+	for (index = 0; index < FF_VOLUMES; index ++)
+	{
+		if(fatfs_device_table[index] == device)
+		{
+			break;
+		}
+	}
+
+	return index;
+}
+
+static char* to_fatfs_path(const vfs_mount_t* mnt, const char *filename, char* cache)
+{
+	int index;
+	int len;
+	char* p;
+
+	len = strlen(mnt->mount_point);
+	index = get_dev_index(mnt->device);
+
+	if(len >= 2)
+	{
+		p = (char*)&filename[len - 2];
+		cache[0] = p[0];
+		cache[1] = p[1];
+		p[0] = '0' + index;
+		p[1] = ':';
+	}
+	else if((0 == index) && (len == 1))
+	{
+		p = (char*)&filename[len];
+	}
+	else
+	{
+		asAssert(0);
+	}
+
+	return p;
+}
+
+static char* restore_fatfs_path(const vfs_mount_t* mnt, const char *filename, char* cache)
+{
+	int index;
+	int len;
+	char* p;
+
+	len = strlen(mnt->mount_point);
+	index = get_dev_index(mnt->device);
+
+	if(len >= 2)
+	{
+		p = (char*)&filename[len - 2];
+		p[0] = cache[0];
+		p[1] = cache[1];
+	}
+
+	return p;
+}
+
+int fatfs_is_root(const char* path)
+{
+	int ret = FALSE;
+	int len = strlen(path);
+
+	if((1 == len) && ('/' == path[0]))
+	{
+		ret = TRUE;
+	}
+	else if((2 == len) && (':' == path[1]))
+	{
+		ret = TRUE;
+	}
+
+	return ret;
+}
+
+static VFS_FILE* fatfs_fopen (const vfs_mount_t* mnt, const char *filename, const char *opentype)
 {
 	VFS_FILE *f;
 	BYTE flags = 0;
@@ -91,7 +182,9 @@ static VFS_FILE* fatfs_fopen (const char *filename, const char *opentype)
 		opentype++;
 	}
 
+	BEGIN_FATFS_PATH(filename);
 	r = f_open(f->priv, TO_FATFS_PATH(filename), flags);
+	ENDOF_FATFS_PATH(filename);
 	if (FR_OK != r)
 	{
 		free(f->priv);
@@ -192,13 +285,15 @@ static size_t fatfs_ftell (VFS_FILE *stream)
 	return ((FIL*)(stream->priv))->fptr;
 }
 
-static int fatfs_unlink (const char *filename)
+static int fatfs_unlink (const vfs_mount_t* mnt, const char *filename)
 {
 	FRESULT r;
 
 	ASLOG(FATFS, "unlink(%s)\n", filename);
 
+	BEGIN_FATFS_PATH(filename);
 	r = f_unlink(TO_FATFS_PATH(filename));
+	ENDOF_FATFS_PATH(filename);
 	if (FR_OK == r)
 	{
 		return 0;
@@ -207,15 +302,14 @@ static int fatfs_unlink (const char *filename)
 	return EOF;
 }
 
-static int fatfs_stat (const char *filename, vfs_stat_t *buf)
+static int fatfs_stat (const vfs_mount_t* mnt, const char *filename, vfs_stat_t *buf)
 {
 	FILINFO f;
 	FRESULT r;
 
 	ASLOG(FATFS, "stat(%s)\n", filename);
-
-	if(('\0' == TO_FATFS_PATH(filename)[0])
-		|| (0 == strcmp(TO_FATFS_PATH(filename),"/")) )
+	BEGIN_FATFS_PATH(filename);
+	if(fatfs_is_root(TO_FATFS_PATH(filename)))
 	{	/* just the root */
 		f.fsize = 0;
 		f.fattrib = AM_DIR;
@@ -230,7 +324,7 @@ static int fatfs_stat (const char *filename, vfs_stat_t *buf)
 			return ENOENT;
 		}
 	}
-
+	ENDOF_FATFS_PATH(filename);
 	buf->st_size = f.fsize;
 
 	buf->st_mode = 0;
@@ -256,7 +350,7 @@ static int fatfs_stat (const char *filename, vfs_stat_t *buf)
 	return 0;
 }
 
-static VFS_DIR * fatfs_opendir (const char *dirname)
+static VFS_DIR * fatfs_opendir (const vfs_mount_t* mnt, const char *dirname)
 {
 	VFS_DIR* dir;
 	FRESULT r;
@@ -276,8 +370,9 @@ static VFS_DIR * fatfs_opendir (const char *dirname)
 		free(dir);
 		return NULL;
 	}
-
+	BEGIN_FATFS_PATH(dirname);
 	r = f_opendir(dir->priv, TO_FATFS_PATH(dirname));
+	ENDOF_FATFS_PATH(dirname);
 	if (FR_OK != r)
 	{
 		ASLOG(FATFS, "opendir(%s) failed!(%d)\n", dirname, r);
@@ -332,11 +427,12 @@ static int fatfs_closedir(VFS_DIR* dir)
 	return EBADF;
 }
 
-static int fatfs_chdir (const char *filename)
+static int fatfs_chdir (const vfs_mount_t* mnt, const char *filename)
 {
 	FRESULT r;
 
 	ASLOG(FATFS, "chdir(%s)\n", filename);
+	BEGIN_FATFS_PATH(filename);
 	if(('\0' == TO_FATFS_PATH(filename)[0]))
 	{
 		r = f_chdir("/");
@@ -345,7 +441,7 @@ static int fatfs_chdir (const char *filename)
 	{
 		r = f_chdir(TO_FATFS_PATH(filename));
 	}
-
+	ENDOF_FATFS_PATH(filename);
 	if (FR_OK == r)
 	{
 		return 0;
@@ -356,13 +452,14 @@ static int fatfs_chdir (const char *filename)
 	return ENOTDIR;
 }
 
-static int fatfs_mkdir (const char *filename, uint32_t mode)
+static int fatfs_mkdir (const vfs_mount_t* mnt, const char *filename, uint32_t mode)
 {
 	FRESULT r;
 
 	ASLOG(FATFS, "mkdir(%s, 0x%x)\n", filename, mode);
-
+	BEGIN_FATFS_PATH(filename);
 	r = f_mkdir(TO_FATFS_PATH(filename));
+	ENDOF_FATFS_PATH(filename);
 
 	if (FR_OK == r)
 	{
@@ -378,13 +475,15 @@ static int fatfs_mkdir (const char *filename, uint32_t mode)
 	return EACCES;
 }
 
-static int fatfs_rmdir (const char *filename)
+static int fatfs_rmdir (const vfs_mount_t* mnt, const char *filename)
 {
 	FRESULT r;
 
 	ASLOG(FATFS, "rmdir(%s)\n", filename);
 
+	BEGIN_FATFS_PATH(filename);
 	r = f_rmdir(TO_FATFS_PATH(filename));
+	ENDOF_FATFS_PATH(filename);
 
 	if (FR_OK == r)
 	{
@@ -394,13 +493,15 @@ static int fatfs_rmdir (const char *filename)
 	return EACCES;
 }
 
-static int fatfs_rename (const char *oldname, const char *newname)
+static int fatfs_rename (const vfs_mount_t* mnt, const char *oldname, const char *newname)
 {
 	FRESULT r;
 
 	ASLOG(FATFS, "rename(%s,%s)\n", oldname, newname);
 
-	r = f_rename(TO_FATFS_PATH(oldname),TO_FATFS_PATH(newname));
+	BEGIN_FATFS_PATHAB(oldname,newname);
+	r = f_rename(TO_FATFS_PATHA(oldname),TO_FATFS_PATHB(newname));
+	ENDOF_FATFS_PATHAB(oldname,newname);
 
 	if (FR_OK == r)
 	{
