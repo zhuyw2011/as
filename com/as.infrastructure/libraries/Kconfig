@@ -12,15 +12,6 @@ config TRACE
 	bool "enable the trace library"
 	default n
 
-config ARMNN
-	bool "enable ARM CMSIS NN library"
-	default n
-
-config NNOM
-	bool "enable Neural Network on Microcontroller"
-	default y
-	depends on ARMNN
-
 config LIBFIXMATH
 	bool "Cross Platform Fixed Point Maths Library"
 	default y

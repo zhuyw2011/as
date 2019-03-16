@@ -10,5 +10,7 @@ objs = []
 AddPackage('https://github.com/autoas/CMSIS_5.git')
 if('NNOM' in MODULES):
     AddPackage('https://github.com/autoas/nnom.git')
+if('KWS' in MODULES):
+    AddPackage('https://github.com/autoas/ML-KWS-for-MCU.git')
 
 Return('objs')
