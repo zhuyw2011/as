@@ -1238,7 +1238,11 @@ def Building(target, sobjs, env=None):
     BuildDTS(dts,bdir)
     BuildOFS(ofs)
     BuildingSWCS(swcs)
-    env.Program(target, objs)
+    if('Program' in env):
+        # special program for some compiler
+        env['Program'](target, objs, env)
+    else:
+        env.Program(target, objs)
 
     if(IsPlatformWindows()):target += '.exe'
     if(GetOption('memory')):
