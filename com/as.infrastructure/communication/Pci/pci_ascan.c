@@ -255,9 +255,9 @@ static void can_isr(void)
 				}
 
 				asAssert(Can_Global.config->CanConfigSet->CanCallbacks->RxIndication);
-				ASLOG(CANRX,"CAN%d ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",ctlrId,
+				ASLOG(CANRX, ("CAN%d ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n", ctlrId, 
 						canid,dlc,data[0],data[1],data[2],data[3],
-					data[4],data[5],data[6],data[7]);
+					data[4],data[5],data[6],data[7]));
 				Can_Global.config->CanConfigSet->CanCallbacks->RxIndication(Hrh, canid, dlc, data);
 
 			}
@@ -346,7 +346,7 @@ void Can_Init( const Can_ConfigType *config )
 	}
 	else
 	{
-		ASLOG(ERROR,"No pci-can device found, specify '-device pci-ascan' to qemu\n");
+		ASLOG(ERROR, ("No pci-can device found, specify '-device pci-ascan' to qemu\n"));
 	}
 }
 
@@ -383,7 +383,7 @@ Can_ReturnType Can_SetControllerMode( uint8 controller, Can_StateTransitionType 
 	{
 		case CAN_T_START:
 			canUnit->state = CANIF_CS_STARTED;
-			ASLOG(STDOUT,"can set on-line!\n");
+			ASLOG(STDOUT, ("can set on-line!\n"));
 			if (canUnit->lock_cnt == 0){
 				Can_EnableControllerInterrupts(controller);
 			}
@@ -452,9 +452,9 @@ Can_ReturnType Can_Write( Can_Arc_HTHType hth, Can_PduType *pduInfo )
 				writel(__iobase+REG_CANDATA, pduInfo->sdu[i]);
 			}
 			writel(__iobase+REG_CMD, 2);
-			ASLOG(CANTX,"CAN%d ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",controller,
+			ASLOG(CANTX, ("CAN%d ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n", controller, 
 				pduInfo->id,pduInfo->length,pduInfo->sdu[0],pduInfo->sdu[1],pduInfo->sdu[2],pduInfo->sdu[3],
-				pduInfo->sdu[4],pduInfo->sdu[5],pduInfo->sdu[6],pduInfo->sdu[7]);
+				pduInfo->sdu[4],pduInfo->sdu[5],pduInfo->sdu[6],pduInfo->sdu[7]));
 
 			canUnit->swPduHandle = pduInfo->swPduHandle;
 		}

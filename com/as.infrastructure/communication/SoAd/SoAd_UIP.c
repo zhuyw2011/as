@@ -48,7 +48,7 @@ int tcp_socket_data_callback(struct tcp_socket *s,
 {
 	int slot = (int)(long)ptr;
 	asAssert(slot == (s-tcpSocket));
-	ASLOG(SOAD, "%s(%d) message %d@%p\n", __func__, slot, input_data_len, input_data_ptr);
+	ASLOG(SOAD, ("%s(%d) message %d@%p\n",  __func__,  slot,  input_data_len, input_data_ptr));
 
 	if(NULL == tcpSocketDatatPtr[slot])
 	{
@@ -68,15 +68,15 @@ int tcp_socket_data_callback(struct tcp_socket *s,
 		if(tcpSocketDatatPtr[slot] != NULL)
 		{
 			tcpSocketDatatPtr[slot] = NULL;
-			ASLOG(SOADE, "%s(%d) message %d@%p is not fully consumed,"
+			ASLOG(SOADE, ("%s(%d) message %d@%p is not fully consumed, "
 				  " maybe UIP buffer is too small,"
 				  " or upper layer has some erros\n",
-				  __func__, slot, input_data_len, input_data_ptr);
+				  __func__, slot, input_data_len, input_data_ptr));
 		}
 	}
 	else
 	{
-		ASLOG(SOADE, "%s(%d) data coming too fast!\n", __func__, slot);
+		ASLOG(SOADE, ("%s(%d) data coming too fast!\n",  __func__, slot));
 	}
 
 	return input_data_len;
@@ -88,7 +88,7 @@ void tcp_socket_event_callback(struct tcp_socket *s,
 {
 	int slot = (int)(long)ptr;
 	asAssert(slot == (s-tcpSocket));
-	ASLOG(SOAD, "%s(%d, %d)\n", __func__, slot, event);
+	ASLOG(SOAD, ("%s(%d,  %d)\n",  __func__,  slot, event));
 	switch(event) {
 		case TCP_SOCKET_CONNECTED:
 			tcpSocketConnectFlag |= 1<<slot;
@@ -253,8 +253,8 @@ int SoAd_RecvImpl(int s, void *mem, size_t len, int flags)
 			tcpSocketDatatPtr[s] = NULL;
 		}
 
-		ASLOG(SOAD, "uip socket[%d]: %s %d bytes, left %d bytes.\n",
-			  s, (flags&MSG_PEEK)?"peek":"recv", r, tcpSocketDatatLen[s]);
+		ASLOG(SOAD, ("uip socket[%d]: %s %d bytes,  left %d bytes.\n", 
+				s, (flags&MSG_PEEK)?"peek":"recv", r, tcpSocketDatatLen[s]));
 		ASMEM(SOAD, "", mem, r);
 	}
 

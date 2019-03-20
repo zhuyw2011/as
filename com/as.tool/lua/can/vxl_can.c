@@ -130,7 +130,7 @@ static boolean open_vxl(struct Can_VxlHandle_s *handle)
 	}
 	else
 	{
-		ASWARNING("CAN VXL get driver config error<%d>: %s\n",status, xlGetErrorString(status));
+		ASWARNING(("CAN VXL get driver config error<%d>: %s\n",status, xlGetErrorString(status)));
 		return FALSE;
 	}
 
@@ -140,14 +140,14 @@ static boolean open_vxl(struct Can_VxlHandle_s *handle)
 	status= xlOpenPort(&handle->xlHandle,userName,accessMask,&handle->xlAccess,512,XL_INTERFACE_VERSION,XL_BUS_TYPE_CAN);
 	if(XL_SUCCESS != status)
 	{
-		ASWARNING("CAN VXL open port error<%d>: %s\n",status, xlGetErrorString(status));
+		ASWARNING(("CAN VXL open port error<%d>: %s\n",status, xlGetErrorString(status)));
 		return FALSE;
 	}
 
 	status = xlCanSetChannelBitrate(handle->xlHandle,handle->xlAccess,handle->baudrate);
 	if(XL_SUCCESS != status)
 	{
-		ASWARNING("CAN VXL open error<%d>: %s\n",status, xlGetErrorString(status));
+		ASWARNING(("CAN VXL open error<%d>: %s\n",status, xlGetErrorString(status)));
 		return FALSE;
 	}
 
@@ -155,7 +155,7 @@ static boolean open_vxl(struct Can_VxlHandle_s *handle)
 	status = xlActivateChannel(handle->xlHandle,handle->xlAccess,XL_BUS_TYPE_CAN,XL_ACTIVATE_RESET_CLOCK);
 	if(XL_SUCCESS != status)
 	{
-		ASWARNING("CAN VXL open error<%d>: %s\n",status, xlGetErrorString(status));
+		ASWARNING(("CAN VXL open error<%d>: %s\n",status, xlGetErrorString(status)));
 		return FALSE;
 	}
 
@@ -171,7 +171,7 @@ static boolean vxl_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_devi
 
 		if(XL_SUCCESS != status)
 		{
-			ASWARNING("CAN VXL open error<%d>: %s\n",status, xlGetErrorString(status));
+			ASWARNING(("CAN VXL open error<%d>: %s\n",status, xlGetErrorString(status)));
 			return FALSE;
 		}
 
@@ -186,7 +186,7 @@ static boolean vxl_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_devi
 
 	if(handle)
 	{
-		ASWARNING("CAN VXL port=%d is already on-line, no need to probe it again!\n",port);
+		ASWARNING(("CAN VXL port=%d is already on-line, no need to probe it again!\n",port));
 		rv = FALSE;
 	}
 	else
@@ -205,7 +205,7 @@ static boolean vxl_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_devi
 		else
 		{
 			free(handle);
-			ASWARNING("CAN VXL port=%d is is not able to be opened!\n",port);
+			ASWARNING(("CAN VXL port=%d is is not able to be opened!\n",port));
 			rv = FALSE;
 		}
 	}
@@ -244,13 +244,13 @@ static boolean vxl_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t dl
 		if(XL_SUCCESS != status)
 		{
 			rv = FALSE;
-			ASWARNING("CAN VXL port=%d send message failed: %s!\n",port,xlGetErrorString(status));
+			ASWARNING(("CAN VXL port=%d send message failed: %s!\n",port,xlGetErrorString(status)));
 		}
 	}
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN Vxl port=%d is not on-line, not able to send message!\n",port);
+		ASWARNING(("CAN Vxl port=%d is not on-line, not able to send message!\n",port));
 	}
 
 	return rv;
@@ -290,13 +290,13 @@ static void rx_notifiy(struct Can_VxlHandle_s* handle)
 
 	if(XL_SUCCESS != status)
 	{
-		ASWARNING("CAN VXL port=%d receive message failed: %s!\n",handle->port,xlGetErrorString(status));
+		ASWARNING(("CAN VXL port=%d receive message failed: %s!\n",handle->port,xlGetErrorString(status)));
 		return;
 	}
 	string = xlGetEventString(&Event);
 	if(NULL != strstr(string,"ERROR_FRAME"))
 	{
-		ASWARNING("%s!\n",string);
+		ASWARNING(("%s!\n",string));
 	}
 	/* RX_MSG c=0, t=222, id=0510 l=8, 0000000000000000 tid=00 */
 	else if(NULL != strstr(string,"RX_MSG"))
@@ -312,7 +312,7 @@ static void rx_notifiy(struct Can_VxlHandle_s* handle)
 	}
 	else
 	{
-		ASWARNING("CAN VXL port=%d receive unknown message: '%s'!\n",handle->port,string);
+		ASWARNING(("CAN VXL port=%d receive unknown message: '%s'!\n",handle->port,string));
 	}
 }
 static void * rx_daemon(void * param)

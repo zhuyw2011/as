@@ -32,7 +32,7 @@ static VFS_FILE* host_fopen (const vfs_mount_t* mnt, const char *filename, const
 {
 	VFS_FILE *f;
 
-	ASLOG(HOFS, "fopen(%s,%s)\n", filename, opentype);
+	ASLOG(HOFS, ("fopen(%s, %s)\n",  filename, opentype));
 
 	f = malloc(sizeof(VFS_FILE));
 	if(NULL != f)
@@ -111,7 +111,7 @@ static int host_unlink (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
-	ASLOG(HOFS, "unlink(%s)\n", filename);
+	ASLOG(HOFS, ("unlink(%s)\n", filename));
 
 	r = remove(TO_HOFS_PATH(filename));
 
@@ -122,7 +122,7 @@ static int host_stat (const vfs_mount_t* mnt, const char *filename, vfs_stat_t *
 {
 	int r = ENOENT;
 
-	ASLOG(HOFS, "stat(%s)\n", filename);
+	ASLOG(HOFS, ("stat(%s)\n", filename));
 
 	if(('\0' == TO_HOFS_PATH(filename)[0])
 		|| (0 == strcmp(TO_HOFS_PATH(filename),"/")) )
@@ -150,7 +150,7 @@ static VFS_DIR * host_opendir (const vfs_mount_t* mnt, const char *dirname)
 {
 	VFS_DIR* dir;
 
-	ASLOG(HOFS, "opendir(%s)\n", dirname);
+	ASLOG(HOFS, ("opendir(%s)\n", dirname));
 
 	dir = malloc(sizeof(VFS_DIR));
 
@@ -174,7 +174,7 @@ static VFS_DIR * host_opendir (const vfs_mount_t* mnt, const char *dirname)
 		{
 			free(dir);
 			dir = NULL;
-			ASLOG(HOFS, "opendir failed!\n");
+			ASLOG(HOFS, ("opendir failed!\n"));
 		}
 	}
 
@@ -231,7 +231,7 @@ static int host_chdir (const vfs_mount_t* mnt, const char *filename)
 
 	int r = ENOTDIR;
 
-	ASLOG(HOFS, "chdir(%s)\n", filename);
+	ASLOG(HOFS, ("chdir(%s)\n", filename));
 
 	if(('\0' == TO_HOFS_PATH(filename)[0]))
 	{
@@ -257,7 +257,7 @@ static int host_mkdir (const vfs_mount_t* mnt, const char *filename, uint32_t mo
 {
 	int r;
 
-	ASLOG(HOFS, "mkdir(%s, 0x%x)\n", filename, mode);
+	ASLOG(HOFS, ("mkdir(%s,  0x%x)\n",  filename, mode));
 
 #if defined(__LINUX__)
 	r = mkdir(TO_HOFS_PATH(filename), mode);
@@ -271,7 +271,7 @@ static int host_rmdir (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
-	ASLOG(HOFS, "rmdir(%s)\n", filename);
+	ASLOG(HOFS, ("rmdir(%s)\n", filename));
 
 	r = rmdir(TO_HOFS_PATH(filename));
 
@@ -282,7 +282,7 @@ static int host_rename (const vfs_mount_t* mnt, const char *oldname, const char 
 {
 	int r;
 
-	ASLOG(HOFS, "rename (%s, %s)\n", oldname, newname);
+	ASLOG(HOFS, ("rename (%s,  %s)\n",  oldname, newname));
 
 	r = rename(TO_HOFS_PATH(oldname), TO_HOFS_PATH(newname));
 

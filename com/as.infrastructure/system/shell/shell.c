@@ -167,7 +167,7 @@ void SHELL_input(char c)
 	Irq_Restore(imask);
 	if(1 != r)
 	{
-		ASWARNING("shell input buffer overflow!\n");
+		ASWARNING(("shell input buffer overflow!\n"));
 	}
 #if defined(USE_TINYOS) || defined(USE_CONTIKI)
 	OsActivateTask(TaskShell);
@@ -391,7 +391,7 @@ int SHELL_RunCmd(const char *cmdArgs, int *cmdRv ) {
 
 	*cmdRv = 1;
 
-	ASLOG(SHELL,"run cmd '%s'\n",cmdArgs);
+	ASLOG(SHELL, ("run cmd '%s'\n", cmdArgs));
 
 	if (cmdArgs == NULL) {
 		return SHELL_E_CMD_IS_NULL;
@@ -409,7 +409,7 @@ int SHELL_RunCmd(const char *cmdArgs, int *cmdRv ) {
 
 	if(NULL == cmdStr)
 	{
-		ASLOG(SHELL,"error when parse cmdStr\n");
+		ASLOG(SHELL, ("error when parse cmdStr\n"));
 		return SHELL_E_CMD_IS_NULL;
 	}
 
@@ -450,7 +450,7 @@ int SHELL_RunCmd(const char *cmdArgs, int *cmdRv ) {
 
 			if(NULL == arg)
 			{
-				ASLOG(SHELL,"error when parse arg\n");
+				ASLOG(SHELL, ("error when parse arg\n"));
 				return SHELL_E_CMD_IS_NULL;
 			}
 

@@ -33,7 +33,7 @@
 
 
 void Com_MainFunctionRx(void) {
-	//DEBUG(DEBUG_MEDIUM, "Com_MainFunctionRx() excecuting\n");
+	//ASLOG(MEDIUM, ("Com_MainFunctionRx() excecuting\n"));
 	for (uint16 pduId = 0; !ComConfig->ComIPdu[pduId].Com_Arc_EOL; pduId++) {
 		boolean pduUpdated = false;
 		const ComIPdu_type *IPdu = GET_IPdu(pduId);
@@ -98,7 +98,7 @@ void Com_MainFunctionRx(void) {
 void Com_MainFunctionTx(void) {
 	imask_t irq_state;
 
-	//DEBUG(DEBUG_MEDIUM, "Com_MainFunctionTx() excecuting\n");
+	//ASLOG(MEDIUM, ("Com_MainFunctionTx() excecuting\n"));
 	// Decrease timers.
 	const ComIPdu_type *IPdu;
 	for (uint16 i = 0; !ComConfig->ComIPdu[i].Com_Arc_EOL; i++) {

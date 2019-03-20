@@ -221,7 +221,7 @@ static rt_err_t tap_netif_init(rt_device_t dev)
 	enable_pci_interrupt(pdev);
 
 #ifdef USE_PCAPIF
-	ASLOG(ETH, "using adapter %d\n", PACKET_LIB_ADAPTER_NR);
+	ASLOG(ETH, ("using adapter %d\n", PACKET_LIB_ADAPTER_NR));
 	writel(__iobase+REG_ADAPTERID, PACKET_LIB_ADAPTER_NR);
 	writel(__iobase+REG_MACH,0xdeadbeef);
 	writel(__iobase+REG_MACL,0xdeadbeef);
@@ -386,7 +386,7 @@ void PciNet_Init(uint32 gw, uint32 netmask, uint8* hwaddr, uint32* mtu)
 		enable_pci_interrupt(pdev);
 
 #ifdef USE_PCAPIF
-		ASLOG(ETH, "using adapter %d, gw/netmask=%08X/%08X\n", PACKET_LIB_ADAPTER_NR, gw, netmask);
+		ASLOG(ETH, ("using adapter %d,  gw/netmask=%08X/%08X\n",  PACKET_LIB_ADAPTER_NR,  gw, netmask));
 		writel(__iobase+REG_ADAPTERID, PACKET_LIB_ADAPTER_NR);
 		writel(__iobase+REG_MACH,0xdeadbeef);
 		writel(__iobase+REG_MACL,0xdeadbeef);
@@ -408,7 +408,7 @@ void PciNet_Init(uint32 gw, uint32 netmask, uint8* hwaddr, uint32* mtu)
 	}
 	else
 	{
-		ASLOG(ERROR,"No pci-asnet device found, specify '-device pci-asnet' to qemu\n");
+		ASLOG(ERROR, ("No pci-asnet device found, specify '-device pci-asnet' to qemu\n"));
 	}
 }
 #ifdef USE_LWIP
@@ -523,10 +523,10 @@ err_t ethernetif_init(struct netif *netif)
 	netif->hwaddr_len = 6;
 	netif->mtu = mtu;
 
-	ASLOG(ETH,"hwaddr is %02X:%02X:%02X:%02X:%02X:%02X, mtu=%d\n",
+	ASLOG(ETH, ("hwaddr is %02X:%02X:%02X:%02X:%02X:%02X,  mtu=%d\n", 
 			netif->hwaddr[0],netif->hwaddr[1],netif->hwaddr[2],
 			netif->hwaddr[3],netif->hwaddr[4],netif->hwaddr[5],
-			mtu);
+			mtu));
 	netif->name[0] = IFNAME0;
 	netif->name[1] = IFNAME1;
 	netif->output = etharp_output;
@@ -608,7 +608,7 @@ static uint16_t ethernet_poll(void)
 			size = len = readl(__iobase+REG_LENGTH);
 			if(size > UIP_BUFSIZE)
 			{
-				ASLOG(ETHE, "uip input buffer(%d bytes) is not enough for packet with size %d bytes.\n", UIP_BUFSIZE, size);
+				ASLOG(ETHE, ("uip input buffer(%d bytes) is not enough for packet with size %d bytes.\n",  UIP_BUFSIZE, size));
 				size = len = UIP_BUFSIZE;
 			}
 			if(size > 0)
@@ -629,7 +629,7 @@ static uint16_t ethernet_poll(void)
 
 static void ethernet_exit(void)
 {
-	ASLOG(ETHE, "ethernet exit is not supported\n");
+	ASLOG(ETHE, ("ethernet exit is not supported\n"));
 }
 
 static void ethernet_init(void)
@@ -637,10 +637,10 @@ static void ethernet_init(void)
 	uint32 mtu;
 	PciNet_Init(inet_addr("172.18.0.1"), inet_addr("255.255.255.0"), uip_lladdr.addr, &mtu);
 
-	ASLOG(ETH,"hwaddr is %02X:%02X:%02X:%02X:%02X:%02X, mtu=%d\n",
+	ASLOG(ETH, ("hwaddr is %02X:%02X:%02X:%02X:%02X:%02X,  mtu=%d\n", 
 		  uip_lladdr.addr[0],uip_lladdr.addr[1],uip_lladdr.addr[2],
 		  uip_lladdr.addr[3],uip_lladdr.addr[4],uip_lladdr.addr[5],
-		  mtu);
+		  mtu));
 }
 
 static void pollhandler(void)

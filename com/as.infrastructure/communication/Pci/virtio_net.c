@@ -37,7 +37,7 @@ static pci_dev *pdev = NULL;
 /* ============================ [ LOCALS    ] ====================================================== */
 static void handler(void)
 {
-	ASLOG(VNET,"virtio net isr happened\n");
+	ASLOG(VNET, ("virtio net isr happened\n"));
 }
 /* ============================ [ FUNCTIONS ] ====================================================== */
 void virtio_net_init(void)
@@ -51,16 +51,16 @@ void virtio_net_init(void)
 	iobase = pdev->io_addr[0];
 
 	/* ref http://wiki.osdev.org/Virtio */
-	ASLOG(VNET,"virtio net MAC=%02X:%02X:%02X:%02X:%02X:%02X\n",
+	ASLOG(VNET, ("virtio net MAC=%02X:%02X:%02X:%02X:%02X:%02X\n", 
 			inb(iobase+0x14),inb(iobase+0x15),inb(iobase+0x16),
-			inb(iobase+0x17),inb(iobase+0x18),inb(iobase+0x19));
+inb(iobase+0x17),inb(iobase+0x18),inb(iobase+0x19)));
 
 	/* Virtual I/O Device (VIRTIO) Version 1.0, Spec 4, section 3.1.1:  Device Initialization */
 	outb(iobase+0x12,VIRTIO_ACKNOWLEDGE);
 	outb(iobase+0x12,VIRTIO_ACKNOWLEDGE | VIRTIO_DRIVER);
 
 	features = inl(iobase+0x00);
-	ASLOG(VNET,"virtio net supported features %08X\n", features);
+	ASLOG(VNET, ("virtio net supported features %08X\n", features));
 	/* disable some features
 	 * ref http://www.dumais.io/attachment-mongo.php?art=aca38a9a2b065b24dfa1dee728062a12&a=virtnet.c*/
 	features &= ~((1<<VIRTIO_GUEST_TSO4) |
@@ -77,12 +77,12 @@ void virtio_net_init(void)
 	val = inb(iobase+0x12);
 	if(0 == (val&VIRTIO_FEATURES_OK))
 	{
-		ASLOG(ERROR," virtio net features NOK\n");
+		ASLOG(ERROR, (" virtio net features NOK\n"));
 		return;
 	}
 	else
 	{
-		ASLOG(VNET, "features okay\n");
+		ASLOG(VNET, ("features okay\n"));
 	}
 
 	/* setup queues */

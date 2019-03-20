@@ -244,7 +244,7 @@ void SoAd_SocketStatusCheck(uint16 sockNr, int sockHandle)
 
 	sockErr = SoAd_SocketStatusCheckImpl(sockHandle);
 	if (sockErr != 0) {
-		ASLOG(SOADE, "socket[%d] status not okay, closed!\n", sockNr);
+		ASLOG(SOADE, ("socket[%d] status not okay,  closed!\n", sockNr));
 		SoAd_SocketClose(sockNr);
 	}
 }
@@ -284,12 +284,12 @@ static void socketCreate(uint16 sockNr)
 
     sockFd = SoAd_CreateSocketImpl(AF_INET, sockType, 0);
     if (sockFd >= 0) {
-        ASLOG(SOAD,"SoAd create socket[%d] okay.\n",sockNr);
+        ASLOG(SOAD, ("SoAd create socket[%d] okay.\n", sockNr));
 		r = SoAd_BindImpl(sockFd, SocketAdminList[sockNr].SocketConnectionRef->SocketLocalPort,
 				SocketAdminList[sockNr].SocketConnectionRef->SocketLocalIpAddress);
 		if(r >= 0) {
-			ASLOG(SOAD,"SoAd bind socket[%d] on port %d okay.\n",sockNr,
-                SocketAdminList[sockNr].SocketConnectionRef->SocketLocalPort);
+			ASLOG(SOAD, ("SoAd bind socket[%d] on port %d okay.\n", sockNr, 
+						SocketAdminList[sockNr].SocketConnectionRef->SocketLocalPort));
             if (!SocketAdminList[sockNr].SocketProtocolIsTcp) {
             	// Now the UDP socket is ready for receive/transmit
             	SocketAdminList[sockNr].SocketHandle = sockFd;
@@ -297,22 +297,22 @@ static void socketCreate(uint16 sockNr)
             } else {
                 if  ( SoAd_ListenImpl(sockFd, 20) == 0 ){	// NOTE: What number of the backlog?
                 	// Now the TCP socket is ready for receive/transmit
-                    ASLOG(SOAD,"SoAd listen socket[%d] okay.\n",sockNr);
+                    ASLOG(SOAD, ("SoAd listen socket[%d] okay.\n", sockNr));
                 	SocketAdminList[sockNr].SocketHandle = sockFd;
                 	SocketAdminList[sockNr].SocketState = SOCKET_TCP_LISTENING;
                 } else {
-                    ASLOG(SOADE,"SoAd listen socket[%d] failed.\n",sockNr);
+                    ASLOG(SOADE,("SoAd listen socket[%d] failed.\n",sockNr));
                 	SoAd_SocketCloseImpl(sockFd);
                 }
             }
     	} else {
-            ASLOG(SOADE,"SoAd bind socket[%d] failed.\n",sockNr);
+            ASLOG(SOADE,("SoAd bind socket[%d] failed.\n",sockNr));
     		SoAd_SocketCloseImpl(sockFd);
     	}
     } else {
     	// Socket creation failed
     	// Do nothing, try again later
-        ASLOG(SOADE,"SoAd create socket[%d] failed! try again later.\n",sockNr);
+        ASLOG(SOADE, ("SoAd create socket[%d] failed! try again later.\n", sockNr));
     }
 }
 

@@ -138,7 +138,7 @@ void vPortStartFirstTask( void )
 
 	runtsk = schedtsk;
 
-	ASLOG(OS,"switch to task %d\n",runtsk);
+	ASLOG(OS, ("switch to task %d\n", runtsk));
 
 	/* Start the first task. */
 	prvResumeThread( pxThreads[runtsk].hThread  );
@@ -153,7 +153,7 @@ void vPortYield( void )
 		{
 			TaskType saved_runtsk = runtsk;
 			/* Switch tasks. */
-			ASLOG(OS,"switch from task %d to task %d\n",runtsk,schedtsk);
+			ASLOG(OS, ("switch from task %d to task %d\n", runtsk, schedtsk));
 			runtsk = schedtsk;
 
 			callevel = TCL_TASK;
@@ -193,12 +193,12 @@ portTickType xMicroSeconds = portTICK_RATE_MICROSECONDS;
 		/* Set-up the timer interrupt. */
 		if ( 0 != setitimer( TIMER_TYPE, &itimer, &oitimer ) )
 		{
-			ASLOG(OS, "Set Timer problem.\n" );
+			ASLOG(OS, ("Set Timer problem.\n" ));
 		}
 	}
 	else
 	{
-		ASLOG(OS, "Get Timer problem.\n" );
+		ASLOG(OS, ("Get Timer problem.\n" ));
 	}
 }
 
@@ -213,7 +213,7 @@ void prvProcessTickInterrupt( void )
 /*-----------------------------------------------------------*/
 void vPortSystemTickHandler( int sig )
 {
-	ASLOG(OFF,"xInterruptsEnabled=%d,xServicingTick=%d\n",xInterruptsEnabled,xServicingTick);
+	ASLOG(OFF, ("xInterruptsEnabled=%d, xServicingTick=%d\n", xInterruptsEnabled, xServicingTick));
 	if ( ( pdTRUE == xInterruptsEnabled ) && ( pdTRUE != xServicingTick ) )
 	{
 		if ( 0 == pthread_mutex_trylock( &xSingleThreadMutex ) )
@@ -233,7 +233,7 @@ void vPortSystemTickHandler( int sig )
 			{
 				TaskType saved_runtsk = runtsk;
 
-				ASLOG(OS,"isr switch from task %d to task %d\n",runtsk,schedtsk);
+				ASLOG(OS, ("isr switch from task %d to task %d\n", runtsk, schedtsk));
 
 				runtsk = schedtsk;
 
@@ -272,7 +272,7 @@ void prvSuspendSignalHandler(int sig)
 {
 sigset_t xSignals;
 
-	ASLOG(OFF, "prvSuspendSignalHandler\n" );
+	ASLOG(OFF, ("prvSuspendSignalHandler\n" ));
 
 	/* Only interested in the resume signal. */
 	sigemptyset( &xSignals );
@@ -282,13 +282,13 @@ sigset_t xSignals;
 	/* Unlock the Single thread mutex to allow the resumed task to continue. */
 	if ( 0 != pthread_mutex_unlock( &xSingleThreadMutex ) )
 	{
-		ASLOG(OS, "Releasing someone else's lock.\n" );
+		ASLOG(OS, ("Releasing someone else's lock.\n" ));
 	}
 
 	/* Wait on the resume signal. */
 	if ( 0 != sigwait( &xSignals, &sig ) )
 	{
-		ASLOG(OS, "SSH: Sw %d\n", sig );
+		ASLOG(OS, ("SSH: Sw %d\n", sig ));
 	}
 	/* Will resume here when the SIG_RESUME signal is received. */
 }
@@ -296,7 +296,7 @@ sigset_t xSignals;
 
 void prvSuspendThread( pthread_t xThreadId )
 {
-	ASLOG(OFF, "prvSuspendThread(%Xh)\n", xThreadId);
+	ASLOG(OFF, ("prvSuspendThread(%Xh)\n", xThreadId));
 	portBASE_TYPE xResult = pthread_mutex_lock( &xSuspendResumeThreadMutex );
 	if ( 0 == xResult )
 	{
@@ -314,7 +314,7 @@ void prvSuspendThread( pthread_t xThreadId )
 
 void prvResumeSignalHandler(int sig)
 {
-	ASLOG(OFF, "prvResumeSignalHandler\n" );
+	ASLOG(OFF, ("prvResumeSignalHandler\n" ));
 	/* Yield the Scheduler to ensure that the yielding thread completes. */
 	if ( 0 == pthread_mutex_lock( &xSingleThreadMutex ) )
 	{
@@ -327,7 +327,7 @@ void prvResumeThread( pthread_t xThreadId )
 {
 portBASE_TYPE xResult;
 
-	ASLOG(OFF, "prvResumeThread(%Xh)\n", xThreadId);
+	ASLOG(OFF, ("prvResumeThread(%Xh)\n", xThreadId));
 	if ( 0 == pthread_mutex_lock( &xSuspendResumeThreadMutex ) )
 	{
 		if ( pthread_self() != xThreadId )
@@ -369,17 +369,17 @@ struct sigaction sigsuspendself, sigresume, sigtick;
 
 	if ( 0 != sigaction( SIG_SUSPEND, &sigsuspendself, NULL ) )
 	{
-		ASLOG(OS, "Problem installing SIG_SUSPEND_SELF\n" );
+		ASLOG(OS, ("Problem installing SIG_SUSPEND_SELF\n" ));
 	}
 	if ( 0 != sigaction( SIG_RESUME, &sigresume, NULL ) )
 	{
-		ASLOG(OS, "Problem installing SIG_RESUME\n" );
+		ASLOG(OS, ("Problem installing SIG_RESUME\n" ));
 	}
 	if ( 0 != sigaction( SIG_TICK, &sigtick, NULL ) )
 	{
-		ASLOG(OS, "Problem installing SIG_TICK\n" );
+		ASLOG(OS, ("Problem installing SIG_TICK\n" ));
 	}
-	ASLOG(OS,"Running as PID: %d\n", getpid() );
+	ASLOG(OS, ("Running as PID: %d\n", getpid() ));
 }
 
 /*-----------------------------------------------------------*/
@@ -388,7 +388,7 @@ void vPortFindTicksPerSecond( void )
 {
 	/* Needs to be reasonably high for accuracy. */
 	unsigned long ulTicksPerSecond = sysconf(_SC_CLK_TCK);
-	ASLOG(OS, "Timer Resolution for Run TimeStats is %ld ticks per second.\n", ulTicksPerSecond );
+	ASLOG(OS, ("Timer Resolution for Run TimeStats is %ld ticks per second.\n", ulTicksPerSecond ));
 }
 /*-----------------------------------------------------------*/
 
@@ -456,7 +456,7 @@ void disable_int(void)
 		(void)pthread_mutex_lock( &xSingleThreadMutex );
 	}
 	xInterruptsEnabled = pdFALSE;
-	ASLOG(ISR, "disable_int\n" );
+	ASLOG(ISR, ("disable_int\n" ));
 	pthread_mutex_unlock(&isrAccess);
 }
 void enable_int(void)
@@ -468,7 +468,7 @@ void enable_int(void)
 	{
 		(void)pthread_mutex_unlock( &xSingleThreadMutex );
 	}
-	ASLOG(ISR, "enable_int\n" );
+	ASLOG(ISR, ("enable_int\n" ));
 	pthread_mutex_unlock(&isrAccess);
 }
 imask_t __Irq_Save(void)
@@ -484,7 +484,7 @@ imask_t __Irq_Save(void)
 		(void)pthread_mutex_lock( &xSingleThreadMutex );
 	}
 	xInterruptsEnabled = pdFALSE;
-	ASLOG(ISR, "__Irq_Save(%d)\n",ret);
+	ASLOG(ISR, ("__Irq_Save(%d)\n", ret));
 	//asCallStack();
 	pthread_mutex_unlock(&isrAccess);
 
@@ -500,7 +500,7 @@ void Irq_Restore(imask_t irq_state)
 	{
 		(void)pthread_mutex_unlock( &xSingleThreadMutex );
 	}
-	ASLOG(ISR, "Irq_Restore(%d)\n",irq_state);
+	ASLOG(ISR, ("Irq_Restore(%d)\n", irq_state));
 	pthread_mutex_unlock(&isrAccess);
 }
 #else
@@ -508,7 +508,7 @@ void disable_int( void )
 {
 	pthread_mutex_lock(&isrAccess);
 
-	ASLOG(ISR, "disable_int(%d)\n",uxCriticalNesting);
+	ASLOG(ISR, ("disable_int(%d)\n", uxCriticalNesting));
 
 	uxCriticalNesting ++;
 
@@ -538,7 +538,7 @@ void enable_int( void )
 		(void)pthread_mutex_unlock( &xSingleThreadMutex );
 	}
 
-	ASLOG(ISR, "enable_int(%d)\n",uxCriticalNesting);
+	ASLOG(ISR, ("enable_int(%d)\n", uxCriticalNesting));
 	pthread_mutex_unlock(&isrAccess);
 }
 
@@ -598,11 +598,11 @@ void start_dispatch(void)
 	{
 		if ( 0 != sigwait( &xSignals, &iSignal ) )
 		{
-			ASLOG(OS, "Main thread spurious signal: %d\n", iSignal );
+			ASLOG(OS, ("Main thread spurious signal: %d\n", iSignal ));
 		}
 	}
 
-	ASLOG(OS, "Cleaning Up, Exiting.\n" );
+	ASLOG(OS, ("Cleaning Up, Exiting.\n" ));
 	/* Cleanup the mutexes */
 	xResult = pthread_mutex_destroy( &xSuspendResumeThreadMutex );
 	xResult = pthread_mutex_destroy( &xSingleThreadMutex );

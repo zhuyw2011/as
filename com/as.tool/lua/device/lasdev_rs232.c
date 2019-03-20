@@ -79,7 +79,7 @@ static int lasdev_open  (const char* device, const char* option, void** param)
 	/* option format "baudrate\0modes", e.g. "115200\08N1" */
 	baudrate = atoi(option);
 	modes = option + strlen(option) + 1;
-	ASLOG(LAS_DEV,"rs232 open(%d,%d,%s)\n",port,baudrate,modes);
+	ASLOG(LAS_DEV, ("rs232 open(%d, %d, %s)\n", port, baudrate, modes));
 
 	if(CAN_TCP_SERIAL_PORT == port)
 	{
@@ -99,7 +99,7 @@ static int lasdev_open  (const char* device, const char* option, void** param)
 		addr.sin_port = htons(1103);
 
 		if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-			ASWARNING("Serial TCP open failed!\n");
+			ASWARNING(("Serial TCP open failed!\n"));
 			rv = FALSE;
 		}
 
@@ -109,7 +109,7 @@ static int lasdev_open  (const char* device, const char* option, void** param)
 			if(connect(s, (struct sockaddr*) & addr, sizeof (addr)) < 0)
 			{
 				#ifdef __WINDOWS__
-				ASWARNING("Serial TCP connect failed: %d\n", WSAGetLastError());
+				ASWARNING(("Serial TCP connect failed: %d\n", WSAGetLastError()));
 				closesocket(s);
 				#else
 				ASWARNING("Serial TCP connect failed!\n");
@@ -156,7 +156,7 @@ static int lasdev_read  (void* param,char** pdata)
 		memcpy(*pdata,data,len);
 	}
 
-	ASLOG(LAS_DEV,"rs232 %d = read(%d)\n",len,*((LAS_RS232ParamType*)param));
+	ASLOG(LAS_DEV, ("rs232 %d = read(%d)\n", len, *((LAS_RS232ParamType*)param)));
 
 	return len;
 }
@@ -173,7 +173,7 @@ static int lasdev_write (void* param,const char* data,size_t ls)
 		}
 		else
 		{
-			ASWARNING("Serial TCP send message failed!\n");
+			ASWARNING(("Serial TCP send message failed!\n"));
 		}
 	}
 	else

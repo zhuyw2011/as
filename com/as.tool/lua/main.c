@@ -112,7 +112,7 @@ void RPmsg_Client_RxNotitication(RPmsg_ChannelType chl,void* data, uint16 len)
 	uint32_t i;
 	char* cmd = (char*)data;
 	asAssert(chl == RPMSG_CHL_CLIENT);
-	ASLOG(SHELL,"receive cmd \"%s\"\n",cmd);
+	ASLOG(SHELL, ("receive cmd \"%s\"\n", cmd));
 	/* for debug */
 	/* strcpy(cmd,"lua d:/repository/as/com/as.tool/lua/script/flashloader.lua"); */
 	if(NULL != strstr(cmd,"lua"))

@@ -398,7 +398,7 @@ TASK(SchM_Startup){
 	uint32_t i;
 #endif
 	OS_TASK_BEGIN();
-	ASLOG(OFF,"SchM_Startup is running\n");
+	ASLOG(OFF, ("SchM_Startup is running\n"));
 
 	SchM_StartupHook();
 	/* At this point EcuM ==  ECUM_STATE_STARTUP_ONE */
@@ -478,7 +478,7 @@ TASK(SchM_BswService) {
 
 	OS_TASK_BEGIN();
 
-	ASLOG(OFF,"SchM_BswService is running\n");
+	ASLOG(OFF, ("SchM_BswService is running\n"));
 	EcuM_GetState(&state);
 
 	switch( state ) {

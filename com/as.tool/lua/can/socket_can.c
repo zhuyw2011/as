@@ -113,7 +113,7 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 
 	if(handle)
 	{
-		ASWARNING("CAN socket port=%d is already on-line, no need to probe it again!\n",port);
+		ASWARNING(("CAN socket port=%d is already on-line, no need to probe it again!\n",port));
 		rv = FALSE;
 	}
 	else
@@ -124,7 +124,7 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 		/* open socket */
 		if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
 			perror("CAN socket : ");
-			ASWARNING("CAN Socket port=%d open failed!\n",port);
+			ASWARNING(("CAN Socket port=%d open failed!\n",port));
 			rv = FALSE;
 		}
 
@@ -135,7 +135,7 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 			ifr.ifr_ifindex = if_nametoindex(ifr.ifr_name);
 			if (!ifr.ifr_ifindex) {
 				perror("CAN socket if_nametoindex");
-				ASWARNING("CAN Socket port=%d if_nametoindex failed!\n",port);
+				ASWARNING(("CAN Socket port=%d if_nametoindex failed!\n",port));
 				rv = FALSE;
 			}
 		}
@@ -153,7 +153,7 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 
 			if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 				perror("CAN socket bind");
-				ASWARNING("CAN Socket port=%d bind failed!\n",port);
+				ASWARNING(("CAN Socket port=%d bind failed!\n",port));
 				rv = FALSE;
 			}
 
@@ -222,14 +222,14 @@ static boolean socket_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t
 
 		if (write(handle->s, &frame, required_mtu) != required_mtu) {
 			perror("CAN socket write");
-			ASWARNING("CAN Socket port=%d send message failed!\n",port);
+			ASWARNING(("CAN Socket port=%d send message failed!\n",port));
 			rv = FALSE;
 		}
 	}
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN Socket port=%d is not on-line, not able to send message!\n",port);
+		ASWARNING(("CAN Socket port=%d is not on-line, not able to send message!\n",port));
 	}
 
 	return rv;
@@ -262,7 +262,7 @@ static void rx_notifiy(struct Can_SocketHandle_s* handle)
 	}
 	else if (nbytes < 0) {
 		perror("CAN socket read");
-		ASWARNING("CAN Socket port=%d read message failed %d!\n",handle->port,nbytes);
+		ASWARNING(("CAN Socket port=%d read message failed %d!\n",handle->port,nbytes));
 	}
 	else
 	{

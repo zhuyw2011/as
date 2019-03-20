@@ -314,8 +314,8 @@ extern void Xcp_TxEvent(Xcp_EventType code);
 extern void Xcp_TxSuccess();
 
 /* HELPER DEFINES */
-#define RETURN_ERROR(code, ...) do {      \
-        ASLOG(XCP,## __VA_ARGS__ );\
+#define RETURN_ERROR(code, msg) do {      \
+        ASLOG(XCP, msg);\
         Xcp_TxError(code);                \
         return E_NOT_OK;                  \
     } while(0)

@@ -101,14 +101,14 @@ static boolean get_zlg_param(uint32_t port,uint32_t* DeviceType,uint32_t* CANInd
 	{
 		*DeviceType = strtoul(pVCI_USBCAN, NULL, 10);
 		*CANInd  = port;
-		ASLOG(ZLG, "open VCI_USBCAN %d port %d\n", *DeviceType, *CANInd);
+		ASLOG(ZLG, ("open VCI_USBCAN %d port %d\n", *DeviceType, *CANInd));
 	}
 	else
 	{
-		ASWARNING("please set env VCI_USBCAN according to the device type value specified in ConttrolCAN.h!\n"
+		ASWARNING(("please set env VCI_USBCAN according to the device type value specified in ConttrolCAN.h!\n"
 				"  set VCI_USBCAN=4 REM for VCI_USBCAN2\n"
 				"  set VCI_USBCAN=21 REM for VCI_USBCAN_2E_U\n"
-				);
+				));
 		rv = FALSE;
 	}
 
@@ -146,7 +146,7 @@ static boolean zlg_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_devi
 
 	if(handle)
 	{
-		ASWARNING("CAN ZLG port=%d is already on-line, no need to probe it again!\n",port);
+		ASWARNING(("CAN ZLG port=%d is already on-line, no need to probe it again!\n",port));
 		rv = FALSE;
 	}
 	else
@@ -165,8 +165,8 @@ static boolean zlg_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_devi
 
 			if(STATUS_OK != status)
 			{
-				ASWARNING("CAN ZLG port=%d is not able to be opened,error=%X!\n",port,status);
-				ASWARNING("maybe you forgot about the ControlCAN\\64\\kerneldlls to be copied to local directory!\n");
+				ASWARNING(("CAN ZLG port=%d is not able to be opened,error=%X!\n",port,status));
+				ASWARNING(("maybe you forgot about the ControlCAN\\64\\kerneldlls to be copied to local directory!\n"));
 				rv = FALSE;
 			}
 		}
@@ -183,7 +183,7 @@ static boolean zlg_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_devi
 			status = VCI_InitCAN(DeviceType,0,CANInd,&init_config);
 			if(STATUS_OK != status)
 			{
-				ASWARNING("CAN ZLG port=%d is not able to be initialized,error=%X!\n",port,status);
+				ASWARNING(("CAN ZLG port=%d is not able to be initialized,error=%X!\n",port,status));
 				rv = FALSE;
 			}
 		}
@@ -193,7 +193,7 @@ static boolean zlg_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_devi
 			status = VCI_StartCAN(DeviceType,0,CANInd);
 			if(STATUS_OK != status)
 			{
-				ASWARNING("CAN ZLG port=%d is not able to be started,error=%X!\n",port,status);
+				ASWARNING(("CAN ZLG port=%d is not able to be started,error=%X!\n",port,status));
 				rv = FALSE;
 			}
 		}
@@ -262,13 +262,13 @@ static boolean zlg_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t dl
 		else
 		{
 			rv = FALSE;
-			ASWARNING("CAN ZLG port=%d send message failed: error = %X!\n",port,status);
+			ASWARNING(("CAN ZLG port=%d send message failed: error = %X!\n",port,status));
 		}
 	}
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN ZLG port=%d is not on-line, not able to send message!\n",port);
+		ASWARNING(("CAN ZLG port=%d is not on-line, not able to send message!\n",port));
 	}
 
 	return rv;
@@ -308,7 +308,7 @@ static void rx_notifiy(struct Can_ZLGHandle_s* handle)
 		}
 		else
 		{
-			ASWARNING("CAN ZLG port=%d read message failed: error = %X!\n",handle->port,status);
+			ASWARNING(("CAN ZLG port=%d read message failed: error = %X!\n",handle->port,status));
 		}
 	}
 

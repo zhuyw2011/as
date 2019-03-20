@@ -78,8 +78,8 @@ static boolean fifo_read(Ipc_ChannelRuntimeType* runtime, Ipc_ChannelConfigType*
     {
     	//asmem(config->r_fifo,512);
         *idx = config->r_fifo->idx[runtime->r_pos];
-        ASLOG(IPC,"Incoming message: 0x%X,pos=%d,count=%d from fifo@%p\n",
-        		*idx,runtime->r_pos,config->r_fifo->count,config->r_fifo);
+        ASLOG(IPC, ("Incoming message: 0x%X, pos=%d, count=%d from fifo@%p\n", 
+				*idx,runtime->r_pos,config->r_fifo->count,config->r_fifo));
         config->r_fifo->count -= 1;
         runtime->r_pos = (runtime->r_pos + 1)%(IPC_FIFO_SIZE);
         ercd = TRUE;
@@ -102,8 +102,8 @@ static boolean fifo_write(Ipc_ChannelRuntimeType* runtime, Ipc_ChannelConfigType
 	{
 		config->w_fifo->idx[runtime->w_pos] = idx;
 		config->w_fifo->count += 1;
-		ASLOG(IPC,"Transmit message: 0x%X,pos=%d,count=%d through fifo@%p\n",
-				idx,runtime->w_pos,config->w_fifo->count,config->w_fifo);
+		ASLOG(IPC, ("Transmit message: 0x%X, pos=%d, count=%d through fifo@%p\n", 
+				idx,runtime->w_pos,config->w_fifo->count,config->w_fifo));
 		runtime->w_pos = (runtime->w_pos + 1)%(IPC_FIFO_SIZE);
 		ercd = true;
 	}
@@ -152,10 +152,10 @@ void* Ipc_Daemon(void* lpParameter)
 	{
 		usleep(1);
 	}
-    ASLOG(IPC,"r_lock=%08X, w_lock=%08X, r_event=%08X, w_event=%08X, r_fifo=%08X, w_fifo=%08X\n",
+    ASLOG(IPC, ("r_lock=%08X,  w_lock=%08X,  r_event=%08X,  w_event=%08X,  r_fifo=%08X,  w_fifo=%08X\n", 
           (uint32)config->r_lock,(uint32)config->w_lock,
 		  (uint32)config->r_event,(uint32)config->w_event,
-		  (uint32)config->r_fifo,(uint32)config->w_fifo);
+		  (uint32)config->r_fifo,(uint32)config->w_fifo));
 	runtime->ready = TRUE;
 	while(true)
 	{

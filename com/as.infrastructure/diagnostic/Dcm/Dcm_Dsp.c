@@ -497,7 +497,7 @@ boolean DspCheckSessionLevel(Dcm_DspSessionRowType const* const* sessionLevelRef
 		}
 	}
 
-	ASLOG(DCM,"DspCheckSessionLevel(%d)=%s\n",currentSession,(TRUE==levelFound)?"True":"False");
+	ASLOG(DCM, ("DspCheckSessionLevel(%d)=%s\n", currentSession, (TRUE==levelFound)?"True":"False"));
 	return levelFound;
 }
 
@@ -4475,7 +4475,7 @@ void DspRequestDownload(const PduInfoType *pduRxData,PduInfoType *pduTxData)
 						dspUDTData.blockSequenceCounter = 1u;
 						dspUDTData.memoryIdentifier = memoryIdentifier;
 
-						ASLOG(DCM,"request download addr(%X) size(%X),memory=%X",memoryAddress,memorySize,memoryIdentifier);
+						ASLOG(DCM, ("request download addr(%X) size(%X), memory=%X", memoryAddress, memorySize, memoryIdentifier));
 						/* create positive response code */
 						pduTxData->SduDataPtr[1] = 0x20;  /* lengthFormatIdentifier = 2 Bytes */
 

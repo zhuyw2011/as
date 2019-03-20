@@ -300,12 +300,12 @@ void Can_Init( const Can_ConfigType *config ) {
 	#else
 	if(FALSE == can_open(configId,CAN_DEV_NAME,ctlrId,canHwConfig->CanControllerBaudRate*1000))
 	{
-		ASLOG(STDOUT,"for device <socket> please start vcan for simulation:\n\t"
+		ASLOG(STDOUT, ("for device <socket> please start vcan for simulation:\n\t"
 				"sudo modprobe vcan\n\t"
 				"sudo ip link add dev can%d type vcan\n\t"
 				"sudo ip link set up can%d\n\t"
-				"sudo ip link set can%d mtu 72\n", ctlrId, ctlrId, ctlrId);
-		ASLOG(STDOUT,"for device <socketwin> please start the windows socket can bus driver /com/as.tool/lua/script/socketwin_can_driver.exe %d\n", ctlrId);
+				"sudo ip link set can%d mtu 72\n", ctlrId, ctlrId, ctlrId));
+		ASLOG(STDOUT, ("for device <socketwin> please start the windows socket can bus driver /com/as.tool/lua/script/socketwin_can_driver.exe %d\n", ctlrId));
 		asAssert(0);
 	}
 	#endif
@@ -419,7 +419,7 @@ Can_ReturnType Can_SetControllerMode( uint8 controller, Can_StateTransitionType 
   {
 	  case CAN_T_START:
 		canUnit->state = CANIF_CS_STARTED;
-		ASLOG(STDOUT,"can set on-line!\n");
+		ASLOG(STDOUT, ("can set on-line!\n"));
 		if (canUnit->lock_cnt == 0){   // REQ CAN196
 		  Can_EnableControllerInterrupts(controller);
 		}
@@ -547,9 +547,9 @@ Can_ReturnType Can_Write( Can_Arc_HTHType hth, Can_PduType *pduInfo ) {
 		  }
 		#endif	/* __AS_CAN_BUS__ */
 
-		  ASLOG(CAN,"CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
+		  ASLOG(CAN, ("CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n", 
 				  pduInfo->id,pduInfo->length,pduInfo->sdu[0],pduInfo->sdu[1],pduInfo->sdu[2],pduInfo->sdu[3],
-				  pduInfo->sdu[4],pduInfo->sdu[5],pduInfo->sdu[6],pduInfo->sdu[7]);
+				  pduInfo->sdu[4],pduInfo->sdu[5],pduInfo->sdu[6],pduInfo->sdu[7]));
 
 		  canUnit->swPduHandle = pduInfo->swPduHandle;
 		  // Increment statistics
@@ -660,7 +660,7 @@ void Can_SimulatorRunning(void)
 				if(NULL != Can_Global.config->CanConfigSet->CanCallbacks->TxConfirmation)
 				{
 					Can_Global.config->CanConfigSet->CanCallbacks->TxConfirmation(swPduHandle);
-					ASLOG(CAN,"TxComfirm(%d,%d)\n",configId,swPduHandle);
+					ASLOG(CAN, ("TxComfirm(%d, %d)\n", configId, swPduHandle));
 				}
 			}
 		}

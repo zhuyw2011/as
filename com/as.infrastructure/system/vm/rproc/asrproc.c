@@ -69,8 +69,6 @@ static bool fifo_write(u32 id)
 		w_fifo->identifier[w_fifo->w_pos] = id;
 		w_fifo->w_pos = (w_fifo->w_pos + 1)%(w_fifo->size);
 		w_fifo->count += 1;
-		ASLOG(0,"fifo_write(%x) fifo=%x lock=%x event=%x\n",id, w_fifo, rpdev.w_lock, rpdev.w_event);
-		ASLOG(AS_LOG_RPROC,"Transmit message: 0x%X\n",id);
 		ercd = true;
 	}
 	else
@@ -95,8 +93,6 @@ static bool fifo_read(u32* id)
         *id = r_fifo->identifier[r_fifo->r_pos];
         r_fifo->r_pos = (r_fifo->r_pos + 1)%(r_fifo->size);
         r_fifo->count -= 1;
-        ASLOG(0,"fifo_read(%x) fifo=%x lock=%x event=%x\n",*id, r_fifo, rpdev.r_lock, rpdev.r_event);
-        ASLOG(AS_LOG_RPROC,"Incoming message: 0x%X\n",*id);
         ercd = true;
     }
     else
@@ -124,7 +120,6 @@ static void* virtio_run(void* lpParameter)
 	pvObjectList[ 0 ] = rpdev.r_lock;
 	pvObjectList[ 1 ] = rpdev.r_event;
 #endif
-	ASLOG(0,"virtio_run daemon is on-line fifo=%x lock=%x event=%x\n",r_fifo, rpdev.r_lock, rpdev.r_event);
 	virtio_add_devices();
 	while(true)
 	{

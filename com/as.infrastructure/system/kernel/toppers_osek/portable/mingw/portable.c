@@ -270,7 +270,7 @@ void *pvObjectList[ 2 ];
 	SetEvent( pvInterruptEvent );
 
 	xPortRunning = pdTRUE;
-	ASLOG(OS,"portable is running...\n");
+	ASLOG(OS, ("portable is running...\n"));
 	for(;;)
 	{
 		WaitForMultipleObjects( sizeof( pvObjectList ) / sizeof( void * ), pvObjectList, TRUE, INFINITE );
@@ -307,7 +307,7 @@ void *pvObjectList[ 2 ];
 			that is already in the running state. */
 			if( runtsk != schedtsk )
 			{
-				ASLOG(OS,"swtich from task<%d> to task<%d>\n",runtsk,schedtsk);
+				ASLOG(OS, ("swtich from task<%d> to task<%d>\n", runtsk, schedtsk));
 
 				if(runtsk!=INVALID_TASK)
 				{
@@ -343,13 +343,13 @@ void disable_int(void)
 	while(ulCriticalNesting!=0)	Sleep(1);
 	vPortEnterCritical();
 
-	ASLOG(OS,"lock_cpu()\n");
+	ASLOG(OS, ("lock_cpu()\n"));
 }
 void enable_int(void)
 {
 	vPortExitCritical();
 
-	ASLOG(OS,"unlock_cpu()\n");
+	ASLOG(OS, ("unlock_cpu()\n"));
 }
 
 void dispatch(void)
@@ -487,7 +487,7 @@ void vPortEnterCritical( void )
 		ulCriticalNesting++;
 	}
 
-	ASLOG(OFF,"vPortEnterCritical %d\n",ulCriticalNesting);
+	ASLOG(OFF, ("vPortEnterCritical %d\n", ulCriticalNesting));
 }
 /*-----------------------------------------------------------*/
 
@@ -535,7 +535,7 @@ int32_t lMutexNeedsReleasing;
 			ReleaseMutex( pvInterruptEventMutex );
 		}
 	}
-	ASLOG(OFF,"vPortExitCritical  %d\n",ulCriticalNesting);
+	ASLOG(OFF, ("vPortExitCritical  %d\n", ulCriticalNesting));
 }
 /*-----------------------------------------------------------*/
 void set_ipl(IPL ipl)
@@ -605,7 +605,7 @@ void start_dispatch(void)
 
 		if(runtsk != INVALID_TASK)
 		{
-			ASLOG(OS,"swtich to task<%d>\n",runtsk);
+			ASLOG(OS, ("swtich to task<%d>\n", runtsk));
 			/* Start the highest priority task by obtaining its associated thread
 			state structure, in which is stored the thread handle. */
 			pxThreadState = &portThreadState[runtsk];

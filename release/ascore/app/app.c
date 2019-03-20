@@ -165,7 +165,7 @@ void __weak TaskAppHook(void) { }
 TASK(TaskApp)
 {
 	OS_TASK_BEGIN();
-	ASLOG(OFF,"TaskApp is running\n");
+	ASLOG(OFF,("TaskApp is running\n"));
 
 	TaskAppHook();
 #ifdef USE_SG
@@ -299,31 +299,31 @@ void ErrorHook(StatusType ercd)
 	switch(ercd)
 	{
 		case E_OS_ACCESS:
-			ASLOG(OS,"ercd = %d E_OS_ACCESS!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_ACCESS!\r\n",ercd));
 			break;
 		case E_OS_CALLEVEL:
-			ASLOG(OS,"ercd = %d E_OS_CALLEVEL!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_CALLEVEL!\r\n",ercd));
 			break;
 		case E_OS_ID:
-			ASLOG(OS,"ercd = %d E_OS_ID!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_ID!\r\n",ercd));
 			break;
 		case E_OS_LIMIT:
-			ASLOG(OS,"ercd = %d E_OS_LIMIT!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_LIMIT!\r\n",ercd));
 			break;
 		case E_OS_NOFUNC:
-			ASLOG(OS,"ercd = %d E_OS_NOFUNC!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_NOFUNC!\r\n",ercd));
 			break;
 		case E_OS_RESOURCE:
-			ASLOG(OS,"ercd = %d E_OS_RESOURCE!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_RESOURCE!\r\n",ercd));
 			break;
 		case E_OS_STATE:
-			ASLOG(OS,"ercd = %d E_OS_STATE!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_STATE!\r\n",ercd));
 			break;
 		case E_OS_VALUE	:
-			ASLOG(OS,"ercd = %d E_OS_VALUE!\r\n",ercd);
+			ASLOG(OS,("ercd = %d E_OS_VALUE!\r\n",ercd));
 			break;
 		default:
-			ASLOG(OS,"ercd = %d unknown error!\r\n",ercd);
+			ASLOG(OS,("ercd = %d unknown error!\r\n",ercd));
 			break;
 	}
 

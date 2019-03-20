@@ -151,10 +151,10 @@ static void ReceiveSF(uint8 Instance, uint8* Data)
 	uint8 length;
 	uint8 *pData;
 	BufReq_ReturnType ret;
-	ASLOG(CANTP, "[%d]%s\n", Instance, __func__);
+	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
 	if(CANTP_RTE.state != CANTP_IDLE)
 	{
-		ASLOG(CANTPE, "[%d]Received SF when in state %d.\n", Instance, CANTP_RTE.state);
+		ASLOG(CANTPE, ("[%d]Received SF when in state %d.\n",  Instance, CANTP_RTE.state));
 	}
 	else
 	{
@@ -179,8 +179,8 @@ static void ReceiveSF(uint8 Instance, uint8* Data)
 		}
 		else
 		{
-			ASLOG(CANTPE, "[%d]Received SF provide RX buffer failed %d (%p/%p,%d).\n", Instance,
-					ret, CANTP_RTE.pdu, CANTP_RTE.pdu->SduDataPtr, CANTP_RTE.pdu->SduLength);
+			ASLOG(CANTPE, ("[%d]Received SF provide RX buffer failed %d (%p/%p,%d).\n", Instance,
+					ret, CANTP_RTE.pdu, CANTP_RTE.pdu->SduDataPtr, CANTP_RTE.pdu->SduLength));
 		}
 	}
 }
@@ -191,10 +191,10 @@ static void ReceiveFF(PduIdType Instance, uint8* Data)
 	uint8 *pData;
 	BufReq_ReturnType ret;
 
-	ASLOG(CANTP, "[%d]%s\n", Instance, __func__);
+	ASLOG(CANTP, ("[%d]%s\n", Instance, __func__));
 	if(CANTP_RTE.state != CANTP_IDLE)
 	{
-		ASLOG(CANTPE, "[%d]Received FF when in state %d.\n", Instance, CANTP_RTE.state);
+		ASLOG(CANTPE, ("[%d]Received FF when in state %d.\n", Instance, CANTP_RTE.state));
 	}
 	else
 	{
@@ -221,8 +221,8 @@ static void ReceiveFF(PduIdType Instance, uint8* Data)
 		}
 		else
 		{
-			ASLOG(CANTPE, "[%d]Received FF provide RX buffer failed %d (%p/%p,%d).\n", Instance,
-					ret, CANTP_RTE.pdu, CANTP_RTE.pdu->SduDataPtr, CANTP_RTE.pdu->SduLength);
+			ASLOG(CANTPE, ("[%d]Received FF provide RX buffer failed %d (%p/%p,%d).\n", Instance,
+					ret, CANTP_RTE.pdu, CANTP_RTE.pdu->SduDataPtr, CANTP_RTE.pdu->SduLength));
 		}
 	}
 }
@@ -230,13 +230,13 @@ static void ReceiveFF(PduIdType Instance, uint8* Data)
 static void ReceiveCF(PduIdType Instance, uint8* Data)
 {
 	PduLengthType doSz;
-	ASLOG(CANTP, "[%d]%s %d/%d [%02X%02X%02X%02X%02X%02X%02X%02X]\n", Instance, __func__,
+	ASLOG(CANTP, ("[%d]%s %d/%d [%02X%02X%02X%02X%02X%02X%02X%02X]\n",  Instance,  __func__, 
 			CANTP_RTE.SduIndex , CANTP_RTE.SduLength,
-			Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7]);
+			Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7]));
 
 	if(CANTP_RTE.state != CANTP_WAIT_CF)
 	{
-		ASLOG(CANTPE, "[%d]Received CF when in state %d.\n", Instance, CANTP_RTE.state);
+		ASLOG(CANTPE, ("[%d]Received CF when in state %d.\n",  Instance, CANTP_RTE.state));
 	}
 	else
 	{
@@ -269,17 +269,17 @@ static void ReceiveCF(PduIdType Instance, uint8* Data)
 		{
 			CANTP_RTE.state = CANTP_IDLE;
 			Dcm_RxIndication(Instance, NTFRSLT_E_NOT_OK);
-			ASLOG(CANTPE, "[%d]Sequence Number Wrong,Abort Current Receiving.", Instance);
+			ASLOG(CANTPE, ("[%d]Sequence Number Wrong, Abort Current Receiving.", Instance));
 		}
 	}
 }
 
 static void ReceiveFC(PduIdType Instance, uint8* Data)
 {
-	ASLOG(CANTP, "[%d]%s\n", Instance, __func__);
+	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
 	if(CANTP_RTE.state != CANTP_WAIT_FC)
 	{
-		ASLOG(CANTPE, "[%d]Receive FC when in state %d.\n", Instance, CANTP_RTE.state);
+		ASLOG(CANTPE, ("[%d]Receive FC when in state %d.\n",  Instance, CANTP_RTE.state));
 	}
 	else
 	{
@@ -306,7 +306,7 @@ static void SendFC(PduIdType Instance)
 	PduInfoType pdu;
 	uint8 data[CANTP_LL_DL];
 
-	ASLOG(CANTP, "[%d]%s\n", Instance, __func__);
+	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	data[0] = N_PCI_FC|N_PCI_CTS;
@@ -337,7 +337,7 @@ static void SendCF(PduIdType Instance)
 	PduLengthType doSz;
 	uint8 data[CANTP_LL_DL];
 
-	ASLOG(CANTP, "[%d]%s\n", Instance, __func__);
+	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	if(tpIsAlarmStarted())
@@ -404,7 +404,7 @@ static void SendSF(PduIdType Instance)
 	uint8 data[CANTP_LL_DL];
 	uint8* pData;
 
-	ASLOG(CANTP, "[%d]%s\n", Instance, __func__);
+	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	if(CANTP_LL_DL > 8)
@@ -442,7 +442,7 @@ static void SendFF(PduIdType Instance)
 	uint8* pData;
 	uint8 i;
 
-	ASLOG(CANTP, "[%d]%s\n", Instance, __func__);
+	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	if(CANTP_LL_DL > 8)
@@ -498,7 +498,7 @@ static void HandleWaiting(PduIdType Instance)
 		tpSignalAlarm();
 		if(tpIsAlarmTimeout())
 		{
-			ASLOG(CANTPE,"[%d]Timeout in the state %d.\n", Instance, CANTP_RTE.state);
+			ASLOG(CANTPE, ("[%d]Timeout in the state %d.\n",  Instance, CANTP_RTE.state));
 			switch(CANTP_RTE.state)
 			{
 				case CANTP_WAIT_CF:
@@ -541,7 +541,7 @@ Std_ReturnType CanTp_Transmit( PduIdType CanTpTxSduId, const PduInfoType * pdu )
 	/* NOTE: RX IDs FIRST and THEN TX IDs */
 	PduIdType Instance = CanTpTxSduId - CANTP_INSTANCE_NUM;
 	asAssert(Instance < CANTP_INSTANCE_NUM);
-	ASLOG(CANTP, "[%d]%s\n",Instance,__func__);
+	ASLOG(CANTP, ("[%d]%s\n",Instance,__func__));
 	if((CANTP_BUSY == CANTP_RTE.state) || (CANTP_IDLE == CANTP_RTE.state))
 	{
 		ret = Dcm_ProvideTxBuffer(Instance, &(CANTP_RTE.pdu), pdu->SduLength);
@@ -556,13 +556,13 @@ Std_ReturnType CanTp_Transmit( PduIdType CanTpTxSduId, const PduInfoType * pdu )
 		}
 		else
 		{
-			ASLOG(CANTPE, "[%d]CanTp_Transmit provide TX buffer failed %d(%p/%p,%d).\n",Instance,
-					ret, CANTP_RTE.pdu, CANTP_RTE.pdu->SduDataPtr, CANTP_RTE.pdu->SduLength);
+			ASLOG(CANTPE, ("[%d]CanTp_Transmit provide TX buffer failed %d(%p/%p,%d).\n",Instance,
+					ret, CANTP_RTE.pdu, CANTP_RTE.pdu->SduDataPtr, CANTP_RTE.pdu->SduLength));
 		}
 	}
 	else
 	{
-		ASLOG(CANTPE, "[%d]CANTP is not busy in receiving, current state is %d\n",Instance,CANTP_RTE.state);
+		ASLOG(CANTPE, ("[%d]CANTP is not busy in receiving,  current state is %d\n", Instance, CANTP_RTE.state));
 		ercd = E_NOT_OK;
 	}
 	return ercd;
@@ -615,7 +615,7 @@ void CanTp_RxIndication( PduIdType Instance, const PduInfoType *pdu )
 	}
 	else
 	{
-		ASLOG(CANTPE, "[%d]Invalid PCI",Instance);
+		ASLOG(CANTPE, ("[%d]Invalid PCI", Instance));
 	}
 }
 

@@ -57,11 +57,11 @@ void FlashInit(tFlashParam* FlashParam)
 			}
 			fclose(fp);
 
-			ASLOG(FLS,"simulation on new created image %s(%dKb)\n",FLASH_IMG,FLS_TOTAL_SIZE/1024);
+			ASLOG(FLS, ("simulation on new created image %s(%dKb)\n", FLASH_IMG, FLS_TOTAL_SIZE/1024));
 		}
 		else
 		{
-			ASLOG(FLS,"simulation on old existed image %s(%dKb)\n",FLASH_IMG,FLS_TOTAL_SIZE/1024);
+			ASLOG(FLS, ("simulation on old existed image %s(%dKb)\n", FLASH_IMG, FLS_TOTAL_SIZE/1024));
 			fclose(fp);
 		}
 		FlashParam->errorcode = kFlashOk;

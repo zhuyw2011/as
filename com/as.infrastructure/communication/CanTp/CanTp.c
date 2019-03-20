@@ -231,11 +231,11 @@ static ISO15765FrameType getFrameType(
 
 	switch (*formatType) {
 	case CANTP_STANDARD:
-		ASLOG(CANTP, "CANTP_STANDARD\n");
+		ASLOG(CANTP, ("CANTP_STANDARD\n"));
 		tpci = CanTpRxPduPtr->SduDataPtr[0];
 		break;
 	case CANTP_EXTENDED:
-		ASLOG(CANTP, "CANTP_EXTENDED\n");
+		ASLOG(CANTP, ("CANTP_EXTENDED\n"));
 		tpci = CanTpRxPduPtr->SduDataPtr[1];
 		break;
 	default:
@@ -454,7 +454,7 @@ static void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_Channel
 	uint16 spaceFreePduRBuffer = 0;
 	uint16 computedBs = 0;
 
-	ASLOG(CANTP, "sendFlowControlFrame called!\n");
+	ASLOG(CANTP, ("sendFlowControlFrame called!\n"));
 	pduInfo.SduDataPtr = &sduData[0];
 	if (rxConfig->CanTpAddressingFormant == CANTP_EXTENDED) {
 		sduData[indexCount++] = rxRuntime->iso15765.extendedAddress;
@@ -472,7 +472,7 @@ static void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_Channel
 		if (computedBs > rxConfig->CanTpBs) { // /** @req CANTP091 *//** @req CANTP084 */
 			computedBs = rxConfig->CanTpBs;
 		}
-		ASLOG(CANTP, "computedBs:%d\n", computedBs);
+		ASLOG(CANTP, ("computedBs:%d\n", computedBs));
 		sduData[indexCount++] = computedBs; // 734 PC-lint: Okej att casta till uint8?
 		sduData[indexCount++] = (uint8) rxConfig->CanTpSTmin;
 		rxRuntime->iso15765.nextFlowControlCount = computedBs;
@@ -524,8 +524,8 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 		}
 		segmentNumber = rxPduData->SduDataPtr[indexCount++] & SEGMENT_NUMBER_MASK;
 		if (segmentNumber != (rxRuntime->iso15765.framesHandledCount & SEGMENT_NUMBER_MASK)) {
-			ASLOG(CANTP,"Segmentation number error detected - is the sending"
-					"unit too fast? Increase STmin (cofig) to slow it down!\n");
+			ASLOG(CANTP,("Segmentation number error detected - is the sending"
+					"unit too fast? Increase STmin (cofig) to slow it down!\n"));
 			PduR_CanTpRxIndication(rxConfig->PduR_PduId, NTFRSLT_E_WRONG_SN); /** @req CANTP084 */
 			rxRuntime->iso15765.state = IDLE;
 			rxRuntime->mode = CANTP_RX_WAIT;
@@ -556,7 +556,7 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 						rxRuntime->iso15765.state = IDLE;
 						rxRuntime->mode = CANTP_RX_WAIT;
 						dataCopyFailure = TRUE;
-						ASLOG(CANTP, "Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n");
+						ASLOG(CANTP, ("Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n"));
 					}
 				} else {
 					if ( copySegmentToLocalRxBuffer(rxRuntime,  /** @req CANTP067 */
@@ -565,7 +565,7 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 						rxRuntime->iso15765.state = IDLE;
 						rxRuntime->mode = CANTP_RX_WAIT;
 						dataCopyFailure = TRUE;
-						ASLOG(CANTP, "Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n");
+						ASLOG(CANTP, ("Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n"));
 					}
 				}
 				if ( !dataCopyFailure ) {
@@ -586,7 +586,7 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 						rxRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(rxConfig->CanTpNcr);  //UH
 					}
 				} else {
-					ASLOG(CANTP,"ISO15765-Rx session finished, going back to IDLE!\n");
+					ASLOG(CANTP, ("ISO15765-Rx session finished, going back to IDLE!\n"));
 					rxRuntime->iso15765.state = IDLE;
 					rxRuntime->mode = CANTP_RX_WAIT;
 					PduR_CanTpRxIndication(rxConfig->PduR_PduId, NTFRSLT_OK); /** @req CANTP084 */
@@ -733,7 +733,7 @@ static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,
 		txRuntime->iso15765.nextFlowControlCount = txRuntime->iso15765.BS;
 		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
 #endif
-		ASLOG(CANTP, "txRuntime->iso15765.STmin = %d\n", txRuntime->iso15765.STmin);
+		ASLOG(CANTP, ("txRuntime->iso15765.STmin = %d\n", txRuntime->iso15765.STmin));
 		// change state and setup timout
 		txRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(txConfig->CanTpNcs);
 		txRuntime->iso15765.state = TX_WAIT_TRANSMIT;
@@ -749,7 +749,7 @@ static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,
 			break;
 		}
 	} else {
-		ASLOG(CANTP, "Ignoring flow control, we do not expect it!");
+		ASLOG(CANTP, ("Ignoring flow control, we do not expect it!"));
 	}
 } // 438, 550 PC-lint: extendAdress används inte. EN BUG? Behöver fixas
 
@@ -766,7 +766,7 @@ static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,
 
 	if (rxRuntime->iso15765.state != IDLE) {
 		PduR_CanTpRxIndication(rxConfig->PduR_PduId, NTFRSLT_E_NOT_OK);  // Abort current reception, we need to tell the current receiver it has been aborted.
-		ASLOG(CANTP, "Single frame received and channel not IDLE!\n");
+		ASLOG(CANTP, ("Single frame received and channel not IDLE!\n"));
 	}
 	(void) initRx15765RuntimeData(rxConfig, rxRuntime); /** @req CANTP124 */
 	pduLength = getPduLength(&rxConfig->CanTpAddressingFormant, SINGLE_FRAME, rxPduData);
@@ -826,7 +826,7 @@ static void handleFirstFrame(const CanTp_RxNSduType *rxConfig,
 
 
 	if (rxRuntime->iso15765.state != IDLE) {
-		ASLOG(CANTP, "First frame received during Rx-session!\n" );
+		ASLOG(CANTP, ("First frame received during Rx-session!\n" ));
 		PduR_CanTpRxIndication(rxConfig->PduR_PduId, NTFRSLT_E_NOT_OK);  // Abort current reception, we need to tell the current receiver it has been aborted.
 	}
 
@@ -965,7 +965,7 @@ Std_ReturnType CanTp_Transmit(PduIdType CanTpTxSduId,
 	PduIdType CanTp_InternalTxNSduId;
 	boolean isClassic;
 
-	ASLOG(CANTP, "CanTp_Transmit called in polite index: %d!\n", CanTpTxSduId);
+	ASLOG(CANTP, ("CanTp_Transmit called in polite index: %d!\n", CanTpTxSduId));
 
 	VALIDATE( CanTpTxInfoPtr != NULL,
 			SERVICE_ID_CANTP_TRANSMIT, CANTP_E_PARAM_ADDRESS ); /** @req CANTP031 */
@@ -1040,7 +1040,7 @@ Std_ReturnType CanTp_Transmit(PduIdType CanTpTxSduId,
 				ret = E_NOT_OK;
 			}
 		} else {
-			ASLOG(CANTP, "CanTp can't transmit, it is already occupied!\n", CanTpTxSduId);
+			ASLOG(CANTP, ("CanTp can't transmit,  it is already occupied!\n", CanTpTxSduId));
 			ret = E_NOT_OK;  /** @req CANTP123 *//** @req CANTP206 */
 		}
 	}
@@ -1111,10 +1111,10 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId, /** @req CANTP078 */ /** @req CA
 		DET_REPORTERROR(MODULE_ID_CANTP, 0, SERVICE_ID_CANTP_RX_INDICATION, CANTP_E_UNINIT );  /** @req CANTP238 */ /** @req CANTP031 */
 		return;
 	}
-	ASLOG(CANTP,"CanTp_RxIndication: PduId=%d, LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
+	ASLOG(CANTP, ("CanTp_RxIndication: PduId=%d,  LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n", 
 			CanTpRxPduId,CanTpRxPduPtr->SduLength,CanTpRxPduPtr->SduDataPtr[0],CanTpRxPduPtr->SduDataPtr[1],
 			CanTpRxPduPtr->SduDataPtr[2],CanTpRxPduPtr->SduDataPtr[3],CanTpRxPduPtr->SduDataPtr[4],
-			CanTpRxPduPtr->SduDataPtr[5],CanTpRxPduPtr->SduDataPtr[6],CanTpRxPduPtr->SduDataPtr[7]);
+CanTpRxPduPtr->SduDataPtr[5],CanTpRxPduPtr->SduDataPtr[6],CanTpRxPduPtr->SduDataPtr[7]));
 
 	VALIDATE_NO_RV( CanTpRunTimeData.internalState == CANTP_ON,
 			SERVICE_ID_CANTP_RX_INDICATION, CANTP_E_UNINIT ); /** @req CANTP031 */
@@ -1153,49 +1153,49 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId, /** @req CANTP078 */ /** @req CA
 	switch (frameType) {
 	case SINGLE_FRAME: {
 		if (rxConfigParams != NULL) {
-			ASLOG(CANTP, "calling handleSingleFrame!\n");
+			ASLOG(CANTP, ("calling handleSingleFrame!\n"));
 			handleSingleFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
 		}
 		else{
-			ASLOG(CANTP, "Single frame received on ISO15765-Tx - is ignored!\n");
+			ASLOG(CANTP, ("Single frame received on ISO15765-Tx - is ignored!\n"));
 		}
 		break;
 	}
 	case FIRST_FRAME: {
 		if (rxConfigParams != NULL) {
-			ASLOG(CANTP, "calling handleFirstFrame!\n");
+			ASLOG(CANTP, ("calling handleFirstFrame!\n"));
 			handleFirstFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
 		}else{
-			ASLOG(CANTP, "First frame received on ISO15765-Tx - is ignored!\n");
+			ASLOG(CANTP, ("First frame received on ISO15765-Tx - is ignored!\n"));
 		}
 		break;
 	}
 	case CONSECUTIVE_FRAME: {
 		if (rxConfigParams != NULL) {
-			ASLOG(CANTP, "calling handleConsecutiveFrame!\n");
+			ASLOG(CANTP, ("calling handleConsecutiveFrame!\n"));
 			handleConsecutiveFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
 		} else {
-			ASLOG(CANTP, "Consecutive frame received on ISO15765-Tx - is ignored!\n");
+			ASLOG(CANTP, ("Consecutive frame received on ISO15765-Tx - is ignored!\n"));
 		}
 		break;
 	}
 	case FLOW_CONTROL_CTS_FRAME: {
 		if (txConfigParams != NULL) {
-			ASLOG(CANTP, "calling handleFlowControlFrame!\n");
+			ASLOG(CANTP, ("calling handleFlowControlFrame!\n"));
 			handleFlowControlFrame(txConfigParams, runtimeParams, CanTpRxPduPtr);
 		} else {
-			ASLOG(CANTP, "Flow control frame received on ISO15765-Rx - is ignored!\n");
+			ASLOG(CANTP, ("Flow control frame received on ISO15765-Rx - is ignored!\n"));
 		}
 		break;
 	}
 	case INVALID_FRAME: {
-		ASLOG(CANTP, "INVALID_FRAME received - is ignored!\n!\n");
+		ASLOG(CANTP, ("INVALID_FRAME received - is ignored!\n!\n"));
 		break;
 	}
 	default:
 		break;
 	}
-	ASLOG( OFF, "CanTp_RxIndication_Main exit!\n");
+	ASLOG( OFF, ("CanTp_RxIndication_Main exit!\n"));
 }
 
 // - - - - - - - - - - - - - -
@@ -1206,7 +1206,7 @@ void CanTp_TxConfirmation(PduIdType CanTpTxPduId) /** @req CANTP076 */
 	const CanTp_RxNSduType *rxConfigParams = NULL;
 	const CanTp_TxNSduType *txConfigParams = NULL;
 
-	ASLOG(CANTP, "CanTp_TxConfirmation called.\n" );
+	ASLOG(CANTP, ("CanTp_TxConfirmation called.\n" ));
 
 	VALIDATE_NO_RV( CanTpRunTimeData.internalState == CANTP_ON,
 			SERVICE_ID_CANTP_TX_CONFIRMATION, CANTP_E_UNINIT ); /** @req CANTP031 */
@@ -1249,7 +1249,7 @@ static boolean checkNasNarTimeout(CanTp_ChannelPrivateType *runtimeData) {
 	if (runtimeData->iso15765.NasNarPending) {
 		TIMER_DECREMENT(runtimeData->iso15765.NasNarTimeoutCount);
 		if (runtimeData->iso15765.NasNarTimeoutCount == 0) {
-			ASLOG(CANTPE, "NAS timed out.\n" );
+			ASLOG(CANTPE, ("NAS timed out.\n" ));
 			runtimeData->iso15765.state = IDLE;
 			runtimeData->iso15765.NasNarPending = FALSE;
 			ret = TRUE;
@@ -1301,15 +1301,15 @@ void CanTp_MainFunction(void)
 					// check N_Cs timeout
 					TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
 					if (txRuntimeListItem->iso15765.stateTimeoutCount == 0) {
-						ASLOG(CANTPE, "ERROR: N_Cs timeout when sending consecutive frame!\n");
+						ASLOG(CANTPE, ("ERROR: N_Cs timeout when sending consecutive frame!\n"));
 						txRuntimeListItem->iso15765.state = IDLE;
 						txRuntimeListItem->mode = CANTP_TX_WAIT;
 						PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK); /** @req CANTP204 */
 					} else {
-						ASLOG(CANTP, "Waiting for STmin timer to expire!\n");
+						ASLOG(CANTP, ("Waiting for STmin timer to expire!\n"));
 					}
 				} else {
-					ASLOG(CANTPE, "ERROR: Consecutive frame could not be sent!\n");
+					ASLOG(CANTPE, ("ERROR: Consecutive frame could not be sent!\n"));
 					txRuntimeListItem->iso15765.state = IDLE;
 					txRuntimeListItem->mode = CANTP_TX_WAIT;
 					PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK); /** @req CANTP204 */
@@ -1317,10 +1317,10 @@ void CanTp_MainFunction(void)
 				break;
 			}
 			case TX_WAIT_FLOW_CONTROL:
-				//ASLOG(CANTP, "Waiting for flow control!\n");
+				//ASLOG(CANTP, ("Waiting for flow control!\n"));
 				TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
 				if (txRuntimeListItem->iso15765.stateTimeoutCount == 0) {
-					ASLOG(CANTPE, "State TX_WAIT_FLOW_CONTROL timed out!\n");
+					ASLOG(CANTPE, ("State TX_WAIT_FLOW_CONTROL timed out!\n"));
 					txRuntimeListItem->iso15765.state = IDLE;
 					txRuntimeListItem->mode = CANTP_TX_WAIT;
 					PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK); /** @req CANTP204 */ /** @req CANTP185 */
@@ -1344,7 +1344,7 @@ void CanTp_MainFunction(void)
 			case RX_WAIT_CONSECUTIVE_FRAME: {
 				TIMER_DECREMENT (rxRuntimeListItem->iso15765.stateTimeoutCount);
 				if (rxRuntimeListItem->iso15765.stateTimeoutCount == 0) {
-					ASLOG(CANTPE,"CANTP TIMEOUT!\n");
+					ASLOG(CANTPE, ("CANTP TIMEOUT!\n"));
 					PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);
 					rxRuntimeListItem->iso15765.state = IDLE;
 					rxRuntimeListItem->mode = CANTP_RX_WAIT;
@@ -1388,7 +1388,7 @@ void CanTp_MainFunction(void)
 						rxRuntimeListItem->iso15765.state = IDLE;
 						rxRuntimeListItem->mode = CANTP_RX_WAIT;
 					} else if ( ret == BUFREQ_BUSY ) {
-						ASLOG(CANTP, "Still busy!\n");
+						ASLOG(CANTP, ("Still busy!\n"));
 					}
 				}
 				break;

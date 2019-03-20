@@ -165,8 +165,8 @@ void Os_PortActivate(void)
 	/* get internal resource or NON schedule */
 	RunningVar->priority = RunningVar->pConst->runPriority;
 
-	ASLOG(OS, "%s(%d) is running\n", RunningVar->pConst->name,
-			RunningVar->pConst->initPriority);
+	ASLOG(OS, ("%s(%d) is running\n",  RunningVar->pConst->name, 
+			RunningVar->pConst->initPriority));
 
 	CallLevel = TCL_TASK;
 	Irq_Enable();
@@ -246,7 +246,7 @@ int Os_PortInstallSignal(TaskVarType* pTaskVar, int sig, void* handler)
 	if((sp - pTaskVar->pConst->pStack) < (pTaskVar->pConst->stackSize*3/4))
 	{
 		/* stack 75% usage, ignore this signal call */
-		ASLOG(OS,"install signal %d failed\n", sig);
+		ASLOG(OS, ("install signal %d failed\n", sig));
 		return -1;
 	}
 

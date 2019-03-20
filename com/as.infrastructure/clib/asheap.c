@@ -122,8 +122,8 @@ for ef in f:
 print('not freed memory list', m)
  */
 
-#define traceMALLOC( pvReturn, xWantedSize ) ASLOG(HEAP," malloc(%d)=%p\n",xWantedSize,pvReturn)
-#define traceFREE( pv, xBlockSize )  ASLOG(HEAP, " free(%p,%d)\n",pv, xBlockSize)
+#define traceMALLOC( pvReturn, xWantedSize ) ASLOG(HEAP,(" malloc(%d)=%p\n",xWantedSize,pvReturn))
+#define traceFREE( pv, xBlockSize )  ASLOG(HEAP, (" free(%p,%d)\n",pv, xBlockSize))
 
 
 #define portBYTE_ALIGNMENT 4
@@ -578,7 +578,7 @@ void* kzmalloc(size_t size)
 
 void vApplicationMallocFailedHook(void)
 {
-	ASLOG(ERROR,"asmalloc failed\n");
+	ASLOG(ERROR,("asmalloc failed\n"));
 	asAssert(0);
 }
 #ifdef configTOTAL_PAGE_COUNT

@@ -35,12 +35,12 @@ static boolean ELF32_GetDYNVirtualAddress(void* elfFile, Elf32_Addr *vstart_addr
 		{
 			continue;
 		}
-		ASLOG(ELF32, "LOAD segment: %d, 0x%08X, 0x%08x\n",
-				i, phdr[i].p_vaddr, phdr[i].p_memsz);
+		ASLOG(ELF32, ("LOAD segment: %d,  0x%08X,  0x%08x\n", 
+				i, phdr[i].p_vaddr, phdr[i].p_memsz));
 		if(phdr[i].p_memsz < phdr[i].p_filesz)
 		{
-			ASLOG(ERROR, "invalid elf: segment %d: p_vaddr: %d, p_memsz: %d\n",
-					i, phdr[i].p_vaddr, phdr[i].p_memsz);
+			ASLOG(ERROR, ("invalid elf: segment %d: p_vaddr: %d, p_memsz: %d\n",
+					i, phdr[i].p_vaddr, phdr[i].p_memsz));
 			has_vstart = FALSE;
 			break;
 		}
@@ -51,8 +51,8 @@ static boolean ELF32_GetDYNVirtualAddress(void* elfFile, Elf32_Addr *vstart_addr
 			has_vstart = TRUE;
 			if (*vend_addr < *vstart_addr)
 			{
-				ASLOG(ERROR, "invalid elf: segment %d: p_vaddr: %d, p_memsz: %d\n",
-						i, phdr[i].p_vaddr, phdr[i].p_memsz);
+				ASLOG(ERROR, ("invalid elf: segment %d: p_vaddr: %d, p_memsz: %d\n",
+						i, phdr[i].p_vaddr, phdr[i].p_memsz));
 				has_vstart = FALSE;
 				break;
 			}
@@ -61,7 +61,7 @@ static boolean ELF32_GetDYNVirtualAddress(void* elfFile, Elf32_Addr *vstart_addr
 		{
 			if (phdr[i].p_vaddr < *vend_addr)
 			{
-				ASLOG(ERROR, "invalid elf: segment should be sorted and not overlapped\n");
+				ASLOG(ERROR, ("invalid elf: segment should be sorted and not overlapped\n"));
 				has_vstart = FALSE;
 				break;
 			}
@@ -84,8 +84,8 @@ static boolean ELF32_GetDYNVirtualAddress(void* elfFile, Elf32_Addr *vstart_addr
 
 	if(*vstart_addr >= *vend_addr)
 	{
-		ASLOG(ERROR, "invalid eld: start=%08X end=%08X\n",
-				*vstart_addr, *vend_addr);
+		ASLOG(ERROR, ("invalid eld: start=%08X end=%08X\n",
+				*vstart_addr, *vend_addr));
 		has_vstart = FALSE;
 	}
 
@@ -110,7 +110,7 @@ static boolean ELF32_LoadDYNObject(void* elfFile,ELF32_ObjectType* elfObj)
 	}
 
 	elfObj->entry = elfObj->space + fileHdr->e_entry - elfObj->vstart_addr;
-	ASLOG(ELF32, "entry is %p\n", elfObj->entry);
+	ASLOG(ELF32, ("entry is %p\n", elfObj->entry));
 	/* handle relocation section */
 	for (i = 0; i < fileHdr->e_shnum; i ++)
 	{
@@ -133,8 +133,8 @@ static boolean ELF32_LoadDYNObject(void* elfFile,ELF32_ObjectType* elfObj)
 			{
 				Elf32_Sym *sym = &symtab[ELF32_R_SYM(rel->r_info)];
 
-				ASLOG(ELF32, "relocate symbol %s shndx %d\n",
-						strtab + sym->st_name, sym->st_shndx);
+				ASLOG(ELF32, ("relocate symbol %s shndx %d\n",
+						strtab + sym->st_name, sym->st_shndx));
 				if ((sym->st_shndx != SHT_NULL) ||
 					(ELF32_ST_BIND(sym->st_info) == STB_LOCAL) ||
 					((ELF32_ST_BIND(sym->st_info) == STB_GLOBAL) &&
@@ -153,8 +153,8 @@ static boolean ELF32_LoadDYNObject(void* elfFile,ELF32_ObjectType* elfObj)
 					addr = (Elf32_Addr)ELF_FindSymbol((const char *)(strtab + sym->st_name));
 					if (addr == 0)
 					{
-						ASLOG(ERROR,"ELF: can't find %s in kernel symbol table\n",
-								strtab + sym->st_name);
+						ASLOG(ERROR,("ELF: can't find %s in kernel symbol table\n",
+								strtab + sym->st_name));
 						r = FALSE;
 					}
 					else
@@ -272,9 +272,9 @@ static void ELF32_ConstructSymbolTable(void* elfFile, const char* byname, ELF32_
 			memcpy((void *)elfObj->symtab[count].name,
 					  strtab + symtab[j].st_name,
 					  length);
-			ASLOG(ELF32, "symtab[%d] %s %p\n", count,
+			ASLOG(ELF32, ("symtab[%d] %s %p\n", count,
 						elfObj->symtab[count].name,
-						elfObj->symtab[count].addr);
+						elfObj->symtab[count].addr));
 			count ++;
 		}
 	}
@@ -407,31 +407,31 @@ static boolean ELF32_RelocateRELObject(void* elfFile,ELF32_ObjectType* elfObj,
 					if (0 == strncmp(shstrab + shdr[sym->st_shndx].sh_name, ELF_RODATA, 8))
 					{
 						/* relocate rodata section */
-						ASLOG(ELF32, "relocate symbol: %s for rodata\n", strtab + sym->st_name);
+						ASLOG(ELF32, ("relocate symbol: %s for rodata\n", strtab + sym->st_name));
 						ELF32_Relocate(elfObj, rel, (Elf32_Addr)(rodata_addr + sym->st_value));
 					}
 					else if (0 == strncmp(shstrab + shdr[sym->st_shndx].sh_name, ELF_BSS, 5))
 					{
 						/* relocate bss section */
-						ASLOG(ELF32, "relocate symbol: %s for bss\n", strtab + sym->st_name);
+						ASLOG(ELF32, ("relocate symbol: %s for bss\n", strtab + sym->st_name));
 						ELF32_Relocate(elfObj, rel, (Elf32_Addr)(bss_addr + sym->st_value));
 					}
 					else if (0 == strncmp(shstrab + shdr[sym->st_shndx].sh_name, ELF_DATA, 6))
 					{
 						/* relocate data section */
-						ASLOG(ELF32, "relocate symbol: %s for data\n", strtab + sym->st_name);
+						ASLOG(ELF32, ("relocate symbol: %s for data\n", strtab + sym->st_name));
 						ELF32_Relocate(elfObj, rel, (Elf32_Addr)(data_addr + sym->st_value));
 					}
 				}
 				else if (STT_FUNC == ELF32_ST_TYPE(sym->st_info))
 				{
 					/* relocate function */
-					ASLOG(ELF32, "relocate symbol: %s for function\n", strtab + sym->st_name);
+					ASLOG(ELF32, ("relocate symbol: %s for function\n", strtab + sym->st_name));
 					ELF32_Relocate(elfObj, rel, (Elf32_Addr)(elfObj->space - vstart_addr + sym->st_value));
 				}
 				else
 				{
-					ASLOG(ERROR, "ELF32 unhandled case for symbol : %s\n", strtab + sym->st_name);
+					ASLOG(ERROR, ("ELF32 unhandled case for symbol : %s\n", strtab + sym->st_name));
 				}
 			}
 			else if ( (STT_NOTYPE == ELF32_ST_TYPE(sym->st_info)) &&
@@ -439,7 +439,7 @@ static boolean ELF32_RelocateRELObject(void* elfFile,ELF32_ObjectType* elfObj,
 			{
 				Elf32_Addr addr;
 
-				ASLOG(ELF32, "relocate symbol: %s for NOTYPE UNDEF\n", strtab + sym->st_name);
+				ASLOG(ELF32, ("relocate symbol: %s for NOTYPE UNDEF\n", strtab + sym->st_name));
 				/* need to resolve symbol in kernel symbol table */
 				addr = (Elf32_Addr)ELF_FindSymbol(strtab + sym->st_name);
 				if (addr != (Elf32_Addr)NULL)
@@ -448,13 +448,13 @@ static boolean ELF32_RelocateRELObject(void* elfFile,ELF32_ObjectType* elfObj,
 				}
 				else
 				{
-					ASLOG(ERROR, "ELF32: can't find %s in kernel symbol table\n", strtab + sym->st_name);
+					ASLOG(ERROR, ("ELF32: can't find %s in kernel symbol table\n", strtab + sym->st_name));
 					r = FALSE;
 				}
 			}
 			else
 			{
-				ASLOG(ELF32, "relocate symbol: %s\n", strtab + sym->st_name);
+				ASLOG(ELF32, ("relocate symbol: %s\n", strtab + sym->st_name));
 				ELF32_Relocate(elfObj, rel, (Elf32_Addr)(elfObj->space - vstart_addr + sym->st_value));
 			}
 
@@ -484,7 +484,7 @@ static boolean ELF32_LoadRELObject(void* elfFile,ELF32_ObjectType* elfObj)
 		if (IS_PROG(shdr[i]) && IS_AX(shdr[i]))
 		{
 			memcpy(ptr, elfFile + shdr[i].sh_offset, shdr[i].sh_size);
-			ASLOG(ELF32, "load text 0x%x, size %d\n", ptr, shdr[i].sh_size);
+			ASLOG(ELF32, ("load text 0x%x,  size %d\n",  ptr, shdr[i].sh_size));
 			ptr += shdr[i].sh_size;
 			vstart_addr = shdr[i].sh_addr;
 		}
@@ -494,8 +494,8 @@ static boolean ELF32_LoadRELObject(void* elfFile,ELF32_ObjectType* elfObj)
 		{
 			memcpy(ptr, elfFile + shdr[i].sh_offset, shdr[i].sh_size);
 			rodata_addr = ptr;
-			ASLOG(ELF32, "load rodata 0x%x, size %d, rodata 0x%x\n",
-					ptr, shdr[i].sh_size, *(uint32_t *)data_addr);
+			ASLOG(ELF32, ("load rodata 0x%x, size %d, rodata 0x%x\n",
+					ptr, shdr[i].sh_size, *(uint32_t *)data_addr));
 			ptr += shdr[i].sh_size;
 		}
 
@@ -504,8 +504,8 @@ static boolean ELF32_LoadRELObject(void* elfFile,ELF32_ObjectType* elfObj)
 		{
 			memcpy(ptr, elfFile + shdr[i].sh_offset, shdr[i].sh_size);
 			data_addr = ptr;
-			ASLOG(ELF32, "load data 0x%x, size %d, data 0x%x\n",
-					ptr, shdr[i].sh_size, *(uint32_t *)data_addr);
+			ASLOG(ELF32, ("load data 0x%x, size %d, data 0x%x\n",
+					ptr, shdr[i].sh_size, *(uint32_t *)data_addr));
 			ptr += shdr[i].sh_size;
 		}
 
@@ -514,7 +514,7 @@ static boolean ELF32_LoadRELObject(void* elfFile,ELF32_ObjectType* elfObj)
 		{
 			memset(ptr, 0, shdr[i].sh_size);
 			bss_addr = ptr;
-			ASLOG(ELF32, "load bss 0x%x, size %d,\n", ptr, shdr[i].sh_size);
+			ASLOG(ELF32, ("load bss 0x%x,  size %d, \n",  ptr, shdr[i].sh_size));
 		}
 		else
 		{
@@ -523,7 +523,7 @@ static boolean ELF32_LoadRELObject(void* elfFile,ELF32_ObjectType* elfObj)
 	}
 
 	elfObj->entry = elfObj->space + fileHdr->e_entry - vstart_addr;
-	ASLOG(ELF32, "entry is %p\n", elfObj->entry);
+	ASLOG(ELF32, ("entry is %p\n", elfObj->entry));
 
 	r = ELF32_RelocateRELObject(elfFile, elfObj, vstart_addr, rodata_addr, bss_addr, data_addr);
 
@@ -591,7 +591,7 @@ static boolean ELF32_LoadEXECObject(void* elfFile,ELF32_ObjectType* elfObj)
 	}
 
 	elfObj->entry = elfObj->space + fileHdr->e_entry - elfObj->vstart_addr;
-	ASLOG(ELF32, "entry is %p\n", elfObj->entry);
+	ASLOG(ELF32, ("entry is %p\n", elfObj->entry));
 
 	return TRUE;
 }

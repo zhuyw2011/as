@@ -57,8 +57,8 @@ void virtio_pci_setup_vqs(pci_dev* pdev)
 		p = palloc(size);
 		asAssert(p);
 		vring_init(&(dev->vq[i].vring),val,p,PAGE_SIZE);
-		ASLOG(PCI, "pci %04X:%04X vq[%d] number is %d, sum is %d bytes @ %p\n",
-				pdev->vendor_id, pdev->device_id, i, val, size, p);
+		ASLOG(PCI, ("pci %04X:%04X vq[%d] number is %d, sum is %d bytes @ %p\n",
+				pdev->vendor_id, pdev->device_id, i, val, size, p));
 
 		for(j=0;j<(val-1);j++)
 		{

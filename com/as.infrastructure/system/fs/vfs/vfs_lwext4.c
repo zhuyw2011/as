@@ -83,7 +83,7 @@ static VFS_FILE* lwext_fopen (const vfs_mount_t* mnt, const char *filename, cons
 	VFS_FILE *f;
 	int r;
 
-	ASLOG(LWEXT, "fopen(%s,%s)\n", filename, opentype);
+	ASLOG(LWEXT, ("fopen(%s, %s)\n",  filename, opentype));
 
 	f = malloc(sizeof(VFS_FILE));
 	if(NULL != f)
@@ -181,7 +181,7 @@ static int lwext_unlink (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
-	ASLOG(LWEXT, "unlink(%s)\n", filename);
+	ASLOG(LWEXT, ("unlink(%s)\n", filename));
 
 	r = ext4_fremove(TO_LWEXT_PATH(filename));
 
@@ -192,7 +192,7 @@ static int lwext_stat (const vfs_mount_t* mnt, const char *filename, vfs_stat_t 
 {
 	int r = ENOENT;
 
-	ASLOG(LWEXT, "stat(%s)\n", filename);
+	ASLOG(LWEXT, ("stat(%s)\n", filename));
 
 	if(('\0' == TO_LWEXT_PATH(filename)[0])
 		|| (0 == strcmp(TO_LWEXT_PATH(filename),"/")) )
@@ -236,7 +236,7 @@ static VFS_DIR * lwext_opendir (const vfs_mount_t* mnt, const char *dirname)
 {
 	VFS_DIR* dir;
 
-	ASLOG(LWEXT, "opendir(%s)\n", dirname);
+	ASLOG(LWEXT, ("opendir(%s)\n", dirname));
 
 	dir = malloc(sizeof(VFS_DIR));
 
@@ -265,7 +265,7 @@ static VFS_DIR * lwext_opendir (const vfs_mount_t* mnt, const char *dirname)
 				free(dir->priv);
 				free(dir);
 				dir = NULL;
-				ASLOG(LWEXT, "opendir(%s) failed!(%d)\n", p, r);
+				ASLOG(LWEXT, ("opendir(%s) failed!(%d)\n",  p, r));
 			}
 		}
 		else
@@ -322,7 +322,7 @@ static int lwext_chdir (const vfs_mount_t* mnt, const char *filename)
 
 	int r = ENOTDIR;
 
-	ASLOG(LWEXT, "chdir(%s)\n", filename);
+	ASLOG(LWEXT, ("chdir(%s)\n", filename));
 
 	if(('\0' == TO_LWEXT_PATH(filename)[0]))
 	{
@@ -341,7 +341,7 @@ static int lwext_mkdir (const vfs_mount_t* mnt, const char *filename, uint32_t m
 {
 	int r;
 
-	ASLOG(LWEXT, "mkdir(%s, 0x%x)\n", filename, mode);
+	ASLOG(LWEXT, ("mkdir(%s,  0x%x)\n",  filename, mode));
 
 	r = ext4_dir_mk(TO_LWEXT_PATH(filename));
 
@@ -352,7 +352,7 @@ static int lwext_rmdir (const vfs_mount_t* mnt, const char *filename)
 {
 	int r;
 
-	ASLOG(LWEXT, "rmdir(%s)\n", filename);
+	ASLOG(LWEXT, ("rmdir(%s)\n", filename));
 
 	r = ext4_dir_rm(TO_LWEXT_PATH(filename));
 
@@ -363,7 +363,7 @@ static int lwext_rename (const vfs_mount_t* mnt, const char *oldname, const char
 {
 	int r;
 
-	ASLOG(LWEXT, "rename (%s, %s)\n", oldname, newname);
+	ASLOG(LWEXT, ("rename (%s,  %s)\n",  oldname, newname));
 
 	r = ext4_frename(TO_LWEXT_PATH(oldname), TO_LWEXT_PATH(newname));
 

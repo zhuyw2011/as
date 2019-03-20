@@ -144,7 +144,7 @@ static boolean peak_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_dev
 
 	if(handle)
 	{
-		ASWARNING("CAN PEAK port=%d is already on-line, no need to probe it again!\n",port);
+		ASWARNING(("CAN PEAK port=%d is already on-line, no need to probe it again!\n",port));
 		rv = FALSE;
 	}
 	else
@@ -162,7 +162,7 @@ static boolean peak_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_dev
 			}
 			else
 			{
-				ASWARNING("CAN PEAK port=%d is not able to be opened,error=%X!\n",port,status);
+				ASWARNING(("CAN PEAK port=%d is not able to be opened,error=%X!\n",port,status));
 				rv = FALSE;
 			}
 		}
@@ -227,13 +227,13 @@ static boolean peak_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t d
 		else
 		{
 			rv = FALSE;
-			ASWARNING("CAN PEAK port=%d send message failed: error = %X!\n",port,status);
+			ASWARNING(("CAN PEAK port=%d send message failed: error = %X!\n",port,status));
 		}
 	}
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN Peak port=%d is not on-line, not able to send message!\n",port);
+		ASWARNING(("CAN Peak port=%d is not on-line, not able to send message!\n",port));
 	}
 
 	return rv;
@@ -270,7 +270,7 @@ static void rx_notifiy(struct Can_PeakHandle_s* handle)
 	}
 	else
 	{
-		ASWARNING("CAN PEAK port=%d read message failed: error = %X!\n",handle->port,status);
+		ASWARNING(("CAN PEAK port=%d read message failed: error = %X!\n",handle->port,status));
 	}
 
 }

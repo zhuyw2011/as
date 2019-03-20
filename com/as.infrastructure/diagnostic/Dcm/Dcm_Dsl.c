@@ -124,7 +124,7 @@ static void changeDiagnosticSession(Dcm_DslRunTimeProtocolParametersType *runtim
 
 	default:
 		DET_REPORTERROR(MODULE_ID_DCM, 0, DCM_CHANGE_DIAGNOSTIC_SESSION_ID, DCM_E_PARAM);
-		ASLOG( DCM, "Old session invalid");
+		ASLOG( DCM, ("Old session invalid"));
 		break;
 	}
 
@@ -139,7 +139,7 @@ static void changeDiagnosticSession(Dcm_DslRunTimeProtocolParametersType *runtim
 
 	default:
 		DET_REPORTERROR(MODULE_ID_DCM, 0, DCM_CHANGE_DIAGNOSTIC_SESSION_ID, DCM_E_PARAM);
-		ASLOG(DCM, "New session invalid");
+		ASLOG(DCM, ("New session invalid"));
 		break;
 	}
 }
@@ -362,7 +362,7 @@ void DslDsdProcessingDone(PduIdType rxPduIdRef, DsdProcessingDoneResultType resp
 	const Dcm_DslProtocolRowType *protocolRow = NULL;
 	Dcm_DslRunTimeProtocolParametersType *runtime = NULL;
 
-	ASLOG( DCM, "DslDsdProcessingDone rxPduIdRef=%d\n", rxPduIdRef);
+	ASLOG( DCM, ("DslDsdProcessingDone rxPduIdRef=%d\n", rxPduIdRef));
 
 	if (findRxPduIdParentConfigurationLeafs(rxPduIdRef, &protocolRx, &mainConnection, &connection, &protocolRow, &runtime)) {
 	    imask_t state;
@@ -372,11 +372,11 @@ void DslDsdProcessingDone(PduIdType rxPduIdRef, DsdProcessingDoneResultType resp
 			runtime->externalTxBufferStatus = DSD_PENDING_RESPONSE_SIGNALED; /** @req DCM114 */
 			break;
 		case DSD_TX_RESPONSE_SUPPRESSED: /** @req DCM238 */
-			ASLOG( DCM, "DslDsdProcessingDone called with DSD_TX_RESPONSE_SUPPRESSED.\n");
+			ASLOG( DCM, ("DslDsdProcessingDone called with DSD_TX_RESPONSE_SUPPRESSED.\n"));
 			releaseExternalRxTxBuffersHelper(rxPduIdRef);
 			break;
 		default:
-			ASLOG( DCM, "Unknown response result from DslDsdProcessingDone!\n");
+			ASLOG( DCM, ("Unknown response result from DslDsdProcessingDone!\n"));
 			break;
 		}
 	    Irq_Restore(state);
@@ -538,7 +538,7 @@ void DslMain(void) {
 				if( TRUE == runtime->S3ServerStarted ) {
 					DECREMENT(runtime->S3ServerTimeoutCount);
 					if (runtime->S3ServerTimeoutCount == 0) {
-						ASLOG(STDOUT,"\n\n S3Server Timeout!\n\n");
+						ASLOG(STDOUT, ("\n\n S3Server Timeout!\n\n"));
 						changeDiagnosticSession(runtime, DCM_DEFAULT_SESSION); /** @req DCM140 */
 						runtime->protocolStarted = FALSE;
 						if( (NULL != DcmDslRunTimeData.activeProtocol) &&
@@ -559,9 +559,9 @@ void DslMain(void) {
 				// No reset will be performed.
 				// A client mistake action will cause the server fixed to the protocol started.
 			}
-			ASLOG(OFF,"runtime->externalTxBufferStatus = %d,runtime->stateTimeoutCount=%d,runtime->S3ServerTimeoutCount(%s)=%d\n",
+			ASLOG(OFF, ("runtime->externalTxBufferStatus = %d, runtime->stateTimeoutCount=%d, runtime->S3ServerTimeoutCount(%s)=%d\n", 
 					runtime->externalTxBufferStatus,runtime->stateTimeoutCount,
-					runtime->S3ServerStarted?"start":"stop",runtime->S3ServerTimeoutCount);
+					runtime->S3ServerStarted?"start":"stop",runtime->S3ServerTimeoutCount));
 			switch (runtime->externalTxBufferStatus) { // #### TX buffer state. ####
 			case NOT_IN_USE:
 				break;
@@ -581,7 +581,7 @@ void DslMain(void) {
 								releaseExternalRxTxBuffers(protocolRowEntry, runtime);
 							}
 						} else {
-							ASLOG( DCM, "Not configured to send response pending, now sending general reject!\n");
+							ASLOG( DCM, ("Not configured to send response pending, now sending general reject!\n"));
 							DspCancelPendingRequests();
 							sendResponse(protocolRowEntry,DCM_E_GENERAL_REJECT);
 							releaseExternalRxTxBuffers(protocolRowEntry, runtime);
@@ -595,7 +595,7 @@ void DslMain(void) {
 				// Make sure that response pending or general reject have not been issued,
 				// if so we can not transmit to PduR because we would not know from where
 				// the Tx confirmation resides later.
-				ASLOG( DCM, "state DSD_PENDING_RESPONSE_SIGNALED!\n");
+				ASLOG( DCM, ("state DSD_PENDING_RESPONSE_SIGNALED!\n"));
 				if (runtime->localTxBuffer.status == NOT_IN_USE) { // Make sure that no TxConfirm could be sent by the local buffer and mixed up with this transmission.
 					const Dcm_DslProtocolRxType *protocolRx = NULL;
 					const Dcm_DslMainConnectionType *mainConnection = NULL;
@@ -605,37 +605,37 @@ void DslMain(void) {
 
 					if (findRxPduIdParentConfigurationLeafs(runtime->diagReqestRxPduId, &protocolRx, &mainConnection, &connection, &protocolRow, &runtime)) {
 						const PduIdType txPduId = mainConnection->DslProtocolTx->DcmDslProtocolTxPduId;
-						ASLOG( DCM, "runtime->externalTxBufferStatus enter state DCM_TRANSMIT_SIGNALED.\n" );
+						ASLOG( DCM, ("runtime->externalTxBufferStatus enter state DCM_TRANSMIT_SIGNALED.\n" ));
 						runtime->externalTxBufferStatus = DCM_TRANSMIT_SIGNALED;
 						transmitResult = PduR_DcmTransmit(txPduId, &runtime->diagnosticResponseFromDsd); /** @req DCM237 *//* Will trigger PduR (CanTP) to call DslProvideTxBuffer(). */
 						if (transmitResult != E_OK) {
 							// TODO: What to do here?
-							ASLOG( DCME, "send response failed!\n");
+							ASLOG( DCME, ("send response failed!\n"));
 							releaseExternalRxTxBuffers(protocolRow, runtime);
 						}
 					} else {
-						ASLOG( DCM, "***** WARNING, THIS IS UNEXPECTED !!! ********.\n" );
+						ASLOG( DCM, ("***** WARNING, THIS IS UNEXPECTED !!! ********.\n" ));
 						const PduIdType txPduId = protocolRowEntry->DslConnection->DslMainConnection->DslProtocolTx->DcmDslProtocolTxPduId;
-						ASLOG( DCM, "runtime->externalTxBufferStatus enter state DSD_PENDING_RESPONSE_SIGNALED.\n", txPduId);
+						ASLOG( DCM, ("runtime->externalTxBufferStatus enter state DSD_PENDING_RESPONSE_SIGNALED.\n", txPduId));
 						runtime->externalTxBufferStatus = DCM_TRANSMIT_SIGNALED;
-						ASLOG( DCM, "Calling PduR_DcmTransmit with txPduId = %d from DslMain\n", txPduId);
+						ASLOG( DCM, ("Calling PduR_DcmTransmit with txPduId = %d from DslMain\n", txPduId));
 						transmitResult = PduR_DcmTransmit(txPduId, &runtime->diagnosticResponseFromDsd); /** @req DCM237 *//* Will trigger PduR (CanTP) to call DslProvideTxBuffer(). */
 						if (transmitResult != E_OK) {
 							// TODO: What to do here?
-							ASLOG( DCME, "xx send response failed!\n");
+							ASLOG( DCME, ("xx send response failed!\n"));
 							releaseExternalRxTxBuffers(protocolRow, runtime);
 						}
 					}
 				}
 				break;
 			case DCM_TRANSMIT_SIGNALED:
-				ASLOG( DCM, "state DCM_TRANSMIT_SIGNALED!\n");
+				ASLOG( DCM, ("state DCM_TRANSMIT_SIGNALED!\n"));
 				break;
 			case PROVIDED_TO_PDUR: // The valid data is being transmitted by TP-layer.
-				ASLOG( DCM, "state PROVIDED_TO_PDUR!\n");
+				ASLOG( DCM, ("state PROVIDED_TO_PDUR!\n"));
 				break;
 			case PREEMPT_TRANSMIT_NRC: /* preemption has happened,send NRC 0x21 to OBD tester */
-//				ASLOG( DCM, "state PREEMPT_TRANSMIT_NRC!\n");
+//				ASLOG( DCM, ("state PREEMPT_TRANSMIT_NRC!\n"));
 				if (TRUE == PreemptionNotProcessingDone){
 					if( !BusyRepeatSent ) {
 						/*sent NRC 0x21 till timeout or processing done*/
@@ -645,9 +645,9 @@ void DslMain(void) {
 
 					/*decrease preempt timeout count*/					
 					DECREMENT(runtime->preemptTimeoutCount);
-//					ASLOG( DCM, "runtime->preemptTimeoutCount = %x\n",runtime->preemptTimeoutCount);
+//					ASLOG( DCM, ("runtime->preemptTimeoutCount = %x\n", runtime->preemptTimeoutCount));
 					/*if processing done is finished,clear the flag*/
-//					ASLOG( DCM, "DcmDslRunTimeData.activeProtocol->DslRunTimeProtocolParameters->externalTxBufferStatus = %x\n",DcmDslRunTimeData.activeProtocol->DslRunTimeProtocolParameters->externalTxBufferStatus);
+//					ASLOG( DCM, ("DcmDslRunTimeData.activeProtocol->DslRunTimeProtocolParameters->externalTxBufferStatus = %x\n", DcmDslRunTimeData.activeProtocol->DslRunTimeProtocolParameters->externalTxBufferStatus));
 					if (DcmDslRunTimeData.activeProtocol->DslRunTimeProtocolParameters->externalTxBufferStatus == NOT_IN_USE){
 						/*if processing done is finished,clear the flag*/
 						PreemptionNotProcessingDone = FALSE;
@@ -703,13 +703,13 @@ BufReq_ReturnType DslProvideRxBufferToPdur(PduIdType dcmRxPduId, PduLengthType t
 	const Dcm_DslProtocolRowType *protocolRow = NULL;
 	Dcm_DslRunTimeProtocolParametersType *runtime = NULL;
     imask_t state;
-	ASLOG( DCM, "DslProvideRxBufferToPdur(dcmRxPduId=%d) called!\n", dcmRxPduId);
+	ASLOG( DCM, ("DslProvideRxBufferToPdur(dcmRxPduId=%d) called!\n", dcmRxPduId));
     Irq_Save(state);
 	if (findRxPduIdParentConfigurationLeafs(dcmRxPduId, &protocolRx, &mainConnection, &connection, &protocolRow, &runtime)) {
 		const Dcm_DslBufferType *externalRxBuffer = protocolRow->DslProtocolRxBufferID;
 		if (externalRxBuffer->pduInfo.SduLength >= tpSduLength) { /** @req DCM443 */
 			if ((runtime->externalRxBufferStatus == NOT_IN_USE) && (externalRxBuffer->externalBufferRuntimeData->status == BUFFER_AVAILABLE)) {
-				ASLOG( DCM, "External buffer available!\n");
+				ASLOG( DCM, ("External buffer available!\n"));
 				// ### EXTERNAL BUFFER IS AVAILABLE; GRAB IT AND REMEBER THAT WE OWN IT! ###
 				externalRxBuffer->externalBufferRuntimeData->status = BUFFER_BUSY;
 				runtime->diagnosticRequestFromTester.SduDataPtr = externalRxBuffer->pduInfo.SduDataPtr;
@@ -791,7 +791,7 @@ void DslRxIndicationFromPduR(PduIdType dcmRxPduId, NotifResultType result) {
 								if(DCM_OBD_ON_CAN == protocolRow->DslProtocolID){
 									runtime->sessionControl = DCM_OBD_SESSION;
 									//startS3SessionTimer(runtime, protocolRow); // init s3.
-									ASLOG( DCM, "runtime->sessionControl = DCM_OBD_SESSION;");
+									ASLOG( DCM, ("runtime->sessionControl = DCM_OBD_SESSION;"));
 								}								
 							}	
 						}
@@ -825,7 +825,7 @@ void DslRxIndicationFromPduR(PduIdType dcmRxPduId, NotifResultType result) {
 										runtime->diagReqestRxPduId = dcmRxPduId;
 										/* Store the preempting protocol */
 										DcmDslRunTimeData.preemptingProtocol = protocolRow;
-//										ASLOG(DCM,"\n runtime->externalTxBufferStatus = %X\n",runtime->externalTxBufferStatus);
+//										ASLOG(DCM, ("\n runtime->externalTxBufferStatus = %X\n", runtime->externalTxBufferStatus));
 										/*start preemption timer*/
 										startPreemptTimer(runtime, protocolRow);/* TODO: Is it correct to restart timer on each new request? */
 										/*request PduR to cancel transmit of preempted protocol*/
@@ -856,17 +856,17 @@ void DslRxIndicationFromPduR(PduIdType dcmRxPduId, NotifResultType result) {
 						runtime->stateTimeoutCount = DCM_CONVERT_MS_TO_MAIN_CYCLES(sessionRow->DspSessionP2ServerMax); /* See 9.2.2. */
 						runtime->externalRxBufferStatus = PROVIDED_TO_DSD; /** @req DCM241 */
 						if (runtime->externalTxBufferStatus == NOT_IN_USE) {
-							ASLOG( DCM, "External Tx buffer available, we can pass it to DSD.\n");
+							ASLOG( DCM, ("External Tx buffer available, we can pass it to DSD.\n"));
 						} else {
-							ASLOG( DCM, "External buffer not available, a response is being transmitted?\n");
+							ASLOG( DCM, ("External buffer not available, a response is being transmitted?\n"));
 						}
 						runtime->externalTxBufferStatus = PROVIDED_TO_DSD; /** @req DCM241 */
 						runtime->responsePendingCount = DCM_Config.Dsl->DslDiagResp->DslDiagRespMaxNumRespPend;
 						runtime->diagnosticResponseFromDsd.SduDataPtr = protocolRow->DslProtocolTxBufferID->pduInfo.SduDataPtr;
 						runtime->diagnosticResponseFromDsd.SduLength = protocolRow->DslProtocolTxBufferID->pduInfo.SduLength;
-						ASLOG( DCM, "DsdDslDataIndication(DcmDslProtocolTxPduId=%d, dcmRxPduId=%d)\n", mainConnection->DslProtocolTx->DcmDslProtocolTxPduId, dcmRxPduId);
+						ASLOG( DCM, ("DsdDslDataIndication(DcmDslProtocolTxPduId=%d,  dcmRxPduId=%d)\n",  mainConnection->DslProtocolTx->DcmDslProtocolTxPduId, dcmRxPduId));
 						runtime->diagReqestRxPduId = dcmRxPduId;
-						ASLOG(OFF,"\n\n runtime->diagnosticRequestFromTester.SduDataPtr[0]  %x\n\n ",runtime->diagnosticRequestFromTester.SduDataPtr[0]);
+						ASLOG(OFF, ("\n\n runtime->diagnosticRequestFromTester.SduDataPtr[0]  %x\n\n ", runtime->diagnosticRequestFromTester.SduDataPtr[0]));
 						DsdDslDataIndication(  // qqq: We are inside a critical section.
 								&(runtime->diagnosticRequestFromTester),
 								protocolRow->DslProtocolSIDTable,	/** @req DCM035 */
@@ -921,7 +921,7 @@ BufReq_ReturnType DslProvideTxBuffer(PduIdType dcmTxPduId, const PduInfoType **p
 	Dcm_DslRunTimeProtocolParametersType *runtime = NULL;
 
 	(void)length;		// Currently not used, this is only to remove compilation warnings
-	ASLOG( DCM, "DslProvideTxBuffer=%d\n", dcmTxPduId);
+	ASLOG( DCM, ("DslProvideTxBuffer=%d\n", dcmTxPduId));
 	if (findTxPduIdParentConfigurationLeafs(dcmTxPduId, &protocolTx, &mainConnection, &connection, &protocolRow, &runtime)) {
 		switch (runtime->externalTxBufferStatus) { // ### EXTERNAL TX BUFFER ###
 		case DCM_TRANSMIT_SIGNALED: {
@@ -932,7 +932,7 @@ BufReq_ReturnType DslProvideTxBuffer(PduIdType dcmTxPduId, const PduInfoType **p
 			break;
 		}
 		default:
-			ASLOG( DCM, "DCM_TRANSMIT_SIGNALED was not signaled in the external buffer\n");
+			ASLOG( DCM, ("DCM_TRANSMIT_SIGNALED was not signaled in the external buffer\n"));
 			ret = BUFREQ_NOT_OK;
 			break;
 		}
@@ -947,7 +947,7 @@ BufReq_ReturnType DslProvideTxBuffer(PduIdType dcmTxPduId, const PduInfoType **p
 				break;
 			}
 			default:
-				ASLOG( DCM , "DCM_TRANSMIT_SIGNALED was not signaled for the local buffer either\n");
+				ASLOG( DCM , ("DCM_TRANSMIT_SIGNALED was not signaled for the local buffer either\n"));
 				ret = BUFREQ_NOT_OK;
 				break;
 			}
@@ -971,7 +971,7 @@ void DslTxConfirmation(PduIdType dcmTxPduId, NotifResultType result) {
 	Dcm_DslRunTimeProtocolParametersType *runtime = NULL;
 	imask_t state;
 
-	ASLOG( DCM, "DslTxConfirmation=%d, result=%d\n", dcmTxPduId, result);
+	ASLOG( DCM, ("DslTxConfirmation=%d,  result=%d\n",  dcmTxPduId, result));
 	if (findTxPduIdParentConfigurationLeafs(dcmTxPduId, &protocolTx, &mainConnection, &connection, &protocolRow, &runtime)) {
 		boolean externalBufferReleased = FALSE;
 
@@ -985,7 +985,7 @@ void DslTxConfirmation(PduIdType dcmTxPduId, NotifResultType result) {
 			startS3SessionTimer(runtime, protocolRow); /** @req DCM141 */
 			releaseExternalRxTxBuffers(protocolRow, runtime); /** @req DCM118 *//** @req DCM352 *//** @req DCM353 *//** @req DCM354 */
 			externalBufferReleased = TRUE;
-			ASLOG( DCM, "Released external buffer OK!\n");
+			ASLOG( DCM, ("Released external buffer OK!\n"));
 			DsdDataConfirmation(mainConnection->DslProtocolTx->DcmDslProtocolTxPduId, result); /** @req DCM117 *//** @req DCM235 */
 			break;
 		}
@@ -995,11 +995,11 @@ void DslTxConfirmation(PduIdType dcmTxPduId, NotifResultType result) {
 		if (!externalBufferReleased) {
 			switch (runtime->localTxBuffer.status) { // ### LOCAL TX BUFFER ###
 			case PROVIDED_TO_PDUR:
-				ASLOG( DCM, "Released local buffer buffer OK!\n");
+				ASLOG( DCM, ("Released local buffer buffer OK!\n"));
 				runtime->localTxBuffer.status = DCM_IDLE;
 				break;
 			default:
-				ASLOG( DCM, "WARNING! DslTxConfirmation could not release external or local buffer!\n");
+				ASLOG( DCM, ("WARNING! DslTxConfirmation could not release external or local buffer!\n"));
 				break;
 			}
 		}

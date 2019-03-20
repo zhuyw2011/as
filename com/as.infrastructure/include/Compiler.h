@@ -68,6 +68,12 @@
 #elif defined(__ICCHCS12__) || defined(__ICCARM__)
 #define Pragma(x) _Pragma(#x)
 #define __balign(x)       Pragma(data_alignment=x)
+#elif defined(__HIWARE__)
+#define __balign(x)
+#define inline
+# define __naked
+# define __weak
+# define __packed
 #else
 #error Compiler not defined.
 #endif
@@ -82,7 +88,7 @@
 
 #define SECTION_BALIGN(x)  __balign(x)
 
-#if defined(__ICCHCS12__) || defined(__ICCARM__)
+#if defined(__ICCHCS12__) || defined(__ICCARM__) || defined(__HIWARE__)
 #define restrict
 #define DECLARE_WEAK
 #define __simple __simple

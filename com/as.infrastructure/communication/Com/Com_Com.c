@@ -46,7 +46,7 @@ uint8 Com_SendSignal(Com_SignalIdType SignalId, const void *SignalDataPtr) {
 	if (isPduBufferLocked(getPduId(IPdu))) {
 		return COM_BUSY;
 	}
-	//DEBUG(DEBUG_LOW, "Com_SendSignal: id %d, nBytes %d, BitPosition %d, intVal %d\n", SignalId, nBytes, signal->ComBitPosition, (uint32)*(uint8 *)SignalDataPtr);
+	//ASLOG(LOW, ("Com_SendSignal: id %d,  nBytes %d,  BitPosition %d,  intVal %d\n",  SignalId,  nBytes,  signal->ComBitPosition, (uint32)*(uint8 *)SignalDataPtr));
 
 	imask_t irq_state;
 
@@ -71,7 +71,7 @@ uint8 Com_SendSignal(Com_SignalIdType SignalId, const void *SignalDataPtr) {
 
 uint8 Com_ReceiveSignal(Com_SignalIdType SignalId, void* SignalDataPtr) {
 	VALIDATE_SIGNAL(SignalId, 0x0b, E_NOT_OK);
-	DEBUG(DEBUG_LOW, "Com_ReceiveSignal: SignalId %d\n", SignalId);
+	ASLOG(LOW, ("Com_ReceiveSignal: SignalId %d\n", SignalId));
 
 	const ComSignal_type * Signal = GET_Signal(SignalId);
 	const ComIPdu_type *IPdu = GET_IPdu(Signal->ComIPduHandleId);

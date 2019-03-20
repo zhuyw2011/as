@@ -29,6 +29,11 @@
 #if defined(USE_DET)
 #include "Det.h"
 #endif
+
+#define AS_LOG_ECUM 0
+
+#include "asdebug.h"
+
 #define VALIDATE(_exp,_api,_err ) \
         if( !(_exp) ) { \
           Det_ReportError(MODULE_ID_ECUM, 0, _api, _err); \
@@ -96,10 +101,10 @@ char *GetMainStateAsString( EcuM_StateType state );
 //#endif
 
 
-#define DEBUG_ECUM_STATE(_state)						LDEBUG_PRINTF("STATE: %s\n",GetMainStateAsString(_state))
-#define DEBUG_ECUM_CALLOUT(_call)    					LDEBUG_FPUTS( "  CALLOUT->: " _call "\n");
-#define DEBUG_ECUM_CALLOUT_W_ARG(_call,_farg0,_arg0)    LDEBUG_PRINTF("  CALLOUT->: " _call " "_farg0 "\n",_arg0)
-#define DEBUG_ECUM_CALLIN_W_ARG(_call,_farg0,_arg0)     LDEBUG_PRINTF("  <-CALLIN : " _call " "_farg0 "\n",_arg0)
+#define DEBUG_ECUM_STATE(_state)						ASLOG(ECUM, ("STATE: %s\n",GetMainStateAsString(_state)))
+#define DEBUG_ECUM_CALLOUT(_call)    					ASLOG(ECUM, ("  CALLOUT->: " _call "\n"));
+#define DEBUG_ECUM_CALLOUT_W_ARG(_call,_farg0,_arg0)    ASLOG(ECUM, ("  CALLOUT->: " _call " "_farg0 "\n",_arg0))
+#define DEBUG_ECUM_CALLIN_W_ARG(_call,_farg0,_arg0)     ASLOG(ECUM, ("  <-CALLIN : " _call " "_farg0 "\n",_arg0))
 
-
+#define GetWakeupReactionAsString(a) "?"
 #endif /*_ECUM_INTERNALS_H_*/

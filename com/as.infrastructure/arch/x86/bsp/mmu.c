@@ -38,7 +38,7 @@ void *mmap(void *addr, size_t length, int flags)
 	uint32_t dsz;
 
 
-	ASLOG(MMU, "mmap %p\n", addr);
+	ASLOG(MMU, ("mmap %p\n", addr));
 
 	while(*pDir != 0)
 	{
@@ -48,11 +48,11 @@ void *mmap(void *addr, size_t length, int flags)
 			pTblE ++;
 		}
 
-		ASLOG(MMU, "DIR%d: %08X -> [%08X(%d) %08X(%d)]\n",
+		ASLOG(MMU, ("DIR%d: %08X -> [%08X(%d) %08X(%d)]\n", 
 				pDir-PAGE_DIR_BASE,
 				*pDir,
 				*pTblS, pTblS-PAGE_TBL_BASE,
-				*pTblE, pTblE-PAGE_TBL_BASE);
+				*pTblE, pTblE-PAGE_TBL_BASE));
 		if(*pTblE == 0)
 		{
 			break;
@@ -95,11 +95,11 @@ void *mmap(void *addr, size_t length, int flags)
 			{
 				dsz = 0;
 			}
-			ASLOG(MMU, "DIR%d: %08X -> [%08X(%d) %08X(%d)]\n",
+			ASLOG(MMU, ("DIR%d: %08X -> [%08X(%d) %08X(%d)]\n", 
 					pDir-PAGE_DIR_BASE,
 					*pDir,
 					*pTblS, pTblS-PAGE_TBL_BASE,
-					*pTblE, pTblE-PAGE_TBL_BASE);
+					*pTblE, pTblE-PAGE_TBL_BASE));
 		}
 	}
 
@@ -109,7 +109,7 @@ void *mmap(void *addr, size_t length, int flags)
 
 	addr = (void*)((dir<<22) + (table<<12) + offset);
 
-	ASLOG(MMU, " >> %p(%d, %d %d)\n", addr, dir, table, offset);
+	ASLOG(MMU, (" >> %p(%d,  %d %d)\n",  addr,  dir,  table, offset));
 
 	return addr;
 }

@@ -37,7 +37,7 @@ Std_ReturnType Xcp_CmdProgramStart(uint8 pid, void* data, int len)
 #endif
 			| 0 << 1; /* INTERLEAVED_MODE */
 
-    ASLOG(XCP, "Received program_start\n");
+    ASLOG(XCP, ("Received program_start\n"));
     FIFO_GET_WRITE(Xcp_FifoTx, e) {
         SET_UINT8 (e->data, 0, XCP_PID_RES);
         SET_UINT8 (e->data, 1, 0); /* RESERVED */
@@ -68,9 +68,9 @@ Std_ReturnType Xcp_CmdProgramClear(uint8 pid, void* data, int len)
 	uint8  mode  = GET_UINT8 (data, 0);
 	uint32 range = GET_UINT32(data, 3);
 
-	ASLOG(XCP, "Received program_clear %u, %u\n", (unsigned)mode, (unsigned)range);
+	ASLOG(XCP, ("Received program_clear %u,  %u\n",  (unsigned)mode, (unsigned)range));
 	if(!Xcp_Program.started) {
-		RETURN_ERROR(XCP_ERR_GENERIC, "Xcp_CmdProgramClear - programming not started\n");
+		RETURN_ERROR(XCP_ERR_GENERIC, ("Xcp_CmdProgramClear - programming not started\n"));
 	}
 
 	if(mode == 0x01) { /* functional access mode */
@@ -89,28 +89,28 @@ Std_ReturnType Xcp_CmdProgramClear(uint8 pid, void* data, int len)
 		if(E_OK == Xcp_FlashErase(Xcp_Mta.address, range)) {
 			Xcp_TxSuccess();
 		} else {
-			RETURN_ERROR(XCP_ERR_GENERIC, "Xcp_FlashErase failed\n");
+			RETURN_ERROR(XCP_ERR_GENERIC, ("Xcp_FlashErase failed\n"));
 		}
 		return E_OK;
 	}
 
 	XCP_UNUSED(pid);
 	XCP_UNUSED(len);
-	RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Xcp_CmdProgramClear - mode implemented\n");
+	RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Xcp_CmdProgramClear - mode implemented\n"));
 }
 
 Std_ReturnType Xcp_CmdProgram(uint8 pid, void* data, int len)
 {
 	unsigned rem = GET_UINT8(data, 0) * XCP_ELEMENT_SIZE;
 	unsigned off = XCP_ELEMENT_OFFSET(2) + 1;
-	ASLOG(XCP, "Received program %d, %d\n", pid, len);
+	ASLOG(XCP, ("Received program %d,  %d\n",  pid, len));
 	if(!Xcp_Program.started) {
-		RETURN_ERROR(XCP_ERR_GENERIC, "Xcp_CmdProgramClear - programming not started\n");
+		RETURN_ERROR(XCP_ERR_GENERIC, ("Xcp_CmdProgramClear - programming not started\n"));
 	}
 
 #if(!XCP_FEATURE_BLOCKMODE)
 	if(rem + off > len) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Xcp_CmdProgram - Invalid length (%d, %d, %d)\n", rem, off, len);
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Xcp_CmdProgram - Invalid length (%d,  %d,  %d)\n",  rem,  off, len));
 	}
 #endif
 
@@ -121,7 +121,7 @@ Std_ReturnType Xcp_CmdProgram(uint8 pid, void* data, int len)
 
 	/* check for sequence error */
 	if(Xcp_Program.rem != rem) {
-		DEBUG(DEBUG_HIGH, "Xcp_CmdProgram - Invalid next state (%u, %u)\n", rem, (unsigned)Xcp_Program.rem);
+		ASLOG(HIGH, ("Xcp_CmdProgram - Invalid next state (%u,  %u)\n",  rem, (unsigned)Xcp_Program.rem));
 		FIFO_GET_WRITE(Xcp_FifoTx, e) {
 			SET_UINT8 (e->data, 0, XCP_PID_ERR);
 			SET_UINT8 (e->data, 1, XCP_ERR_SEQUENCE);
@@ -161,7 +161,7 @@ Std_ReturnType Xcp_CmdProgramReset(uint8 pid, void* data, int len)
 	XCP_UNUSED(len);
 
 	if(!Xcp_Program.started) {
-		RETURN_ERROR(XCP_ERR_GENERIC, "Xcp_CmdProgramClear - programming not started\n");
+		RETURN_ERROR(XCP_ERR_GENERIC, ("Xcp_CmdProgramClear - programming not started\n"));
 	}
 
 	if(E_OK == Xcp_ProgramReset(data, len))
@@ -169,7 +169,7 @@ Std_ReturnType Xcp_CmdProgramReset(uint8 pid, void* data, int len)
 		RETURN_SUCCESS();
 	}
 
-	RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Xcp_CmdProgramReset - not implemented\n");
+	RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Xcp_CmdProgramReset - not implemented\n"));
 }
 
 typedef enum {

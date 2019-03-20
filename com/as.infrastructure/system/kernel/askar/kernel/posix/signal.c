@@ -306,17 +306,17 @@ int sigwait(const sigset_t * set, int * sig)
 	{
 		tid = pthread_self();
 
-		ASLOG(SIGNAL, "pthread%d sigwait 0x%x @%u\n",
+		ASLOG(SIGNAL, ("pthread%d sigwait 0x%x @%u\n", 
 				(RunningVar-TaskVarArray-TASK_NUM),
-				*set, OsTickCounter);
+				*set, OsTickCounter));
 		LOCK_KERNEL(imask);
 		tid->sigWait = *set;
 		(void)Os_ListWait(&tid->sigList, NULL);
 		*sig = tid->signo;
 		tid->sigWait = 0;
-		ASLOG(SIGNAL, "pthread%d sigwait 0x%x get %d @%u\n",
+		ASLOG(SIGNAL, ("pthread%d sigwait 0x%x get %d @%u\n", 
 				(RunningVar-TaskVarArray-TASK_NUM),
-				*set, *sig, OsTickCounter);
+				*set, *sig, OsTickCounter));
 		UNLOCK_KERNEL(imask);
 	}
 	else
@@ -349,9 +349,9 @@ int pthread_kill (pthread_t tid, int signum)
 		LOCK_KERNEL(imask);
 		sig = lookup_signal2(tid, signum);
 		UNLOCK_KERNEL(imask);
-		ASLOG(SIGNAL, "kill to pthread%d %d\n",
+		ASLOG(SIGNAL, ("kill to pthread%d %d\n", 
 				(tid->pTaskVar-TaskVarArray-TASK_NUM),
-				signum);
+				signum));
 		if(NULL != sig)
 		{
 			tid->signo = signum;
@@ -379,9 +379,9 @@ int pthread_kill (pthread_t tid, int signum)
 				}
 				else
 				{
-					ASLOG(SIGNAL, "kill to pthread%d %d failed\n",
+					ASLOG(SIGNAL, ("kill to pthread%d %d failed\n", 
 							(tid->pTaskVar-TaskVarArray-TASK_NUM),
-							signum);
+							signum));
 					ercd = -ENOMEM;
 				}
 				UNLOCK_KERNEL(imask);

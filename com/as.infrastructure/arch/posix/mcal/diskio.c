@@ -101,11 +101,11 @@ static int asblk_open  (const device_t* device)
 		}
 		free(data);
 		fclose(fp);
-		ASLOG(BLKDEV,"simulation on new created 32Mb %s\n", name);
+		ASLOG(BLKDEV, ("simulation on new created 32Mb %s\n", name));
 	}
 	else
 	{
-		ASLOG(BLKDEV,"simulation on old %s\n", name);
+		ASLOG(BLKDEV, ("simulation on old %s\n", name));
 		fclose(fp);
 	}
 
@@ -209,7 +209,7 @@ DSTATUS disk_status (
 {
 	DSTATUS stat = STA_NOINIT;
 
-	ASLOG(FATFS,"%s %d\n",__func__,pdrv);
+	ASLOG(FATFS, ("%s %d\n", __func__, pdrv));
 
 	switch (pdrv) {
 	case DEV_RAM :
@@ -230,7 +230,7 @@ DSTATUS disk_initialize (
 )
 {
 	DSTATUS stat = STA_NOINIT;
-	ASLOG(FATFS,"%s %d\n",__func__,pdrv);
+	ASLOG(FATFS, ("%s %d\n", __func__, pdrv));
 	switch (pdrv) {
 	case DEV_RAM :
 		break;
@@ -248,11 +248,11 @@ DSTATUS disk_initialize (
 				fwrite(&data,1,1,fp);
 			}
 			fclose(fp);
-			ASLOG(FATFS,"simulation on new created 32Mb %s\n", FATFS_IMG);
+			ASLOG(FATFS, ("simulation on new created 32Mb %s\n", FATFS_IMG));
 		}
 		else
 		{
-			ASLOG(FATFS,"simulation on old %s\n", FATFS_IMG);
+			ASLOG(FATFS, ("simulation on old %s\n", FATFS_IMG));
 			fclose(fp);
 		}
 		stat = 0;
@@ -272,7 +272,7 @@ DRESULT disk_read (
 )
 {
 	DRESULT res = RES_PARERR;
-	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
+	ASLOG(FATFS, ("%s %d %d %d\n", __func__, pdrv, sector, count));
 	switch (pdrv) {
 	case DEV_RAM :
 		break;
@@ -311,7 +311,7 @@ DRESULT disk_write (
 )
 {
 	DRESULT res = RES_PARERR;
-	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
+	ASLOG(FATFS, ("%s %d %d %d\n", __func__, pdrv, sector, count));
 	switch (pdrv) {
 	case DEV_RAM :
 		break;
@@ -348,7 +348,7 @@ DRESULT disk_ioctl (
 )
 {
 	DRESULT res = RES_PARERR;
-	ASLOG(FATFS,"%s %d %d\n",__func__,pdrv,cmd);
+	ASLOG(FATFS, ("%s %d %d\n", __func__, pdrv, cmd));
 	switch (pdrv) {
 	case DEV_RAM :
 		break;
@@ -414,11 +414,11 @@ void ext_mount(void)
 			fwrite(&data,1,1,fp);
 		}
 		fclose(fp);
-        ASLOG(EXTFS,"simulation on new created 32Mb " EXTFS_IMG "\n");
+        ASLOG(EXTFS, ("simulation on new created 32Mb " EXTFS_IMG "\n"));
     }
     else
     {
-        ASLOG(EXTFS,"simulation on old " EXTFS_IMG "\n");
+        ASLOG(EXTFS, ("simulation on old " EXTFS_IMG "\n"));
         fclose(fp);
     }
 
@@ -428,7 +428,7 @@ void ext_mount(void)
     rc = ext4_device_register(bd, EXTFS_IMG);
     if(rc != EOK)
     {
-        ASLOG(EXTFS, "register ext4 device failed\n");
+        ASLOG(EXTFS, ("register ext4 device failed\n"));
     }
 
 	rc = ext4_mount(EXTFS_IMG, "/", false);
@@ -445,19 +445,19 @@ void ext_mount(void)
 		rc = ext4_mkfs(&fs, bd, &info, F_SET_EXT4);
 		if (rc != EOK)
 		{
-			ASLOG(ERROR,"ext4_mkfs error: %d\n", rc);
+			ASLOG(ERROR, ("ext4_mkfs error: %d\n", rc));
 		}
 		else
 		{
 			rc = ext4_mount(EXTFS_IMG, "/", false);
 			if (rc != EOK)
 			{
-				ASLOG(EXTFS, "mount ext4 device failed\n");
+				ASLOG(EXTFS, ("mount ext4 device failed\n"));
 			}
 		}
     }
 
-    ASLOG(EXTFS, "mount ext4 device " EXTFS_IMG " on '/' OK\n");
+    ASLOG(EXTFS, ("mount ext4 device " EXTFS_IMG " on '/' OK\n"));
 }
 #endif
 int __weak fseeko (FILE *stream, off_t offset, int whence)

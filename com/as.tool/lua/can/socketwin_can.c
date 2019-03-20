@@ -171,7 +171,7 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 
 	if(handle)
 	{
-		ASWARNING("CAN socket port=%d is already on-line, no need to probe it again!\n",port);
+		ASWARNING(("CAN socket port=%d is already on-line, no need to probe it again!\n",port));
 		rv = FALSE;
 	}
 	else
@@ -183,7 +183,7 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 		addr.sin_port = htons(CAN_PORT_MIN+port);
 		/* open socket */
 		if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-			ASWARNING("CAN Socket port=%d open failed!\n",port);
+			ASWARNING(("CAN Socket port=%d open failed!\n",port));
 			rv = FALSE;
 		}
 
@@ -192,10 +192,10 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 			/* Connect to server. */
 			int ercd = connect(s, (struct sockaddr *) & addr, sizeof (struct sockaddr));
 			if (ercd < 0) {
-				ASWARNING("connect function failed with error: %d\n", WSAGetLastError());
+				ASWARNING(("connect function failed with error: %d\n", WSAGetLastError()));
 				ercd = closesocket(s);
 				if (ercd < 0){
-					ASWARNING("closesocket function failed with error: %d\n", WSAGetLastError());
+					ASWARNING(("closesocket function failed with error: %d\n", WSAGetLastError()));
 				}
 				rv = FALSE;
 			}
@@ -249,14 +249,14 @@ static boolean socket_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t
 
 		if (send(handle->s, (const char*)&frame, CAN_MTU,0) != CAN_MTU) {
 			perror("CAN socket write");
-			ASWARNING("CAN Socket port=%d send message failed!\n",port);
+			ASWARNING(("CAN Socket port=%d send message failed!\n",port));
 			rv = FALSE;
 		}
 	}
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN Socket port=%d is not on-line, not able to send message!\n",port);
+		ASWARNING(("CAN Socket port=%d is not on-line, not able to send message!\n",port));
 	}
 
 	return rv;
@@ -286,7 +286,7 @@ static void rx_notifiy(struct Can_SocketHandle_s* handle)
 	nbytes = recvfrom(handle->s, (char*)&frame, sizeof(frame), 0, (struct sockaddr*)&handle->addr, &len);
 	if (nbytes < 0) {
 		perror("CAN socket read");
-		ASWARNING("CAN Socket port=%d read message failed!\n",handle->port);
+		ASWARNING(("CAN Socket port=%d read message failed!\n",handle->port));
 	}
 	else if(nbytes==sizeof(frame))
 	{

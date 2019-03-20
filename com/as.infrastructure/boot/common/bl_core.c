@@ -53,11 +53,16 @@ extern void BL_SetAutoPRGS(void);
 /* ============================ [ DATAS     ] ====================================================== */
 static tFlashParam blFlashParam =
 {
-    .patchlevel  = FLASH_DRIVER_VERSION_PATCH,
-    .minornumber = FLASH_DRIVER_VERSION_MINOR,
-    .majornumber = FLASH_DRIVER_VERSION_MAJOR,
-    .wdTriggerFct = NULL,
-    .errorcode   = kFlashOk,
+	/* .patchlevel  = */ FLASH_DRIVER_VERSION_PATCH,
+	/* .minornumber = */ FLASH_DRIVER_VERSION_MINOR,
+	/* .majornumber = */ FLASH_DRIVER_VERSION_MAJOR,
+	/* .reserved1   = */ 0,
+	/* .errorcode   = */ kFlashOk,
+	/* .reserved2   = */ 0,
+	/* .address     = */ 0,
+	/* .length      = */ 0,
+	/* .data        = */ NULL,
+	/* .wdTriggerFct =*/ (tWDTriggerFct)NULL,
 };
 static uint8   blMemoryIdentifier;
 static uint32  blMemoryAddress;
@@ -119,8 +124,8 @@ static Dcm_ReturnEraseMemoryType eraseFlash(Dcm_OpStatusType OpStatus,uint32 Mem
 			}
 			else
 			{
-				ASLOG(BL,"erase faile: errorcode = %X(addr=%X,size=%X)\n",
-						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length);
+				ASLOG(BL,("erase faile: errorcode = %X(addr=%X,size=%X)\n",
+						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length));
 				rv = DCM_ERASE_FAILED;
 			}
 			break;
@@ -174,8 +179,8 @@ static Dcm_ReturnWriteMemoryType writeFlash(Dcm_OpStatusType OpStatus,uint32 Mem
 			}
 			else
 			{
-				ASLOG(BL,"write faile: errorcode = %X(addr=%X,size=%X)\n",
-						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length);
+				ASLOG(BL,("write faile: errorcode = %X(addr=%X,size=%X)\n",
+						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length));
 				rv = DCM_WRITE_FAILED;
 			}
 			break;
@@ -229,8 +234,8 @@ static Dcm_ReturnReadMemoryType readFlash(Dcm_OpStatusType OpStatus,uint32 Memor
 			}
 			else
 			{
-				ASLOG(BL,"read faile: errorcode = %X(addr=%X,size=%X)\n",
-						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length);
+				ASLOG(BL,("read faile: errorcode = %X(addr=%X,size=%X)\n",
+						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length));
 				rv = DCM_READ_FAILED;
 			}
 			break;
@@ -266,8 +271,8 @@ Dcm_ReturnEraseMemoryType Dcm_EraseMemory(Dcm_OpStatusType OpStatus,
 	imask_t imask;
 	Dcm_ReturnEraseMemoryType rv;
 
-	ASLOG(BL,"Dcm_EraseMemory(%X,%X,%X,%X)\n",
-			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize);
+	ASLOG(BL,("Dcm_EraseMemory(%X,%X,%X,%X)\n",
+			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize));
 	StopTimer(&appTimer);
 	if(DCM_INITIAL == OpStatus)
 	{
@@ -296,8 +301,8 @@ Dcm_ReturnWriteMemoryType Dcm_WriteMemory(Dcm_OpStatusType OpStatus,
 {
 	imask_t imask;
 	Dcm_ReturnEraseMemoryType rv;
-	ASLOG(BL,"Dcm_WriteMemory(%X,%X,%X,%X)\n",
-			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize);
+	ASLOG(BL,("Dcm_WriteMemory(%X,%X,%X,%X)\n",
+			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize));
 	StopTimer(&appTimer);
 	if(DCM_INITIAL == OpStatus)
 	{
@@ -330,8 +335,8 @@ Dcm_ReturnReadMemoryType Dcm_ReadMemory(Dcm_OpStatusType OpStatus,
 {
 	imask_t imask;
 	Dcm_ReturnReadMemoryType rv;
-	ASLOG(BL,"Dcm_ReadMemory(%X,%X,%X,%X)\n",
-			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize);
+	ASLOG(BL,("Dcm_ReadMemory(%X,%X,%X,%X)\n",
+			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize));
 	if(DCM_INITIAL == OpStatus)
 	{
 		blMemoryIdentifier = MemoryIdentifier;
@@ -432,10 +437,10 @@ void BL_MainFunction(void)
 
 		Irq_Save(imask);
 
-		ASLOG(BL,"appTimer timeout, jump to application @%p 0x%X FLSDRV@%X!\n",
+		ASLOG(BL,("appTimer timeout, jump to application @%p 0x%X FLSDRV@%X!\n",
 				application_main,
 				*(uint32_t*)application_main,
-				FLASH_DRIVER_STARTADDRESS);
+				FLASH_DRIVER_STARTADDRESS));
 		if( ((*(uint32_t*)application_main) != 0)
 			&& ((*(uint32_t*)application_main) != 0xFFFFFFFF)
 #ifdef STM32F10X_CL
@@ -447,7 +452,7 @@ void BL_MainFunction(void)
 		}
 		else
 		{
-			ASLOG(BL,"invalid application entry point, stay in bootloader.\n");
+			ASLOG(BL,("invalid application entry point, stay in bootloader.\n"));
 		}
 
 		Irq_Restore(imask);

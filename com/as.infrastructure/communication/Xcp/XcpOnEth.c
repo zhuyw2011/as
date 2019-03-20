@@ -53,7 +53,7 @@ void Xcp_SoAdRxIndication   (PduIdType XcpRxPduId, PduInfoType* XcpRxPduPtr)
 
     uint16 ctr = (XcpRxPduPtr->SduDataPtr[3] << 8) | XcpRxPduPtr->SduDataPtr[2];
     if(Xcp_Connected && ctr && ctr != Xcp_EthCtrRx) {
-        DEBUG(DEBUG_HIGH, "Xcp_SoAdRxIndication - ctr:%d differs from expected: %d\n", ctr, Xcp_EthCtrRx);
+        ASLOG(HIGH, ("Xcp_SoAdRxIndication - ctr:%d differs from expected: %d\n",  ctr, Xcp_EthCtrRx));
     }
 
     Xcp_EthCtrRx = ctr+1;

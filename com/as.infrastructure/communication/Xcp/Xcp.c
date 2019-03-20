@@ -183,7 +183,7 @@ void Xcp_Init(const Xcp_ConfigType* Xcp_ConfigPtr) {
  */
 void Xcp_RxIndication(const void* data, int len) {
 	if (len > XCP_MAX_DTO) {
-		ASLOG(XCP, "Xcp_RxIndication - length %d too long\n", len);
+		ASLOG(XCP, ("Xcp_RxIndication - length %d too long\n", len));
 		return;
 	}
 
@@ -428,10 +428,10 @@ static Std_ReturnType Xcp_CmdConnect(uint8 pid, void* data, int len) {
 	uint8 mode = GET_UINT8(data, 0);
 	uint32_t endian_mask = 0xdeadbeef;
 
-	ASLOG(XCP, "Received connect mode %x\n", mode);
+	ASLOG(XCP, ("Received connect mode %x\n", mode));
 
 	if (mode != 0) {
-		RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Xcp_CmdConnect\n");
+		RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Xcp_CmdConnect\n"));
 	}
 
 	if(0xde == (*(uint8_t*)&endian_mask))
@@ -495,7 +495,7 @@ static Std_ReturnType Xcp_CmdConnect(uint8 pid, void* data, int len) {
 
 static Std_ReturnType Xcp_CmdGetStatus(uint8 pid, void* data, int len) {
 
-	ASLOG(XCP, "Received get_status\n");
+	ASLOG(XCP, ("Received get_status\n"));
 
 	/* find if any lists are running */
 	int running = 0;
@@ -535,7 +535,7 @@ static Std_ReturnType Xcp_CmdGetCommModeInfo(uint8 pid, void* data, int len) {
 #endif
 			| 0 << 1; /* INTERLEAVED_MODE  */
 
-	ASLOG(XCP, "Received get_comm_mode_info\n");
+	ASLOG(XCP, ("Received get_comm_mode_info\n"));
 	FIFO_GET_WRITE(Xcp_FifoTx, e)
 	{
 		FIFO_ADD_U8(e, XCP_PID_RES);
@@ -553,7 +553,7 @@ static Std_ReturnType Xcp_CmdGetCommModeInfo(uint8 pid, void* data, int len) {
 
 static Std_ReturnType Xcp_CmdGetId(uint8 pid, void* data, int len) {
 	uint8 idType = GET_UINT8(data, 0);
-	ASLOG(XCP, "Received get_id %d\n", idType);
+	ASLOG(XCP, ("Received get_id %d\n", idType));
 
 	const char* text = NULL;
 
@@ -606,9 +606,9 @@ static Std_ReturnType Xcp_CmdGetId(uint8 pid, void* data, int len) {
 
 static Std_ReturnType Xcp_CmdDisconnect(uint8 pid, void* data, int len) {
 	if (Xcp_Connected) {
-		ASLOG(XCP, "Received disconnect\n");
+		ASLOG(XCP, ("Received disconnect\n"));
 	} else {
-		ASLOG(XCP, "Invalid disconnect without connect\n");
+		ASLOG(XCP, ("Invalid disconnect without connect\n"));
 	}
 	Xcp_Connected = 0;
 
@@ -617,7 +617,7 @@ static Std_ReturnType Xcp_CmdDisconnect(uint8 pid, void* data, int len) {
 
 static Std_ReturnType Xcp_CmdSync(uint8 pid, void* data, int len) {
 
-	RETURN_ERROR(XCP_ERR_CMD_SYNCH, "Xcp_CmdSync\n");
+	RETURN_ERROR(XCP_ERR_CMD_SYNCH, ("Xcp_CmdSync\n"));
 }
 
 static Std_ReturnType Xcp_CmdUser(uint8 pid, void* data, int len) {
@@ -625,7 +625,7 @@ static Std_ReturnType Xcp_CmdUser(uint8 pid, void* data, int len) {
 	if (Xcp_Context.config->XcpUserFn) {
 		return Xcp_Context.config->XcpUserFn((uint8 *) data + 1, len - 1);
 	} else {
-		RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Xcp_CmdUser\n");
+		RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Xcp_CmdUser\n"));
 	}
 }
 
@@ -666,14 +666,14 @@ static void Xcp_CmdUpload_Worker(void) {
 }
 
 static Std_ReturnType Xcp_CmdUpload(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received upload\n");
+	ASLOG(XCP, ("Received upload\n"));
 
 	Xcp_Upload.len = GET_UINT8(data, 0) * XCP_ELEMENT_SIZE;
 	Xcp_Upload.rem = Xcp_Upload.len;
 
 #ifndef XCP_FEATURE_BLOCKMODE
 	if(Xcp_Upload.len + 1 > XCP_MAX_CTO) {
-		RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Xcp_CmdUpload - Block mode not supported\n");
+		RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Xcp_CmdUpload - Block mode not supported\n"));
 	}
 #endif
 
@@ -683,19 +683,19 @@ static Std_ReturnType Xcp_CmdUpload(uint8 pid, void* data, int len) {
 }
 
 static Std_ReturnType Xcp_CmdShortUpload(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received short upload\n");
+	ASLOG(XCP, ("Received short upload\n"));
 
 	uint8 count = GET_UINT8(data, 0);
 	uint8 ext = GET_UINT8(data, 2);
 	uint32 addr = GET_UINT32(data, 3);
 
 	if (count > XCP_MAX_CTO - XCP_ELEMENT_SIZE) {
-		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Xcp_CmdShortUpload - Too long data requested\n");
+		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Xcp_CmdShortUpload - Too long data requested\n"));
 	}
 
 	Xcp_MtaInit(&Xcp_Mta, addr, ext);
 	if (Xcp_Mta.read == NULL) {
-		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Xcp_CmdShortUpload - invalid memory address\n");
+		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Xcp_CmdShortUpload - invalid memory address\n"));
 	}
 
 	FIFO_GET_WRITE(Xcp_FifoTx, e)
@@ -715,7 +715,7 @@ static Std_ReturnType Xcp_CmdShortUpload(uint8 pid, void* data, int len) {
 static Std_ReturnType Xcp_CmdSetMTA(uint8 pid, void* data, int len) {
 	int ext = GET_UINT8(data, 2);
 	int ptr = GET_UINT32(data, 3);
-	ASLOG(XCP, "Received set_mta 0x%x, %d\n", ptr, ext);
+	ASLOG(XCP, ("Received set_mta 0x%x,  %d\n",  ptr, ext));
 
 
 	Xcp_MtaInit(&Xcp_Mta, ptr, ext);
@@ -725,15 +725,15 @@ static Std_ReturnType Xcp_CmdSetMTA(uint8 pid, void* data, int len) {
 static Std_ReturnType Xcp_CmdDownload(uint8 pid, void* data, int len) {
 	uint32 rem = GET_UINT8(data, 0) * XCP_ELEMENT_SIZE;
 	uint32 off = XCP_ELEMENT_OFFSET(2) + 1;
-	ASLOG(XCP, "Received download %d, %d\n", pid, len);
+	ASLOG(XCP, ("Received download %d,  %d\n",  pid, len));
 
 	if (!Xcp_Mta.write) {
-		RETURN_ERROR(XCP_ERR_WRITE_PROTECTED, "Xcp_Download - Mta not inited\n");
+		RETURN_ERROR(XCP_ERR_WRITE_PROTECTED, ("Xcp_Download - Mta not inited\n"));
 	}
 
 #if(!XCP_FEATURE_BLOCKMODE)
 	if(rem + off > len) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Xcp_Download - Invalid length (%u, %u, %d)\n", rem, off, len);
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Xcp_Download - Invalid length (%u,  %u,  %d)\n",  rem,  off, len));
 	}
 #endif
 
@@ -744,8 +744,8 @@ static Std_ReturnType Xcp_CmdDownload(uint8 pid, void* data, int len) {
 
 	/* check for sequence error */
 	if (Xcp_Download.rem != rem) {
-		ASLOG(XCP, "Xcp_Download - Invalid next state (%u, %u)\n", rem,
-				Xcp_Download.rem);
+		ASLOG(XCP, ("Xcp_Download - Invalid next state (%u,  %u)\n",  rem, 
+				Xcp_Download.rem));
 		FIFO_GET_WRITE(Xcp_FifoTx, e)
 		{
 			FIFO_ADD_U8(e, XCP_PID_ERR);
@@ -781,10 +781,10 @@ static uint32 Xcp_CmdBuildChecksum_Add11(uint32 block) {
 static Std_ReturnType Xcp_CmdBuildChecksum(uint8 pid, void* data, int len) {
 	uint32 block = GET_UINT32(data, 3);
 
-	ASLOG(XCP, "Received build_checksum %ul\n", (uint32) block);
+	ASLOG(XCP, ("Received build_checksum %ul\n", (uint32) block));
 
 	if (!Xcp_Mta.get) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Xcp_CmdBuildChecksum - Mta not inited\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Xcp_CmdBuildChecksum - Mta not inited\n"));
 	}
 
 	//added to have an upper limit of block
@@ -827,7 +827,7 @@ static Std_ReturnType Xcp_CmdSetCalPage(uint8 pid, void* data, int len)
 	uint32 mode = GET_UINT8(data, 0);
 	uint32 segm = GET_UINT8(data, 1);
 	uint32 page = GET_UINT8(data, 2);
-	ASLOG(XCP, "Received SetCalPage(0x%x, %u, %u)\n", mode, segm, page);
+	ASLOG(XCP, ("Received SetCalPage(0x%x,  %u,  %u)\n",  mode,  segm, page));
 
 	Xcp_SegmentType* begin = NULL, *end = NULL;
 	if(mode & 0x80) {
@@ -835,7 +835,7 @@ static Std_ReturnType Xcp_CmdSetCalPage(uint8 pid, void* data, int len)
 		end = begin + Xcp_Context.config->XcpMaxSegment;
 	} else {
 		if(segm >= Xcp_Context.config->XcpMaxSegment) {
-			RETURN_ERROR(XCP_ERR_SEGMENT_NOT_VALID, "Xcp_CmdSetCalPage(0x%x, %u, %u) - invalid segment\n", mode, segm, page);
+			RETURN_ERROR(XCP_ERR_SEGMENT_NOT_VALID, ("Xcp_CmdSetCalPage(0x%x,  %u,  %u) - invalid segment\n",  mode,  segm, page));
 		}
 
 		begin = Xcp_Context.config->XcpSegment+segm;
@@ -844,7 +844,7 @@ static Std_ReturnType Xcp_CmdSetCalPage(uint8 pid, void* data, int len)
 
 	for(Xcp_SegmentType* s = begin; s != end; s++) {
 		if(page >= s->XcpMaxPage) {
-			RETURN_ERROR(XCP_ERR_PAGE_NOT_VALID, "Xcp_CmdSetCalPage(0x%x, %u, %u) - invalid page\n", mode, s-Xcp_Context.config->XcpSegment, page);
+			RETURN_ERROR(XCP_ERR_PAGE_NOT_VALID, ("Xcp_CmdSetCalPage(0x%x,  %u,  %u) - invalid page\n",  mode,  s-Xcp_Context.config->XcpSegment, page));
 		}
 
 		if(mode & 0x01) {
@@ -862,10 +862,10 @@ static Std_ReturnType Xcp_CmdGetCalPage(uint8 pid, void* data, int len)
 	uint32 mode = GET_UINT8(data, 0);
 	uint32 segm = GET_UINT8(data, 1);
 	uint32 page = 0;
-	ASLOG(XCP, "Received GetCalPage(0x%x, %u)\n", mode, segm);
+	ASLOG(XCP, ("Received GetCalPage(0x%x,  %u)\n",  mode, segm));
 
 	if(segm >= Xcp_Context.config->XcpMaxSegment) {
-		RETURN_ERROR(XCP_ERR_SEGMENT_NOT_VALID, "Xcp_CmdGetCalPage(0x%x, %u, %u) - invalid segment\n", mode, segm, page);
+		RETURN_ERROR(XCP_ERR_SEGMENT_NOT_VALID, ("Xcp_CmdGetCalPage(0x%x,  %u,  %u) - invalid segment\n",  mode,  segm, page));
 	}
 
 	if(mode == 0x01) {
@@ -873,7 +873,7 @@ static Std_ReturnType Xcp_CmdGetCalPage(uint8 pid, void* data, int len)
 	} else if(mode == 0x02) {
 		page = Xcp_Context.config->XcpSegment[segm].XcpPageXcp;
 	} else {
-		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Xcp_CmdGetCalPage(0x%x, %u) - invalid mode\n", mode, segm);
+		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Xcp_CmdGetCalPage(0x%x,  %u) - invalid mode\n",  mode, segm));
 	}
 
 	FIFO_GET_WRITE(Xcp_FifoTx, e) {
@@ -887,7 +887,7 @@ static Std_ReturnType Xcp_CmdGetCalPage(uint8 pid, void* data, int len)
 
 static Std_ReturnType Xcp_CmdGetPagProcessorInfo(uint8 pid, void* data, int len)
 {
-	ASLOG(XCP, "Received GetPagProcessorInfo\n");
+	ASLOG(XCP, ("Received GetPagProcessorInfo\n"));
 	FIFO_GET_WRITE(Xcp_FifoTx, e) {
 		FIFO_ADD_U8 (e, XCP_PID_RES);
 		FIFO_ADD_U8 (e, Xcp_Context.config->XcpMaxSegment);
@@ -902,10 +902,10 @@ static Std_ReturnType Xcp_CmdGetSegmentInfo(uint8 pid, void* data, int len)
 	uint32 segm = GET_UINT8(data, 1);
 	uint32 info = GET_UINT8(data, 2);
 	uint32 mapi = GET_UINT8(data, 3);
-	ASLOG(XCP, "Received GetSegmentInfo(%u, %u, %u, %u)\n", mode, segm, info, mapi);
+	ASLOG(XCP, ("Received GetSegmentInfo(%u,  %u,  %u,  %u)\n",  mode,  segm,  info, mapi));
 
 	if(segm >= Xcp_Context.config->XcpMaxSegment) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Invalid segment requested");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Invalid segment requested"));
 	}
 
 	const Xcp_SegmentType* seg = Xcp_Context.config->XcpSegment + segm;
@@ -918,7 +918,7 @@ static Std_ReturnType Xcp_CmdGetSegmentInfo(uint8 pid, void* data, int len)
 		} else if(info == 1) {
 			data = seg->XcpLength;
 		} else {
-			RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Unsupported");
+			RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Unsupported"));
 		}
 
 		FIFO_GET_WRITE(Xcp_FifoTx, e) {
@@ -944,7 +944,7 @@ static Std_ReturnType Xcp_CmdGetSegmentInfo(uint8 pid, void* data, int len)
 		uint32 data;
 
 		if(mapi >= seg->XcpMaxMapping) {
-			RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Out or range mapping index");
+			RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Out or range mapping index"));
 		}
 		Xcp_MemoryMappingType* map = seg->XcpMapping + mapi;
 
@@ -955,7 +955,7 @@ static Std_ReturnType Xcp_CmdGetSegmentInfo(uint8 pid, void* data, int len)
 		} else if(info == 2) {
 			data = map->XcpLen;
 		} else {
-			RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Unsupported");
+			RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Unsupported"));
 		}
 
 		FIFO_GET_WRITE(Xcp_FifoTx, e) {
@@ -967,7 +967,7 @@ static Std_ReturnType Xcp_CmdGetSegmentInfo(uint8 pid, void* data, int len)
 		}
 
 	} else {
-		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Unsupported");
+		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Unsupported"));
 	}
 	return E_OK;
 }
@@ -984,7 +984,7 @@ static Std_ReturnType Xcp_CmdClearDaqList(uint8 pid, void* data, int len) {
 
 
 	if (daqListNumber >= Xcp_Context.XcpMaxDaq || daqListNumber < Xcp_Context.config->XcpMinDaq)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: Daqlist number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: Daqlist number out of range\n"));
 
 	const Xcp_DaqListType* daq = Xcp_Context.XcpDaqList;
 	for (int i = 0; i < daqListNumber; i++) {
@@ -992,7 +992,7 @@ static Std_ReturnType Xcp_CmdClearDaqList(uint8 pid, void* data, int len) {
 	}
 
 	if (daq->XcpParams->Mode & XCP_DAQLIST_MODE_RUNNING)
-		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, "Error: DAQ running\n");
+		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, ("Error: DAQ running\n"));
 
 	Xcp_OdtEntryType* entry;
 
@@ -1016,11 +1016,11 @@ static Std_ReturnType Xcp_CmdSetDaqPtr(uint8 pid, void* data, int len) {
 	uint16 daqListNumber = GET_UINT16(data, 1);
 	uint8 odtNumber = GET_UINT8(data, 3);
 	uint8 odtEntryNumber = GET_UINT8(data, 4);
-	ASLOG(XCP, "Received SetDaqPtr %u, %u, %u\n", daqListNumber,odtNumber, odtEntryNumber);
+	ASLOG(XCP, ("Received SetDaqPtr %u,  %u,  %u\n",  daqListNumber, odtNumber, odtEntryNumber));
 
 
 	if (daqListNumber >= Xcp_Context.XcpMaxDaq)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: daq list number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: daq list number out of range\n"));
 
 	const Xcp_DaqListType* daq = Xcp_Context.XcpDaqList;
 	for (int i = 0; i < daqListNumber; i++) {
@@ -1028,10 +1028,10 @@ static Std_ReturnType Xcp_CmdSetDaqPtr(uint8 pid, void* data, int len) {
 	}
 
 	if (daq->XcpParams->Mode & XCP_DAQLIST_MODE_RUNNING)
-		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, "Error: DAQ running\n");
+		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, ("Error: DAQ running\n"));
 
 	if (odtNumber >= daq->XcpMaxOdt)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: odt number out of range (%u, %u)\n", odtNumber, daq->XcpMaxOdt);
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: odt number out of range (%u,  %u)\n",  odtNumber, daq->XcpMaxOdt));
 
 	Xcp_OdtType* odt = daq->XcpOdt;
 	for (int i = 0; i < odtNumber; i++) {
@@ -1039,7 +1039,7 @@ static Std_ReturnType Xcp_CmdSetDaqPtr(uint8 pid, void* data, int len) {
 	}
 
 	if (odtEntryNumber >= odt->XcpOdtEntriesCount)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: odt entry number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: odt entry number out of range\n"));
 
 	Xcp_OdtEntryType* odtEntry = odt->XcpOdtEntry;
 	for (int j = 0; j < odtEntryNumber; j++) {
@@ -1054,16 +1054,16 @@ static Std_ReturnType Xcp_CmdSetDaqPtr(uint8 pid, void* data, int len) {
 }
 
 static Std_ReturnType Xcp_CmdWriteDaq(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received WriteDaq\n");
+	ASLOG(XCP, ("Received WriteDaq\n"));
 
 	if (Xcp_DaqState.ptr == NULL)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: No more ODT entries in this ODT\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: No more ODT entries in this ODT\n"));
 
 	if (Xcp_DaqState.daq->XcpParams->XcpDaqListNumber < Xcp_Context.config->XcpMinDaq) /* Check if DAQ list is write protected */
-		RETURN_ERROR(XCP_ERR_WRITE_PROTECTED, "Error: DAQ-list is read only\n");
+		RETURN_ERROR(XCP_ERR_WRITE_PROTECTED, ("Error: DAQ-list is read only\n"));
 
 	if (Xcp_DaqState.daq->XcpParams->Mode & XCP_DAQLIST_MODE_RUNNING)
-		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, "Error: DAQ running\n");
+		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, ("Error: DAQ running\n"));
 
 	uint8 maxOdtEntrySize;
 	uint8 granularityOdtEntrySize;
@@ -1080,7 +1080,7 @@ static Std_ReturnType Xcp_CmdWriteDaq(uint8 pid, void* data, int len) {
 	uint8 daqElemSize = GET_UINT8(data, 1);
 
 	if (daqElemSize > maxOdtEntrySize) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: DAQ list element size is invalid\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: DAQ list element size is invalid\n"));
 	}
 
 	uint8 bitOffSet = GET_UINT8(data, 0);
@@ -1089,7 +1089,7 @@ static Std_ReturnType Xcp_CmdWriteDaq(uint8 pid, void* data, int len) {
 		if (daqElemSize == granularityOdtEntrySize) {
 			Xcp_DaqState.ptr->BitOffSet = bitOffSet;
 		} else {
-			RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: Element size and granularity don't match\n");
+			RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: Element size and granularity don't match\n"));
 		}
 	} else {
 		Xcp_DaqState.ptr->BitOffSet = 0xFF;
@@ -1138,14 +1138,14 @@ static void Xcp_CmdSetDaqListMode_EventChannel(const Xcp_DaqListType* daq, uint1
 }
 
 static Std_ReturnType Xcp_CmdSetDaqListMode(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received SetDaqListMode\n");
+	ASLOG(XCP, ("Received SetDaqListMode\n"));
 	uint16 list = GET_UINT16(data, 1);
 	if (list >= Xcp_Context.XcpMaxDaq)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: daq list number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: daq list number out of range\n"));
 
 	uint8 prio = GET_UINT8(data, 6);
 	if (prio)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Priority %d of DAQ lists is not supported\n", prio);
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Priority %d of DAQ lists is not supported\n", prio));
 
 	const Xcp_DaqListType *daq = Xcp_Context.XcpDaqList;
 	for (int i = 0; i < list; i++) {
@@ -1153,7 +1153,7 @@ static Std_ReturnType Xcp_CmdSetDaqListMode(uint8 pid, void* data, int len) {
 	}
 
 	if (daq->XcpParams->Mode & XCP_DAQLIST_MODE_RUNNING)
-		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, "Error: DAQ running\n");
+		RETURN_ERROR(XCP_ERR_DAQ_ACTIVE, ("Error: DAQ running\n"));
 
 	Xcp_EventChannelType* newEventChannel = Xcp_Context.config->XcpEventChannel
 			+ GET_UINT16(data, 3);
@@ -1170,15 +1170,15 @@ static Std_ReturnType Xcp_CmdSetDaqListMode(uint8 pid, void* data, int len) {
 					&& (daq->XcpParams->Properties & XCP_DAQLIST_PROPERTY_DAQ)
 					&& (newEventChannel->XcpEventChannelProperties
 							& XCP_EVENTCHANNEL_PROPERTY_DAQ)))) {
-		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Error: direction not allowed.\n");
+		RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Error: direction not allowed.\n"));
 	}
 
 	if (daq->XcpParams->Properties & XCP_DAQLIST_PROPERTY_PREDEFINED)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: DAQ list is Predefined\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: DAQ list is Predefined\n"));
 
 	if ((daq->XcpParams->Properties & XCP_DAQLIST_PROPERTY_EVENTFIXED)
 			&& (newEventChannel->XcpEventChannelNumber != daq->XcpParams->EventChannel)) {
-		RETURN_ERROR(XCP_ERR_DAQ_CONFIG, "Error: DAQ list has a fixed event channel\n");
+		RETURN_ERROR(XCP_ERR_DAQ_CONFIG, ("Error: DAQ list has a fixed event channel\n"));
 	}
 
 	daq->XcpParams->Mode = (GET_UINT8 (data, 0) & 0x32) | (daq->XcpParams->Mode & ~0x32);
@@ -1190,10 +1190,10 @@ static Std_ReturnType Xcp_CmdSetDaqListMode(uint8 pid, void* data, int len) {
 }
 
 static Std_ReturnType Xcp_CmdGetDaqListMode(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received GetDaqListMode\n");
+	ASLOG(XCP, ("Received GetDaqListMode\n"));
 	uint16 daqListNumber = GET_UINT16(data, 1);
 	if (daqListNumber >= Xcp_Context.XcpMaxDaq) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: DAQ list number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: DAQ list number out of range\n"));
 	}
 	const Xcp_DaqListType* daq = Xcp_Context.XcpDaqList;
 	for (int i = 0; i < daqListNumber; i++) {
@@ -1215,7 +1215,7 @@ static Std_ReturnType Xcp_CmdGetDaqListMode(uint8 pid, void* data, int len) {
 static Std_ReturnType Xcp_CmdStartStopDaqList(uint8 pid, void* data, int len) {
 	uint16 daqListNumber = GET_UINT16(data, 1);
 	if (daqListNumber >= Xcp_Context.XcpMaxDaq) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: daq list number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: daq list number out of range\n"));
 	}
 	const Xcp_DaqListType* daq = Xcp_Context.XcpDaqList;
 	for (int i = 0; i < daqListNumber; i++) {
@@ -1233,7 +1233,7 @@ static Std_ReturnType Xcp_CmdStartStopDaqList(uint8 pid, void* data, int len) {
 		/* SELECT */
 		daq->XcpParams->Mode |= XCP_DAQLIST_MODE_SELECTED;
 	} else {
-		RETURN_ERROR(XCP_ERR_MODE_NOT_VALID, "Error mode not valid\n");
+		RETURN_ERROR(XCP_ERR_MODE_NOT_VALID, ("Error mode not valid\n"));
 	}
 
 	FIFO_GET_WRITE(Xcp_FifoTx, e)
@@ -1246,7 +1246,7 @@ static Std_ReturnType Xcp_CmdStartStopDaqList(uint8 pid, void* data, int len) {
 
 static Std_ReturnType Xcp_CmdStartStopSynch(uint8 pid, void* data, int len) {
 	uint8 mode = GET_UINT8(data, 0);
-	ASLOG(XCP, "Received StartStopSynch %u\n", mode);
+	ASLOG(XCP, ("Received StartStopSynch %u\n", mode));
 	const Xcp_DaqListType* daq = Xcp_Context.XcpDaqList;
 
 	if (mode == 0) {
@@ -1275,13 +1275,13 @@ static Std_ReturnType Xcp_CmdStartStopSynch(uint8 pid, void* data, int len) {
 			daq = daq->XcpParams->XcpNextDaq;
 		}
 	} else {
-		RETURN_ERROR(XCP_ERR_MODE_NOT_VALID, "Error mode not valid\n");
+		RETURN_ERROR(XCP_ERR_MODE_NOT_VALID, ("Error mode not valid\n"));
 	}
 	RETURN_SUCCESS();
 }
 
 static Std_ReturnType Xcp_CmdGetDaqClock(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received GetDaqClock\n");
+	ASLOG(XCP, ("Received GetDaqClock\n"));
 
 	FIFO_GET_WRITE(Xcp_FifoTx, e)
 	{
@@ -1296,7 +1296,7 @@ static Std_ReturnType Xcp_CmdGetDaqClock(uint8 pid, void* data, int len) {
 
 static Std_ReturnType Xcp_CmdReadDaq(uint8 pid, void* data, int len) {
 	if (!Xcp_DaqState.ptr) {
-		RETURN_ERROR(XCP_ERR_DAQ_CONFIG, "Error: No more ODT entries in this ODT\n");
+		RETURN_ERROR(XCP_ERR_DAQ_CONFIG, ("Error: No more ODT entries in this ODT\n"));
 	}
 	FIFO_GET_WRITE(Xcp_FifoTx, e)
 	{
@@ -1331,7 +1331,7 @@ static Std_ReturnType Xcp_CmdGetDaqProcessorInfo(uint8 pid, void* data, int len)
 			| 0 << 6 /* OVERLOAD_MSB        */
 			| 0 << 7 /* OVERLOAD_EVENT      */;
 
-	ASLOG(XCP, "Received GetDaqProcessorInfo\n");
+	ASLOG(XCP, ("Received GetDaqProcessorInfo\n"));
 	FIFO_GET_WRITE(Xcp_FifoTx, e)
 	{
 		FIFO_ADD_U8(e, XCP_PID_RES);
@@ -1358,7 +1358,7 @@ static Std_ReturnType Xcp_CmdGetDaqProcessorInfo(uint8 pid, void* data, int len)
 
 static Std_ReturnType Xcp_CmdGetDaqResolutionInfo(uint8 pid, void* data,
 		int len) {
-	ASLOG(XCP, "Received GetDaqResolutionInfo\n");
+	ASLOG(XCP, ("Received GetDaqResolutionInfo\n"));
 	FIFO_GET_WRITE(Xcp_FifoTx, e)
 	{
 		SET_UINT8(e->data, 0, XCP_PID_RES);
@@ -1382,13 +1382,13 @@ static Std_ReturnType Xcp_CmdGetDaqResolutionInfo(uint8 pid, void* data,
 }
 
 static Std_ReturnType Xcp_CmdGetDaqListInfo(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received GetDaqListInfo\n");
+	ASLOG(XCP, ("Received GetDaqListInfo\n"));
 	uint16 daqListNumber = GET_UINT16(data, 1);
 	/*temporary variable to calculate the maximum OdtEntry value of a given Daq*/
 	uint8 maxMaxOdtEntry = 0U;
 
 	if (daqListNumber >= Xcp_Context.XcpMaxDaq)
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: Xcp_GetDaqListInfo list number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: Xcp_GetDaqListInfo list number out of range\n"));
 
 	const Xcp_DaqListType* daq = Xcp_Context.XcpDaqList;
 	for (int i = 0; i < daqListNumber; i++) {
@@ -1416,11 +1416,11 @@ static Std_ReturnType Xcp_CmdGetDaqListInfo(uint8 pid, void* data, int len) {
 }
 
 static Std_ReturnType Xcp_CmdGetDaqEventInfo(uint8 pid, void* data, int len) {
-	ASLOG(XCP, "Received GetDaqEventInfo\n");
+	ASLOG(XCP, ("Received GetDaqEventInfo\n"));
 	uint16 eventChannelNumber = GET_UINT16(data, 1);
 
 	if (eventChannelNumber >= Xcp_Context.config->XcpMaxEventChannel) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Error: Xcp_CmdGetDaqEventInfo event channel number out of range\n");
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Error: Xcp_CmdGetDaqEventInfo event channel number out of range\n"));
 	}
 
 	const Xcp_EventChannelType* eventChannel = Xcp_Context.config->XcpEventChannel
@@ -1532,13 +1532,13 @@ static Std_ReturnType Xcp_CmdAllocDaq(uint8 pid, void* data, int len) {
 	if (!(Xcp_DaqState.dyn == XCP_DYNAMIC_STATE_FREE_DAQ
 			|| Xcp_DaqState.dyn == XCP_DYNAMIC_STATE_ALLOC_DAQ)) {
 		Xcp_DaqState.dyn = XCP_DYNAMIC_STATE_UNDEFINED;
-		RETURN_ERROR(XCP_ERR_SEQUENCE, " ");
+		RETURN_ERROR(XCP_ERR_SEQUENCE, (" "));
 	}
 	uint16 nrDaqs = GET_UINT16(data, 1);
 
 	Xcp_DaqListType *daq = (Xcp_DaqListType*) Xcp_AllocDaq(nrDaqs);
 	if (daq == NULL) {
-		RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, "Error, memory overflow");
+		RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, ("Error, memory overflow"));
 	}
 
 	Xcp_ReplaceDaqLink(Xcp_Context.XcpMaxDaq, daq);
@@ -1580,14 +1580,14 @@ static Xcp_OdtType* Xcp_AllocOneOdt(void) {
 static Std_ReturnType Xcp_CmdAllocOdt(uint8 pid, void* data, int len) {
 	if (!(Xcp_DaqState.dyn == XCP_DYNAMIC_STATE_ALLOC_DAQ || Xcp_DaqState.dyn == XCP_DYNAMIC_STATE_ALLOC_ODT)) {
 		Xcp_DaqState.dyn = XCP_DYNAMIC_STATE_UNDEFINED;
-		RETURN_ERROR(XCP_ERR_SEQUENCE, " ");
+		RETURN_ERROR(XCP_ERR_SEQUENCE, (" "));
 	}
 
 	uint16 daqNr = GET_UINT16(data, 1);
 	uint8 nrOdts = GET_UINT8(data, 3);
 
 	if (daqNr >= Xcp_Context.XcpMaxDaq || daqNr < Xcp_Context.config->XcpMinDaq) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Requested allocation to predefined daq list %u", daqNr);
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Requested allocation to predefined daq list %u", daqNr));
 	}
 
 	Xcp_DaqListType* daq = (Xcp_DaqListType*)Xcp_Context.XcpDaqList;
@@ -1599,7 +1599,7 @@ static Std_ReturnType Xcp_CmdAllocOdt(uint8 pid, void* data, int len) {
 	Xcp_OdtType *newOdt;
 	newOdt = (Xcp_OdtType*) Xcp_AllocOneOdt();
 	if (newOdt == NULL) {
-		RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, "Error, memory overflow");
+		RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, ("Error, memory overflow"));
 	}
 	newOdt->XcpOdtNumber = 0;
 	newOdt->XcpOdtEntriesCount = 0;
@@ -1614,7 +1614,7 @@ static Std_ReturnType Xcp_CmdAllocOdt(uint8 pid, void* data, int len) {
 	for (uint8 i = 1; i < nrOdts; i++) {
 		newOdt = (Xcp_OdtType*) Xcp_AllocOneOdt();
 		if (newOdt == 0) {
-			RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, "Error, memory overflow");
+			RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, ("Error, memory overflow"));
 		}
 		newOdt->XcpOdtNumber = i;
 		newOdt->XcpOdtEntriesCount = 0;
@@ -1648,7 +1648,7 @@ static Xcp_OdtEntryType* Xcp_AllocOneOdtEntry(void) {
 static Std_ReturnType Xcp_CmdAllocOdtEntry(uint8 pid, void* data, int len) {
 	if (!(Xcp_DaqState.dyn == XCP_DYNAMIC_STATE_ALLOC_ODT || Xcp_DaqState.dyn == XCP_DYNAMIC_STATE_ALLOC_ODT_ENTRY)) {
 		Xcp_DaqState.dyn = XCP_DYNAMIC_STATE_UNDEFINED;
-		RETURN_ERROR(XCP_ERR_SEQUENCE, " ");
+		RETURN_ERROR(XCP_ERR_SEQUENCE, (" "));
 	}
 
 	uint16 daqNr = GET_UINT16(data, 1);
@@ -1656,7 +1656,7 @@ static Std_ReturnType Xcp_CmdAllocOdtEntry(uint8 pid, void* data, int len) {
 	uint8 odtEntriesCount = GET_UINT8(data, 4);
 
 	if (daqNr >= Xcp_Context.XcpMaxDaq || daqNr < Xcp_Context.config->XcpMinDaq) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Requested allocation to predefined daq list %u", daqNr);
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Requested allocation to predefined daq list %u", daqNr));
 	}
 
 	const Xcp_DaqListType* daq = Xcp_Context.XcpDaqList;
@@ -1665,7 +1665,7 @@ static Std_ReturnType Xcp_CmdAllocOdtEntry(uint8 pid, void* data, int len) {
 	}
 
 	if (odtNr >= daq->XcpMaxOdt) {
-		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Requested allocation to invalid odt for daq %u, odt %u", daqNr, odtNr);
+		RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Requested allocation to invalid odt for daq %u,  odt %u",  daqNr, odtNr));
 	}
 
 	Xcp_OdtType* odt = daq->XcpOdt;
@@ -1677,7 +1677,7 @@ static Std_ReturnType Xcp_CmdAllocOdtEntry(uint8 pid, void* data, int len) {
 
 	newOdtEntry = (Xcp_OdtEntryType*) Xcp_AllocOneOdtEntry();
 	if (newOdtEntry == 0) {
-		RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, "Error, memory overflow");
+		RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, ("Error, memory overflow"));
 	}
 	newOdtEntry->XcpOdtEntryNumber = 0;
 	newOdtEntry->XcpNextOdtEntry = NULL;
@@ -1686,7 +1686,7 @@ static Std_ReturnType Xcp_CmdAllocOdtEntry(uint8 pid, void* data, int len) {
 	for (uint8 i = 1; i < odtEntriesCount; i++) {
 		newOdtEntry = (Xcp_OdtEntryType*) Xcp_AllocOneOdtEntry();
 		if (newOdtEntry == 0) {
-			RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, "Error, memory overflow");
+			RETURN_ERROR(XCP_ERR_MEMORY_OVERFLOW, ("Error, memory overflow"));
 		}
 		newOdtEntry->XcpOdtEntryNumber = i;
 		newOdtEntry->XcpNextOdtEntry = NULL;
@@ -1759,7 +1759,7 @@ static Std_ReturnType Xcp_Recieve_Stim(uint8 pid, Xcp_BufferType* it) {
 	Xcp_OdtType* odt;
 	Xcp_GetOdt(daqNr, pid, &daq, &odt);
 	if (!daq || !odt) {
-		ASLOG(XCP, "Unable to find daq: %u, odt:%u", daqNr, pid);
+		ASLOG(XCP, ("Unable to find daq: %u,  odt:%u",  daqNr, pid));
 		return E_NOT_OK ;
 	}
 
@@ -1769,7 +1769,7 @@ static Std_ReturnType Xcp_Recieve_Stim(uint8 pid, Xcp_BufferType* it) {
 		return E_OK ;
 	}
 
-	ASLOG(XCP, "daq: %u is not a STIM list", daqNr);
+	ASLOG(XCP, ("daq: %u is not a STIM list", daqNr));
 	return E_NOT_OK ;
 }
 
@@ -1784,14 +1784,14 @@ static Std_ReturnType Xcp_CmdGetSeed(uint8 pid, void* data, int len)
 {
 	uint8 mode = GET_UINT8(data, 0);
 	uint8 res = GET_UINT8(data, 1);
-	ASLOG(XCP, "Received GetSeed(%u, %u)\n", mode, res);
+	ASLOG(XCP, ("Received GetSeed(%u,  %u)\n",  mode, res));
 
 	if(mode == 0) {
 		if(res != XCP_PROTECT_CALPAG
 				&& res != XCP_PROTECT_DAQ
 				&& res != XCP_PROTECT_STIM
 				&& res != XCP_PROTECT_PGM) {
-			RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, "Requested invalid resource");
+			RETURN_ERROR(XCP_ERR_OUT_OF_RANGE, ("Requested invalid resource"));
 		}
 
 		Xcp_Unlock.res = res;
@@ -1802,10 +1802,10 @@ static Std_ReturnType Xcp_CmdGetSeed(uint8 pid, void* data, int len)
 		Xcp_Unlock.seed_rem = Xcp_Unlock.seed_len;
 	} else if(mode == 1) {
 		if(Xcp_Unlock.res == XCP_PROTECT_NONE) {
-			RETURN_ERROR(XCP_ERR_SEQUENCE, "Requested second part of seed before first");
+			RETURN_ERROR(XCP_ERR_SEQUENCE, ("Requested second part of seed before first"));
 		}
 	} else {
-		RETURN_ERROR(XCP_ERR_GENERIC, "Requested invalid mode");
+		RETURN_ERROR(XCP_ERR_GENERIC, ("Requested invalid mode"));
 	}
 
 	uint8 rem;
@@ -1831,10 +1831,10 @@ static Std_ReturnType Xcp_CmdGetSeed(uint8 pid, void* data, int len)
 static Std_ReturnType Xcp_CmdUnlock(uint8 pid, void* data, int len)
 {
 	uint8 rem = GET_UINT8(data, 0);
-	ASLOG(XCP, "Received Unlock(%u)\n", rem);
+	ASLOG(XCP, ("Received Unlock(%u)\n", rem));
 
 	if(Xcp_Unlock.res == XCP_PROTECT_NONE) {
-		RETURN_ERROR(XCP_ERR_SEQUENCE, "Requested unlock without requesting a seed");
+		RETURN_ERROR(XCP_ERR_SEQUENCE, ("Requested unlock without requesting a seed"));
 	}
 
 	/* if this is first call, setup state */
@@ -1864,7 +1864,7 @@ static Std_ReturnType Xcp_CmdUnlock(uint8 pid, void* data, int len)
 
 	if(Xcp_Unlock.key_rem == 0) {
 		if(Xcp_Context.config->XcpUnlockFn == NULL) {
-			RETURN_ERROR(XCP_ERR_GENERIC, "No unlock function defines");
+			RETURN_ERROR(XCP_ERR_GENERIC, ("No unlock function defines"));
 		}
 
 		if(Xcp_Context.config->XcpUnlockFn( Xcp_Unlock.res
@@ -1874,7 +1874,7 @@ static Std_ReturnType Xcp_CmdUnlock(uint8 pid, void* data, int len)
 						, Xcp_Unlock.key_len) == E_OK) {
 			Xcp_Context.XcpProtect &= ~Xcp_Unlock.res;
 		} else {
-			RETURN_ERROR(XCP_ERR_ACCESS_LOCKED, "Failed to unlock resource");
+			RETURN_ERROR(XCP_ERR_ACCESS_LOCKED, ("Failed to unlock resource"));
 		}
 
 	}
@@ -1932,7 +1932,8 @@ static const Xcp_CmdListType Xcp_CmdList[256] =
 		[XCP_PID_CMD_PAG_GET_SEGMENT_INFO] = {.fun = Xcp_CmdGetSegmentInfo , .len = 3, .lock = XCP_PROTECT_CALPAG},
 #endif // XCP_FEATURE_CALPAG
 
-		/** @req XCP708 *//*The AUTOSAR XCP Module shall support Online memory calibration (read / write access).*/		[XCP_PID_CMD_CAL_DOWNLOAD] = { .fun = Xcp_CmdDownload, .len = 3, .lock = XCP_PROTECT_CALPAG },
+		/** @req XCP708 *//*The AUTOSAR XCP Module shall support Online memory calibration (read / write access).*/
+		[XCP_PID_CMD_CAL_DOWNLOAD] = { .fun = Xcp_CmdDownload, .len = 3, .lock = XCP_PROTECT_CALPAG },
 #if(XCP_FEATURE_BLOCKMODE)
 		/** @req XCP711 *//*The AUTOSAR XCP Module shall support the feature Block communication mode*/
 		[XCP_PID_CMD_CAL_DOWNLOAD_NEXT] = { .fun = Xcp_CmdDownload, .len = 3, .lock = XCP_PROTECT_CALPAG },
@@ -2005,7 +2006,7 @@ void Xcp_Recieve_Main(void) {
 #endif
 
 			if (cmd->len && it->len < cmd->len) {
-				ASLOG(XCP, "Xcp_RxIndication_Main - Len %d to short for %u\n", it->len, pid);
+				ASLOG(XCP, ("Xcp_RxIndication_Main - Len %d to short for %u\n",  it->len, pid));
 				return;
 			}
 			(void) cmd->fun(pid, it->data + 1, it->len - 1);
@@ -2046,7 +2047,7 @@ void Xcp_Transmit_Main(void) {
 		retVal = Xcp_Transmit(it->data, it->len);
 
 		if (E_OK != retVal) {
-			ASLOG(OFF, "Xcp_Transmit_Main - failed to transmit\n");
+			ASLOG(OFF, ("Xcp_Transmit_Main - failed to transmit\n"));
 		} else {
 			txConfirmed = FALSE;
 		}

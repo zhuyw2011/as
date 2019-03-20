@@ -144,7 +144,7 @@
 #define XCP_CHECK(e,msg)							\
 	do {											\
 		if(FALSE == (e)) {							\
-			ASLOG(XCPE, "%s: %s", __func__, msg);	\
+			ASLOG(XCPE, ("%s: %s",  __func__,  msg));	\
 			XcpSendNRC(XCP_ERR_GENERIC);			\
 			return;									\
 		}											\
@@ -602,7 +602,7 @@ static void XcpHandleRequest(void)
 	cmd = XCP_RTE.rxBuffer[0];
 	XCP_RTE.counter ++;
 
-	ASLOG(XCP, "command %X\n", cmd);
+	ASLOG(XCP, ("command %X\n", cmd));
 	if(XCP_CMD_CONNECT == cmd)
 	{
 		XcpCmdConnect();
@@ -646,13 +646,13 @@ static void XcpHandleRequest(void)
 	}
 	else
 	{
-		ASLOG(XCPE, "no connection!");
+		ASLOG(XCPE, ("no connection!"));
 	}
 
 	if(0xFF == XCP_RTE.counter)
 	{
 		XcpReset();
-		ASLOG(XCPE, "fatal error as busy of repeat request, timeout!\n");
+		ASLOG(XCPE, ("fatal error as busy of repeat request, timeout!\n"));
 	}
 }
 
@@ -665,7 +665,7 @@ static void XcpHandleTransmit(void)
 			ret = Xcp_CanIfTransmit(XCP_RTE.txBuffer, XCP_RTE.txLength);
 			break;
 		default:
-			ASLOG(XCPE, "fatal error as invalid target, RESET XCP\n");
+			ASLOG(XCPE, ("fatal error as invalid target, RESET XCP\n"));
 			XcpReset();
 			ret = E_NOT_OK;
 			break;
@@ -702,12 +702,12 @@ void Xcp_RxIndication(const uint8* data, PduLengthType len)
 		}
 		else
 		{
-			ASLOG(XCPE, "rxBuffer busy!\n");
+			ASLOG(XCPE, ("rxBuffer busy!\n"));
 		}
 	}
 	else
 	{
-		ASLOG(XCPE, "rxBuffer overflow(%d < %d)!\n", XCP_MAX_CTO, len);
+		ASLOG(XCPE, ("rxBuffer overflow(%d < %d)!\n",  XCP_MAX_CTO, len));
 	}
 }
 
@@ -735,7 +735,7 @@ void Xcp_CanIfRxIndication(PduIdType    XcpRxPduId, PduInfoType* XcpRxPduPtr)
 	}
 	else
 	{
-		ASLOG(XCPE, "busing service on target %d\n", XCP_RTE.target);
+		ASLOG(XCPE, ("busing service on target %d\n", XCP_RTE.target));
 	}
 }
 

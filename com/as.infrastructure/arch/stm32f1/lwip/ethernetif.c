@@ -383,7 +383,7 @@ void Ethernet_Security(void)
   for( i=0; i<32; i++)
   {
      reg = ETH_ReadPHYRegister(PHY_ADDRESS, i);
-     ASLOG(LWIP, "PHY reg[%d]=0x%X\n", i, reg);
+     ASLOG(LWIP, ("PHY reg[%d]=0x%X\n",  i, reg));
   }
 #endif
 }
@@ -397,7 +397,7 @@ void ethernet_configure(void)
 {
   ETH_InitTypeDef ETH_InitStructure;
 
-  ASLOG(LWIP, "Ethernet Configuration\n");
+  ASLOG(LWIP, ("Ethernet Configuration\n"));
 
   Ethernet_GPIO_Init();
 
@@ -473,7 +473,7 @@ void ethernet_configure(void)
 
   /* Configure Ethernet */
   ETH_Init(&ETH_InitStructure, PHY_ADDRESS);
-  ASLOG(LWIP, "Ethernet Configuration Successfully\n");
+  ASLOG(LWIP, ("Ethernet Configuration Successfully\n"));
 }
 
 void ethernet_enable_interrupt()

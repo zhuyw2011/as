@@ -19,7 +19,6 @@
 #if defined(__LINUX__) || defined(__WINDOWS__)
 #include <sys/time.h>
 #endif
-#include "__debug.h"
 
 /* ============================ [ MACROS    ] ====================================================== */
 #ifdef CONFIG_ARCH_VEXPRESS
@@ -36,54 +35,64 @@
 #define AS_LOG_ERROR    AS_LOG_DEFAULT
 #define AS_LOG_OFF      0
 
+#ifndef AS_LOG_LOW
+#define AS_LOG_LOW 0
+#endif
+#ifndef AS_LOG_MEDIUM
+#define AS_LOG_MEDIUM 0
+#endif
+#ifndef AS_LOG_HIGH
+#define AS_LOG_HIGH 0
+#endif
+
 /* debug/warning/error */
 #define AS_LOG_TRACE_D AS_LOG_DEFAULT
 #define AS_LOG_TRACE_W AS_LOG_DEFAULT
 #define AS_LOG_TRACE_E AS_LOG_DEFAULT
 
+/* ASLOG msg in format: (fmt, ....) */
 #if defined(USE_DET) || defined(USE_ASLOG)
-#define ASLOG(level,fmt,...) 								\
+#define ASLOG(level,msg) 									\
 	do {													\
 		if((AS_LOG_##level) >= AS_LOG_DEFAULT) {			\
-			printf("%-8s:",#level);						\
-			printf(fmt,##__VA_ARGS__);						\
+			printf("%-8s:",#level);							\
+			printf msg ;									\
 		} 													\
 	}while(0)
 
-#define ASWARNING(fmt,...) 									\
+#define ASWARNING(msg) 										\
 	do {													\
 			printf("%-8s:","WARNING");						\
-			printf(fmt,##__VA_ARGS__);						\
+			printf msg ;										\
 	}while(0)
 
 #define ASMEM(level,prefix,p,len)							\
 	if((AS_LOG_##level) >= AS_LOG_DEFAULT) {				\
-        asmem(#level " " prefix, p, len);					\
+		asmem(#level " " prefix, p, len);					\
 	}
 #else	/* USE_DET */
-#define ASLOG(level,fmt,...)
-#define ASWARNING(fmt,...)
+#define ASLOG(level,msg)
+#define ASWARNING(fmt,msg)
 #define ASMEM(level,prefix,p,len)
 #endif
 
 #if defined(USE_DET) || defined(USE_ASLOG)
-#define PRINTF(fmt,...) ASLOG(STDOUT,fmt,##__VA_ARGS__)
 #if defined(__WINDOWS__) || defined(__LINUX__)
 #define ASHEX(a)	ashex((unsigned long)(a))
 #else
 #define ASHEX(a) "hex-null"
 #endif
 #else
-#define PRINTF(fmt,...)
 #define ASHEX(a)	"hex-null"
 #endif
 
 #if defined(USE_DET) || defined(USE_ASLOG)
 #define asAssert(e)  																					\
 	do {																								\
-		if(!(e))																					\
+		if(!(e))																						\
 		{																								\
-			ASLOG(STDERR,"assert error on condition(%s) at line %d of %s %s\n",#e, __LINE__, __func__, __FILE__);	\
+			ASLOG(STDERR,("assert error on condition(%s) at line %d of %s %s\n",						\
+						#e, __LINE__, __func__, __FILE__));												\
 			asAssertErrorHook();																		\
 		}																								\
 	}while(0)

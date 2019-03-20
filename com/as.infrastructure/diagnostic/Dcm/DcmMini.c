@@ -551,9 +551,9 @@ static void HandleRequestDownloadOrUpload(PduIdType Instance, Dcm_UDTStateType s
 					DCM_RTE.UDTData.memoryIdentifier = memoryIdentifier;
 					DCM_RTE.UDTData.blockSequenceCounter = 1u;
 
-					ASLOG(DCM,"request %s addr(%X) size(%X),memory=%X\n",
+					ASLOG(DCM, ("request %s addr(%X) size(%X), memory=%X\n", 
 							(DCM_UDT_DOWNLOAD_STATE==state)?"download":"upload",
-							memoryAddress, memorySize, memoryIdentifier);
+							memoryAddress, memorySize, memoryIdentifier));
 					/* create positive response code */
 					DCM_TXSDU_DATA[1] = 0x20;  /* lengthFormatIdentifier = 2 Bytes */
 
@@ -831,7 +831,7 @@ static void HandleRequest(PduIdType Instance)
 	boolean bPassCheck = TRUE;
 	DCM_RTE.currentSID = DCM_RXSDU_DATA[0];
 
-	ASLOG(DCM, "Service %02X, L=%d\n", DCM_RTE.currentSID, DCM_RTE.rxPduLength);
+	ASLOG(DCM, ("Service %02X,  L=%d\n",  DCM_RTE.currentSID, DCM_RTE.rxPduLength));
 
 	DCM_RTE.counter ++;
 	DCM_RTE.txPduLength = 0;
@@ -1086,7 +1086,7 @@ void Dcm_MainFunction(void)
 				memset(&DCM_RTE, 0, sizeof(DCM_RTE));
 				DCM_RTE.parameter = parameter;
 				DCM_RTE.currentSession = DCM_DEFAULT_SESSION;
-				ASLOG(STDOUT,"S3Server Timeout!\n");
+				ASLOG(STDOUT, ("S3Server Timeout!\n"));
 			}
 		}
 	}

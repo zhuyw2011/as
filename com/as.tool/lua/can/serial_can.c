@@ -125,7 +125,7 @@ static boolean serial_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 
 	if(handle)
 	{
-		ASWARNING("CAN SERIAL port=%d is already on-line, no need to probe it again!\n",port);
+		ASWARNING(("CAN SERIAL port=%d is already on-line, no need to probe it again!\n",port));
 		rv = FALSE;
 	}
 	else
@@ -147,7 +147,7 @@ static boolean serial_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 			addr.sin_port = htons(1103);
 
 			if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-				ASWARNING("CAN Serial TCP open failed!\n");
+				ASWARNING(("CAN Serial TCP open failed!\n"));
 				rv = FALSE;
 			}
 
@@ -157,10 +157,10 @@ static boolean serial_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 				if(connect(s, (struct sockaddr*) & addr, sizeof (addr)) < 0)
 				{
 					#ifdef __WINDOWS__
-					ASWARNING("CAN Serial TCP connect failed: %d\n", WSAGetLastError());
+					ASWARNING(("CAN Serial TCP connect failed: %d\n", WSAGetLastError()));
 					closesocket(s);
 					#else
-					ASWARNING("CAN Serial TCP connect failed!\n");
+					ASWARNING(("CAN Serial TCP connect failed!\n"));
 					close(s);
 					#endif
 					rv = FALSE;
@@ -180,7 +180,7 @@ static boolean serial_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 				handle->online = TRUE;
 				STAILQ_INSERT_TAIL(&serialH->head,handle,entry);
 				pthread_mutex_unlock(&serialH->mutex);
-				ASLOG(RS232,"CAN Serial TCP open OK\n");
+				ASLOG(RS232,("CAN Serial TCP open OK\n"));
 			}
 		}
 		else if( (NULL != getHandle((uint32_t)-1, port)) ||
@@ -196,11 +196,11 @@ static boolean serial_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 			handle->online = TRUE;
 			STAILQ_INSERT_TAIL(&serialH->head,handle,entry);
 			pthread_mutex_unlock(&serialH->mutex);
-			ASLOG(RS232,"CAN Serial open port %d as busid %d OK\n",port, busid);
+			ASLOG(RS232,("CAN Serial open port %d as busid %d OK\n",port, busid));
 		}
 		else
 		{
-			ASWARNING("CAN SERIAL port=%d is is not able to be opened!\n",port);
+			ASWARNING(("CAN SERIAL port=%d is is not able to be opened!\n",port));
 			rv = FALSE;
 		}
 	}
@@ -232,8 +232,8 @@ static boolean serial_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t
 		SETSCANID(pdu.canid, canid);
 		pdu.dlc = dlc;
 		memcpy(pdu.data, data, dlc);
-		ASLOG(OFF, "Tx busid=%X, CanId=%X, CanDlc=%X [%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
-				pdu.busid, canid, dlc, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+		ASLOG(OFF, ("Tx busid=%X, CanId=%X, CanDlc=%X [%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
+				pdu.busid, canid, dlc, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]));
 		if( CAN_TCP_SERIAL_PORT == handle->port)
 		{
 			if(sizeof(pdu) == send(handle->s, (void*)&pdu, sizeof(pdu),0))
@@ -242,7 +242,7 @@ static boolean serial_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t
 			}
 			else
 			{
-				ASWARNING("CAN Serial TCP send message failed!\n");
+				ASWARNING(("CAN Serial TCP send message failed!\n"));
 			}
 		}
 		else if(sizeof(pdu) == RS232_SendBuf((int)handle->port,(unsigned char*)&pdu, sizeof(pdu)))
@@ -252,13 +252,13 @@ static boolean serial_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t
 		else
 		{
 			rv = FALSE;
-			ASWARNING("CAN Serial port=%d<%d> send message failed!\n",port,handle->port);
+			ASWARNING(("CAN Serial port=%d<%d> send message failed!\n",port,handle->port));
 		}
 	}
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN Serial port=%d is not on-line, not able to send message!\n",port);
+		ASWARNING(("CAN Serial port=%d is not on-line, not able to send message!\n",port));
 	}
 
 	return rv;
@@ -285,11 +285,11 @@ static void serial_close(uint32_t busid,uint32_t port)
 			if(NULL == getHandle((uint32_t)-1, port))
 			{
 				RS232_CloseComport(handle->port);
-				ASLOG(RS232,"CAN Serial close port %d as busid %d\n",port,busid);
+				ASLOG(RS232,("CAN Serial close port %d as busid %d\n",port,busid));
 			}
 			else
 			{
-				ASLOG(RS232,"CAN Serial keep port %d open, close only busid %d\n",port,busid);
+				ASLOG(RS232,("CAN Serial keep port %d open, close only busid %d\n",port,busid));
 			}
 		}
 
@@ -311,7 +311,7 @@ static boolean serial_reset(uint32_t busid,uint32_t port)
 		{
 			if(handle->online == TRUE)
 			{
-				ASLOG(RS232, "reset port %d start\n", port);
+				ASLOG(RS232, ("reset port %d start\n", port));
 				pthread_mutex_lock(&serialH->mutex);
 				handle->online = FALSE;
 				pthread_mutex_unlock(&serialH->mutex);
@@ -323,7 +323,7 @@ static boolean serial_reset(uint32_t busid,uint32_t port)
 			}
 			else
 			{
-				ASLOG(RS232, "reset port %d done\n", port);
+				ASLOG(RS232, ("reset port %d done\n", port));
 				pthread_mutex_lock(&serialH->mutex);
 				handle->online = TRUE;
 				pthread_mutex_unlock(&serialH->mutex);
@@ -333,7 +333,7 @@ static boolean serial_reset(uint32_t busid,uint32_t port)
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN Serial port=%d is not on-line, not able to reset!\n",port);
+		ASWARNING(("CAN Serial port=%d is not on-line, not able to reset!\n",port));
 	}
 	return rv;
 }
@@ -363,9 +363,9 @@ static void * rx_daemon(void * param)
 
 				if(size == sizeof(pdu))
 				{
-					ASLOG(OFF, "Rx busid=%X, CanId=%X, CanDlc=%X [%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
+					ASLOG(OFF, ("Rx busid=%X, CanId=%X, CanDlc=%X [%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
 							pdu.busid, SCANID(pdu.canid), pdu.dlc, pdu.data[0], pdu.data[1], pdu.data[2],
-							pdu.data[3], pdu.data[4], pdu.data[5], pdu.data[6], pdu.data[7]);
+							pdu.data[3], pdu.data[4], pdu.data[5], pdu.data[6], pdu.data[7]));
 					if(NULL != handle->rx_notification)
 					{
 						handle->rx_notification(pdu.busid,SCANID(pdu.canid),pdu.dlc,pdu.data);

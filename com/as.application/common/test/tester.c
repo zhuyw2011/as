@@ -55,7 +55,7 @@ KSM(Tester,RoundRobin)
 {
 	if(GetTimer(&timer) > MS2TICKS(1000))
 	{
-		ASLOG(KSM,"Teter 1s runnable\n");
+		ASLOG(KSM,("Teter 1s runnable\n"));
 		StartTimer(&timer);
 		tester_time_1000ms_runnable();
 		tester_nvm_1000ms_runnable();

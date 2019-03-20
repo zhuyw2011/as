@@ -392,7 +392,7 @@ static inline boolean hasPostRunRequests(void){
 static inline void in_state_appRun(void){
 	if (EcuM_World_run_state_timeout){
 		EcuM_World_run_state_timeout--;
-		LDEBUG_PRINTF( ECUM_STR "RUN Timeout=%ld\n",EcuM_World_run_state_timeout);
+		ASLOG( ECUM, (ECUM_STR "RUN Timeout=%ld\n",EcuM_World_run_state_timeout));
 	}
 
 	if ((!hasRunRequests()) && (EcuM_World_run_state_timeout == 0)){
@@ -620,8 +620,8 @@ void EcuM_MainFunction(void) {
 							validationMaxTime);
 					EcuM_World.validationTimer = validationMaxTime;
 				} else {
-					LDEBUG_PRINTF(ECUM_STR "No Validation for event:0x%lx\n",
-							(uint32) wkupCfgPtr->EcuMWakeupSourceId);
+					ASLOG(ECUM, (ECUM_STR "No Validation for event:0x%lx\n",
+							(uint32) wkupCfgPtr->EcuMWakeupSourceId));
 
 					/* Validate right away */
 					EcuM_ValidateWakeupEvent(wkupCfgPtr->EcuMWakeupSourceId);
@@ -655,9 +655,9 @@ void EcuM_MainFunction(void) {
 				/* All events have been validated */
 				done = 1;
 			} else {
-				LDEBUG_PRINTF( ECUM_STR "  Awaiting validation for mask: pending=%lx, expected=%lx\n",
-								pendingWkupMask, validationMask);
-				LDEBUG_PRINTF(ECUM_STR "  Validation Timer            : %lu\n", EcuM_World.validationTimer);
+				ASLOG(ECUM, ( ECUM_STR "  Awaiting validation for mask: pending=%lx, expected=%lx\n",
+								pendingWkupMask, validationMask));
+				ASLOG(ECUM, (ECUM_STR "  Validation Timer            : %lu\n", EcuM_World.validationTimer));
 			}
 
 		} else {
@@ -706,7 +706,7 @@ void EcuM_MainFunction(void) {
 		EcuM_WakeupReactionType wReaction;
 
 		wMask = EcuM_GetValidatedWakeupEvents();
-		LDEBUG_PRINTF(ECUM_STR "EcuM_GetValidatedWakeupEvents() : %x\n", wMask);
+		ASLOG(ECUM, (ECUM_STR "EcuM_GetValidatedWakeupEvents() : %x\n", wMask));
 
 		/* TODO: We have skipped the TTII timer here */
 
@@ -715,8 +715,8 @@ void EcuM_MainFunction(void) {
 		wReaction = (0 == wMask) ? ECUM_WKACT_SHUTDOWN : ECUM_WKACT_RUN;
 		wReaction = EcuM_OnWakeupReaction(wReaction);
 
-		LDEBUG_PRINTF(ECUM_STR "Wakeup Reaction: %s\n",
-				GetWakeupReactionAsString(wReaction));
+		ASLOG(ECUM, (ECUM_STR "Wakeup Reaction: %s\n",
+				GetWakeupReactionAsString(wReaction)));
 		if (wReaction == ECUM_WKACT_RUN) {
 			set_current_state(ECUM_STATE_WAKEUP_TWO);
 		} else {

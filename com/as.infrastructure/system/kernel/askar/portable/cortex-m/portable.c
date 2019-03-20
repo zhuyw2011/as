@@ -46,8 +46,8 @@ void Os_PortActivate(void)
 	/* get internal resource or NON schedule */
 	RunningVar->priority = RunningVar->pConst->runPriority;
 
-	ASLOG(OS, "%s(%d) is running\n", RunningVar->pConst->name,
-			RunningVar->pConst->initPriority);
+	ASLOG(OS, ("%s(%d) is running\n",  RunningVar->pConst->name, 
+			RunningVar->pConst->initPriority));
 
 	CallLevel = TCL_TASK;
 	Irq_Enable();

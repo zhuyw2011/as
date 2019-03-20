@@ -121,8 +121,8 @@ static int lasdev_open  (const char* device, const char* option, void** param)
 	s = ask_create(is_server,uri,port);
 	if(s < 0)
 	{
-		ASWARNING("create websock %s on %s:%d failed at function '%s'\n",
-				is_server?"server":"client",uri,port,__func__);
+		ASWARNING(("create websock %s on %s:%d failed at function '%s'\n",
+is_server?"server":"client",uri,port,__func__));
 
 		return 0;
 	}
@@ -166,7 +166,7 @@ static int lasdev_open  (const char* device, const char* option, void** param)
 		pthread_mutex_unlock(&scMutex);
 	}
 
-	ASLOG(LAS_DEV,"websock %s<%d> online %s:%d\n",LAS_WS_NAME(PPARAM(*param)->is_server),PPARAM(*param)->s,PPARAM(*param)->uri,PPARAM(*param)->port);
+	ASLOG(LAS_DEV, ("websock %s<%d> online %s:%d\n", LAS_WS_NAME(PPARAM(*param)->is_server), PPARAM(*param)->s, PPARAM(*param)->uri, PPARAM(*param)->port));
 	return 1;
 }
 static int lasdev_read  (void* param,char** pdata)
@@ -242,7 +242,7 @@ static int lasdev_read  (void* param,char** pdata)
 	if(len > 0)
 	{
 		data[len]=0;
-		ASLOG(LAS_DEV,"aws read '%s'\n",data);
+		ASLOG(LAS_DEV, ("aws read '%s'\n", data));
 	}
 	return len;
 }
@@ -320,7 +320,7 @@ static int lasdev_write (void* param,const char* data,size_t size)
 						tp = find_server_accept_param(PPARAM(param),cp);
 						if(NULL == tp)
 						{
-							ASWARNING("%s websock call on server with wrong param<%s>, not exist.\n",__func__,cp);
+							ASWARNING(("%s websock call on server with wrong param<%s>, not exist.\n",__func__,cp));
 							err = -__LINE__;
 						}
 						else
@@ -330,7 +330,7 @@ static int lasdev_write (void* param,const char* data,size_t size)
 					}
 					else
 					{
-						ASWARNING("%s websock call on server without param, wrong format.\n",__func__);
+						ASWARNING(("%s websock call on server without param, wrong format.\n",__func__));
 						err = -__LINE__;
 					}
 				}
@@ -357,7 +357,7 @@ static int lasdev_write (void* param,const char* data,size_t size)
 					tp = find_server_accept_param(PPARAM(param),cp);
 					if(NULL == tp)
 					{
-						ASWARNING("%s websock repply on server with wrong param<%s>, not exist.\n",__func__,cp);
+						ASWARNING(("%s websock repply on server with wrong param<%s>, not exist.\n",__func__,cp));
 						err = -__LINE__;
 					}
 					else
@@ -366,7 +366,7 @@ static int lasdev_write (void* param,const char* data,size_t size)
 						msg = find_rmsg(tp,mc);
 						if(NULL == msg)
 						{
-							ASWARNING("%s websock repply on server with wrong msg<%s>, not exist.\n",__func__,mc);
+							ASWARNING(("%s websock repply on server with wrong msg<%s>, not exist.\n",__func__,mc));
 							err = -__LINE__;
 						}
 						else
@@ -379,7 +379,7 @@ static int lasdev_write (void* param,const char* data,size_t size)
 							{
 								iserror = 1;
 							}
-							ASLOG(LAS_DEV,"REPLY-CALL %s to %s/%s(%s) on %s<%d> %s:%d\n", obj, msg->api, msg->verb, afb_wsj1_msg_object_s(msg->msg),LAS_WS_NAME(tp->is_server),tp->s,tp->uri,tp->port);
+							ASLOG(LAS_DEV, ("REPLY-CALL %s to %s/%s(%s) on %s<%d> %s:%d\n",  obj,  msg->api,  msg->verb,  afb_wsj1_msg_object_s(msg->msg), LAS_WS_NAME(tp->is_server), tp->s, tp->uri, tp->port));
 							err = afb_wsj1_reply_s(msg->msg, obj, "lua:parai@foxmail.com", iserror);
 							STAILQ_REMOVE(&tp->msgR,msg,LAS_MessgaeStruct,next);
 							afb_wsj1_msg_unref(msg->msg);
@@ -389,28 +389,28 @@ static int lasdev_write (void* param,const char* data,size_t size)
 				}
 				else
 				{
-					ASWARNING("%s websock reply with wrong format.\n",__func__);
+					ASWARNING(("%s websock reply with wrong format.\n",__func__));
 					err = -__LINE__;
 				}
 
 				break;
 			}
 			default:
-				ASWARNING("%s websock wrong data format\n",__func__);
+				ASWARNING(("%s websock wrong data format\n",__func__));
 				err = -__LINE__;
 				break;
 		}
 	}
 	else
 	{
-		ASWARNING("%s websock wrong data size\n",__func__);
+		ASWARNING(("%s websock wrong data size\n",__func__));
 		err = -__LINE__;
 	}
 	return err;
 }
 static void lasdev_close(void* param)
 {
-	ASLOG(LAS_DEV,"websock close %s<%d> on %s:%d\n",LAS_WS_NAME(PPARAM(param)->is_server),PPARAM(param)->s,PPARAM(param)->uri,PPARAM(param)->port);
+	ASLOG(LAS_DEV, ("websock close %s<%d> on %s:%d\n", LAS_WS_NAME(PPARAM(param)->is_server), PPARAM(param)->s, PPARAM(param)->uri, PPARAM(param)->port));
 
 	if(LAS_WEBSOCK_SERVER == PPARAM(param)->is_server)
 	{
@@ -503,7 +503,7 @@ static void on_hangup(void *closure, struct afb_wsj1 *wsj1)
 {
 	LAS_WebsockParamType *param=(LAS_WebsockParamType*)closure;
 	LAS_MessgaeType *m = malloc(sizeof(LAS_MessgaeType));
-	ASLOG(LAS_DEV,"ON-HANGUP on %s<%d> %s:%d\n",LAS_WS_NAME(param->is_server),param->s,param->uri,param->port);
+	ASLOG(LAS_DEV, ("ON-HANGUP on %s<%d> %s:%d\n", LAS_WS_NAME(param->is_server), param->s, param->uri, param->port));
 	(void)wsj1;
 	asAssert(m);
 	m->type = LAS_HANGUP;
@@ -516,7 +516,7 @@ static void on_call(void *closure, const char *api, const char *verb, struct afb
 	LAS_WebsockParamType *param=(LAS_WebsockParamType*)closure;
 	LAS_MessgaeType *m = malloc(sizeof(LAS_MessgaeType));
 
-	ASLOG(LAS_DEV,"ON-CALL %s/%s(%s) on %s<%d> %s:%d\n", api, verb, afb_wsj1_msg_object_s(msg),LAS_WS_NAME(param->is_server),param->s,param->uri,param->port);
+	ASLOG(LAS_DEV, ("ON-CALL %s/%s(%s) on %s<%d> %s:%d\n",  api,  verb,  afb_wsj1_msg_object_s(msg), LAS_WS_NAME(param->is_server), param->s, param->uri, param->port));
 
 	asAssert(m);
 	m->type = LAS_CALL;
@@ -531,7 +531,7 @@ static void on_event(void *closure, const char *event, struct afb_wsj1_msg *msg)
 {
 	LAS_WebsockParamType *param=(LAS_WebsockParamType*)closure;
 	LAS_MessgaeType *m = malloc(sizeof(LAS_MessgaeType));
-	ASLOG(LAS_DEV,"ON-EVENT %s(%s)  on %s<%d> %s:%d\n", event, afb_wsj1_msg_object_s(msg),LAS_WS_NAME(param->is_server),param->s,param->uri,param->port);
+	ASLOG(LAS_DEV, ("ON-EVENT %s(%s)  on %s<%d> %s:%d\n",  event,  afb_wsj1_msg_object_s(msg), LAS_WS_NAME(param->is_server), param->s, param->uri, param->port));
 	asAssert(m);
 	m->type = LAS_EVENT;
 	m->event = event;
@@ -544,7 +544,7 @@ static void on_reply(void *closure, struct afb_wsj1_msg *msg)
 {
 	LAS_WebsockParamType *param=(LAS_WebsockParamType*)closure;
 	LAS_MessgaeType *m = malloc(sizeof(LAS_MessgaeType));
-	ASLOG(LAS_DEV,"ON-REPLY : %s  on %s<%d> %s:%d\n",afb_wsj1_msg_object_s(msg),LAS_WS_NAME(param->is_server),param->s,param->uri,param->port);
+	ASLOG(LAS_DEV, ("ON-REPLY : %s  on %s<%d> %s:%d\n", afb_wsj1_msg_object_s(msg), LAS_WS_NAME(param->is_server), param->s, param->uri, param->port));
 	asAssert(m);
 	m->type = LAS_REPLY;
 	m->msg = msg;

@@ -70,7 +70,7 @@ struct Can_BusList_s {
 	STAILQ_HEAD(,Can_Bus_s) head;
 };
 /* ============================ [ DECLARES  ] ====================================================== */
-static void logCan(bool isRx,uint32_t busid,uint32_t canid,uint32_t dlc,uint8_t* data);
+static void logCan(boolean isRx,uint32_t busid,uint32_t canid,uint32_t dlc,uint8_t* data);
 /* ============================ [ DATAS     ] ====================================================== */
 static struct Can_BusList_s canbusH =
 {
@@ -161,7 +161,7 @@ static void saveQ(struct Can_Bus_s* b, uint32_t canid, uint8_t dlc, uint8_t * da
 		if(FALSE == b->warningQ)
 		{
 			b->warningQ = TRUE;
-			ASWARNING("LUA CAN BUSQ[id=%X] List is full with size %d\n", b->busid, b->sizeQ);
+			ASWARNING(("LUA CAN BUSQ[id=%X] List is full with size %d\n", b->busid, b->sizeQ));
 		}
 		return;
 	}
@@ -272,7 +272,7 @@ static void saveB(struct Can_Bus_s* b,struct Can_Pdu_s* pdu)
 		}
 		else
 		{
-			ASWARNING("LUA CAN Bus List malloc failed\n");
+			ASWARNING(("LUA CAN Bus List malloc failed\n"));
 		}
 	}
 
@@ -291,7 +291,7 @@ static void saveB(struct Can_Bus_s* b,struct Can_Pdu_s* pdu)
 		{
 			if(L->warning == FALSE)
 			{
-				ASWARNING("LUA CAN Q[id=%X] List is full with size %d\n",L->id,L->size);
+				ASWARNING(("LUA CAN Q[id=%X] List is full with size %d\n",L->id,L->size));
 				L->warning = TRUE;
 			}
 			free(pdu);
@@ -322,22 +322,22 @@ static void rx_notification(uint32_t busid,uint32_t canid,uint32_t dlc,uint8_t* 
 			}
 			else
 			{
-				ASWARNING("LUA CAN RX malloc failed\n");
+				ASWARNING(("LUA CAN RX malloc failed\n"));
 			}
 		}
 		else
 		{
 			/* not on-line */
-			ASLOG(LUA,"lua is not on-line now!\n");
+			ASLOG(LUA,("lua is not on-line now!\n"));
 		}
 	}
 	else
 	{
-		ASWARNING("LUA CAN RX bus <%d> out of range, busid < %d is support only\n",busid,CAN_BUS_NUM);
+		ASWARNING(("LUA CAN RX bus <%d> out of range, busid < %d is support only\n",busid,CAN_BUS_NUM));
 	}
 
-    ASLOG(LUA,"LUA RX CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
-		  canid,dlc,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]);
+    ASLOG(LUA,("LUA RX CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
+		  canid,dlc,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]));
 }
 static const Can_DeviceOpsType* search_ops(const char* name)
 {
@@ -356,7 +356,7 @@ static const Can_DeviceOpsType* search_ops(const char* name)
 
 	return ops;
 }
-static void logCan(bool isRx,uint32_t busid,uint32_t canid,uint32_t dlc,uint8_t* data)
+static void logCan(boolean isRx,uint32_t busid,uint32_t canid,uint32_t dlc,uint8_t* data)
 {
 	static struct timeval m0 = { -1 , -1 };
 
@@ -570,8 +570,8 @@ int luai_can_write (lua_State *L)
 			if(b->device.ops->write)
 			{
 				boolean rv = b->device.ops->write(b->device.busid,b->device.port,canid,dlc,data);
-				ASLOG(CAN,"can_write(bus=%d,canid=%X,dlc=%d,data=[%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
-										busid,canid,dlc,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]);
+				ASLOG(CAN,("can_write(bus=%d,canid=%X,dlc=%d,data=[%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
+										busid,canid,dlc,data[0],data[1],data[2],data[3],data[4],data[5],data[6],data[7]));
 				saveQ(b,canid,dlc,data);
 				logCan(FALSE,busid,canid,dlc,data);
 				if(rv)
@@ -635,10 +635,10 @@ int luai_can_read  (lua_State *L)
 		{
 			int table_index,i;
 
-			ASLOG(CAN,"can_read(bus=%d,canid=%X,dlc=%d,data=[%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
+			ASLOG(CAN,("can_read(bus=%d,canid=%X,dlc=%d,data=[%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
 									busid,pdu->msg.id,pdu->msg.length,
 									pdu->msg.sdu[0],pdu->msg.sdu[1],pdu->msg.sdu[2],pdu->msg.sdu[3],
-									pdu->msg.sdu[4],pdu->msg.sdu[5],pdu->msg.sdu[6],pdu->msg.sdu[7]);
+									pdu->msg.sdu[4],pdu->msg.sdu[5],pdu->msg.sdu[6],pdu->msg.sdu[7]));
 			lua_pushboolean(L, TRUE);
 			lua_pushinteger(L,pdu->msg.id);
 			lua_newtable(L);
@@ -719,7 +719,7 @@ int luai_can_log  (lua_State *L)
 		{
 			fclose(canLog);
 			canLog = NULL;
-			ASWARNING("can_log re-log without previous one closed\n");
+			ASWARNING(("can_log re-log without previous one closed\n"));
 		}
 
 		time_t t = time(0);
@@ -728,7 +728,7 @@ int luai_can_log  (lua_State *L)
 		canLog = fopen(file,"w+");
 		if(NULL != canLog)
 		{
-			ASLOG(STDOUT,"can trace log to file < %s >\n\n",file);
+			ASLOG(STDOUT,("can trace log to file < %s >\n\n",file));
 			fprintf(canLog,"lascan log %04d-%02d-%02d %02d:%02d:%02d\n\n",lt->tm_year+1900,lt->tm_mon+1,lt->tm_mday,
 					lt->tm_hour,lt->tm_min,lt->tm_sec);
 		}

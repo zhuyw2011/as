@@ -292,7 +292,7 @@ int luai_as_write  (lua_State *L)
 			{
 				lua_pushvalue(L, -2);
 				data[i] = (char)lua_tounsignedx(L, -2,&is_num);
-				ASLOG(LAS_DEV,"write: data[%d] = %d\n",i,data[i]);
+				ASLOG(LAS_DEV, ("write: data[%d] = %d\n", i, data[i]));
 				if(!is_num)
 				{
 					return luaL_error(L,"invalid data[%d] to function '%s'",i,__func__);
@@ -308,7 +308,7 @@ int luai_as_write  (lua_State *L)
 		}
 		else
 		{
-			ASLOG(LAS_DEV,"write string is '%s'\n",data);
+			ASLOG(LAS_DEV, ("write string is '%s'\n", data));
 		}
 
 	    len = lua_tounsignedx(L, 3, &is_num);
@@ -390,7 +390,7 @@ int luai_as_ioctl  (lua_State *L)
 			{
 				lua_pushvalue(L, -2);
 				data[i] = (char)lua_tounsignedx(L, -2,&is_num);
-				ASLOG(LAS_DEV,"ioctl %d: data[%d] = %d\n",type,i,data[i]);
+				ASLOG(LAS_DEV, ("ioctl %d: data[%d] = %d\n", type, i, data[i]));
 				if(!is_num)
 				{
 					return luaL_error(L,"invalid data[%d] to function '%s'",i,__func__);
@@ -406,7 +406,7 @@ int luai_as_ioctl  (lua_State *L)
 		}
 		else
 		{
-			ASLOG(LAS_DEV,"ioctl string is '%s'\n",data);
+			ASLOG(LAS_DEV, ("ioctl string is '%s'\n", data));
 		}
 
 	    len = lua_tounsignedx(L, 4, &is_num);

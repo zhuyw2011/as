@@ -185,7 +185,7 @@ static Std_ReturnType Xcp_CmdGetSlaveId(void* data, int len)
     uint8 mode;
 
     if(len < 4) {
-        RETURN_ERROR(XCP_ERR_CMD_SYNTAX, "Invalid length for get_slave_id %d", len);
+        RETURN_ERROR(XCP_ERR_CMD_SYNTAX, ("Invalid length for get_slave_id %d", len));
     }
 
     p[0] = GET_UINT8(data, 0);
@@ -195,7 +195,7 @@ static Std_ReturnType Xcp_CmdGetSlaveId(void* data, int len)
     mode = GET_UINT8(data, 3);
 
     if(strcmp((char*)p, "XCP")) {
-        RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Unknown get_id pattern %s", p);
+        RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Unknown get_id pattern %s", p));
     }
 
     if(mode == 0) {
@@ -215,7 +215,7 @@ static Std_ReturnType Xcp_CmdGetSlaveId(void* data, int len)
             FIFO_ADD_U32(e, XCP_CAN_ID_RX);
         }
     } else {
-        RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Invalid mode for get_slave_id: %u", mode);
+        RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Invalid mode for get_slave_id: %u", mode));
     }
 
     return E_OK;
@@ -241,7 +241,7 @@ Std_ReturnType Xcp_CmdTransportLayer(uint8 pid, void* data, int len)
     }
 #endif
 
-    RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, "Unknown transport cmd:%u, len:%u", id, len);
+    RETURN_ERROR(XCP_ERR_CMD_UNKNOWN, ("Unknown transport cmd:%u,  len:%u",  id, len));
 }
 
 #endif

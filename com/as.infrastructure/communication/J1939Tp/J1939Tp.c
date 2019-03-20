@@ -92,10 +92,10 @@ void J1939Tp_Init(const J1939Tp_ConfigType* ConfigPtr) {
 
 void J1939Tp_RxIndication(PduIdType RxPduId, PduInfoType* PduInfoPtr) {
 	/** @req J1939TP0030 */
-	ASLOG(J1939TP,"J1939Tp_RxIndication: PduId=%d, LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
+	ASLOG(J1939TP, ("J1939Tp_RxIndication: PduId=%d,  LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n", 
 			RxPduId,PduInfoPtr->SduLength,PduInfoPtr->SduDataPtr[0],PduInfoPtr->SduDataPtr[1],
 			PduInfoPtr->SduDataPtr[2],PduInfoPtr->SduDataPtr[3],PduInfoPtr->SduDataPtr[4],
-			PduInfoPtr->SduDataPtr[5],PduInfoPtr->SduDataPtr[6],PduInfoPtr->SduDataPtr[7]);
+			PduInfoPtr->SduDataPtr[5],PduInfoPtr->SduDataPtr[6],PduInfoPtr->SduDataPtr[7]));
 	if (globalState.State == J1939TP_ON) {
 		const J1939Tp_RxPduInfoRelationsType* RxPduRelationsInfo = 0;
 		if (J1939Tp_Internal_GetRxPduRelationsInfo(RxPduId, &RxPduRelationsInfo) == E_OK) {
@@ -190,7 +190,7 @@ void J1939Tp_MainFunction(void) {
 						break;
 				}
 				if (timer == J1939TP_EXPIRED) {
-					ASLOG(J1939TPE,"Channel %d Expired from state %d\n", i, ChannelInfoPtr->RxState->State);
+					ASLOG(J1939TPE, ("Channel %d Expired from state %d\n",  i, ChannelInfoPtr->RxState->State));
 					J1939Tp_Internal_StopTimer(&(ChannelInfoPtr->RxState->TimerInfo));
 					ChannelInfoPtr->RxState->State = J1939TP_RX_IDLE;
 					if (Channel->Protocol == J1939TP_PROTOCOL_CMDT) {
@@ -276,7 +276,7 @@ static inline Std_ReturnType J1939Tp_Internal_ValidatePacketType(const J1939Tp_R
 }
 static inline void J1939Tp_Internal_RxIndication_Direct(PduInfoType* PduInfoPtr, const J1939Tp_RxPduInfoType* RxPduInfoPtr) {
 	if (PduInfoPtr->SduLength > DIRECT_TRANSMIT_SIZE) {
-		ASLOG(J1939TPE, "Invalid DF SduLength = %d\n", PduInfoPtr->SduLength);
+		ASLOG(J1939TPE, ("Invalid DF SduLength = %d\n", PduInfoPtr->SduLength));
 		return;
 	}
 	const J1939Tp_PgType* Pg = RxPduInfoPtr->PgPtr;
@@ -291,7 +291,7 @@ static inline void J1939Tp_Internal_RxIndication_Direct(PduInfoType* PduInfoPtr,
 	}
 	else
 	{
-		ASLOG(J1939TPE, "DF start reception failed\n");
+		ASLOG(J1939TPE, ("DF start reception failed\n"));
 	}
 }
 static inline uint8 J1939Tp_Internal_GetDtPacketsInNextCts(uint8 receivedDtPackets, uint8 totalDtPacketsToReceive) {
@@ -315,7 +315,7 @@ static inline void J1939Tp_Internal_RxIndication_Dt(PduInfoType* PduInfoPtr, J19
 	uint8 expectedSeqNumber = ChannelInfoPtr->RxState->ReceivedDtCount;
 	uint8 seqNumber = PduInfoPtr->SduDataPtr[DT_BYTE_SEQ_NUM];
 	if (seqNumber != expectedSeqNumber) {
-		ASLOG(J1939TPE,"DT, invalid sequence number %d != %d\n", seqNumber, expectedSeqNumber);
+		ASLOG(J1939TPE, ("DT,  invalid sequence number %d != %d\n",  seqNumber, expectedSeqNumber));
 		ChannelInfoPtr->RxState->State = J1939TP_RX_IDLE;
 		if (protocol == J1939TP_PROTOCOL_CMDT) {
 			J1939Tp_PgnType pgn = ChannelInfoPtr->RxState->CurrentPgPtr->Pgn;
@@ -365,12 +365,12 @@ static inline void J1939Tp_Internal_RxIndication_Cm(PduInfoType* PduInfoPtr, J19
 	const J1939Tp_PgType* pg = 0;
 
 	if (ChannelInfoPtr->RxState->State != J1939TP_RX_IDLE) {
-		ASLOG(J1939TPE,"CM, Channel state is not idle<%d>\n", ChannelInfoPtr->RxState->State);
+		ASLOG(J1939TPE, ("CM,  Channel state is not idle<%d>\n", ChannelInfoPtr->RxState->State));
 		return;
 	}
 	J1939Tp_PgnType pgn = J1939Tp_Internal_GetPgn(&(PduInfoPtr->SduDataPtr[CM_PGN_BYTE_1]));
 	if (J1939Tp_Internal_GetPgFromPgn(ChannelInfoPtr->ChannelConfPtr,pgn,&pg) != E_OK) {
-		ASLOG(J1939TPE,"CM, can't get PGN=%d\n", pgn);
+		ASLOG(J1939TPE, ("CM,  can't get PGN=%d\n", pgn));
 		return;
 	}
 	uint8 Command = PduInfoPtr->SduDataPtr[CM_BYTE_CONTROL];
@@ -385,7 +385,7 @@ static inline void J1939Tp_Internal_RxIndication_Cm(PduInfoType* PduInfoPtr, J19
 		ChannelInfoPtr->RxState->TotalMessageSize = messageSize;
 		ChannelInfoPtr->RxState->CurrentPgPtr = pg;
 		J1939Tp_ProtocolType channelProtocol = ChannelInfoPtr->ChannelConfPtr->Protocol;
-		ASLOG(J1939TP,"CM command=%d messageSize=%d DtToReceiveCount=%d\n", Command, messageSize, ChannelInfoPtr->RxState->DtToReceiveCount);
+		ASLOG(J1939TP, ("CM command=%d messageSize=%d DtToReceiveCount=%d\n",  Command,  messageSize, ChannelInfoPtr->RxState->DtToReceiveCount));
 		if (Command == RTS_CONTROL_VALUE && channelProtocol == J1939TP_PROTOCOL_CMDT) {
 			PduLengthType remainingBuffer = 0;
 			if (PduR_J1939TpStartOfReception(pg->NSdu, messageSize, &remainingBuffer) == BUFREQ_OK) {
@@ -412,7 +412,7 @@ static inline void J1939Tp_Internal_RxIndication_ReverseCm(PduInfoType* PduInfoP
 	const J1939Tp_PgType* pg = 0;
 	J1939Tp_PgnType pgn = J1939Tp_Internal_GetPgn(&(PduInfoPtr->SduDataPtr[CM_PGN_BYTE_1]));
 	if (J1939Tp_Internal_GetPgFromPgn(ChannelInfoPtr->ChannelConfPtr,pgn,&pg) != E_OK) {
-		ASLOG(J1939TPE,"invalid PGN=%d\n", pgn);
+		ASLOG(J1939TPE, ("invalid PGN=%d\n", pgn));
 		return;
 	}
 	uint8 Command = PduInfoPtr->SduDataPtr[CM_BYTE_CONTROL];
@@ -677,7 +677,7 @@ static inline Std_ReturnType J1939Tp_Internal_DirectTransmit(const PduInfoType* 
 				Irq_Save(state);
 				PgInfo->TxState = J1939TP_PG_TX_IDLE;
 				Irq_Restore(state);
-				ASLOG(J1939TPE, "send DF failed!\n");
+				ASLOG(J1939TPE, ("send DF failed!\n"));
 			}
 		} else {
 			r = E_NOT_OK;
@@ -710,7 +710,7 @@ static inline Std_ReturnType J1939Tp_Internal_SendBam(J1939Tp_Internal_ChannelIn
 	#if AS_LOG_J1939TPE
 	if(E_OK != r)
 	{
-		ASLOG(J1939TPE, "send BAM failed!\n");
+		ASLOG(J1939TPE, ("send BAM failed!\n"));
 	}
 	#endif
 	return r;
@@ -786,7 +786,7 @@ static inline Std_ReturnType J1939Tp_Internal_SendDt(J1939Tp_Internal_ChannelInf
 		#if AS_LOG_J1939TPE
 		if(E_OK != rv)
 		{
-			ASLOG(J1939TPE, "send DT failed!\n");
+			ASLOG(J1939TPE, ("send DT failed!\n"));
 		}
 		#endif
 		return rv;
@@ -815,7 +815,7 @@ static inline Std_ReturnType J1939Tp_Internal_SendRts(J1939Tp_Internal_ChannelIn
 	#if AS_LOG_J1939TPE
 	if(E_OK != r)
 	{
-		ASLOG(J1939TPE, "send RTS failed!\n");
+		ASLOG(J1939TPE, ("send RTS failed!\n"));
 	}
 	#endif
 	return r;
@@ -835,12 +835,12 @@ static inline void J1939Tp_Internal_SendEndOfMsgAck(J1939Tp_Internal_ChannelInfo
 	endofmsgData[ENDOFMSGACK_BYTE_SAE_ASSIGN] = 0xFF;
 	J1939Tp_Internal_SetPgn(&(endofmsgData[ENDOFMSGACK_BYTE_PGN_1]),ChannelInfoPtr->RxState->CurrentPgPtr->Pgn);
 	CmNPdu = ChannelInfoPtr->ChannelConfPtr->FcNPdu;
-	ASLOG(J1939TP, "Send EndOfMsgAck!\n");
+	ASLOG(J1939TP, ("Send EndOfMsgAck!\n"));
 	ercd = CanIf_Transmit(CmNPdu,&endofmsgInfo);
 
 	if(ercd != E_OK)
 	{
-		ASLOG(J1939TPE, "Send EndOfMsgAck failed!\n");
+		ASLOG(J1939TPE, ("Send EndOfMsgAck failed!\n"));
 	}
 }
 
@@ -861,12 +861,12 @@ static inline void J1939Tp_Internal_SendCts(J1939Tp_Internal_ChannelInfoType* Ch
 	ctsData[CTS_BYTE_SAE_ASSIGN_1] = 0xFF;
 	ctsData[CTS_BYTE_SAE_ASSIGN_2] = 0xFF;
 	J1939Tp_Internal_SetPgn(&(ctsData[BAM_RTS_BYTE_PGN_1]),Pgn);
-	ASLOG(J1939TP, "Send CTS %d %d %d\n",NumPackets, NextPacketSeqNum, Pgn);
+	ASLOG(J1939TP, ("Send CTS %d %d %d\n", NumPackets,  NextPacketSeqNum, Pgn));
 	ercd = CanIf_Transmit(ChannelInfoPtr->ChannelConfPtr->FcNPdu,&ctsInfo);
 
 	if(ercd != E_OK)
 	{
-		ASLOG(J1939TPE, "Send CTS failed!\n");
+		ASLOG(J1939TPE, ("Send CTS failed!\n"));
 	}
 
 }
@@ -882,11 +882,11 @@ static inline void J1939Tp_Internal_SendConnectionAbort(PduIdType CmNPdu, J1939T
 	connAbortData[CONNABORT_BYTE_SAE_ASSIGN_3] = 0xFF;
 	connAbortData[CONNABORT_BYTE_SAE_ASSIGN_4] = 0xFF;
 	J1939Tp_Internal_SetPgn(&(connAbortData[CONNABORT_BYTE_PGN_1]),Pgn);
-	ASLOG(J1939TP, "Send ConnectionAbort!\n");
+	ASLOG(J1939TP, ("Send ConnectionAbort!\n"));
 	ercd = CanIf_Transmit(CmNPdu,&connAbortInfo);
 	if(ercd != E_OK)
 	{
-		ASLOG(J1939TPE, "Send ConnectionAbort failed!\n");
+		ASLOG(J1939TPE, ("Send ConnectionAbort failed!\n"));
 	}
 }
 static inline void J1939Tp_Internal_StartTimer(J1939Tp_Internal_TimerType* TimerInfo,uint16 TimerExpire) {

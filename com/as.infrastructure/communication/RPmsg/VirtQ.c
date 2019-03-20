@@ -94,8 +94,8 @@ Std_ReturnType VirtQ_GetAvailiableBuffer(VirtQ_ChannerlType chl,VirtQ_IdxType* i
 	asAssert(chl < VIRTQ_CHL_NUM);
 	asAssert(virtq.initialized);
 
-	ASLOG(VIRTQ,"VirtQ[%d] get last_avail_idx=%d vring.avail->idx=%d\n",
-			chl,virtq.vq[chl].last_avail_idx, virtq.vq[chl].vring.avail->idx);
+	ASLOG(VIRTQ, ("VirtQ[%d] get last_avail_idx=%d vring.avail->idx=%d\n", 
+			chl,virtq.vq[chl].last_avail_idx, virtq.vq[chl].vring.avail->idx));
 
 	*buf = virtqueue_get_avail_buf(&virtq.vq[chl],idx,len);
 
@@ -113,8 +113,8 @@ Std_ReturnType VirtQ_GetAvailiableBuffer(VirtQ_ChannerlType chl,VirtQ_IdxType* i
 
 void VirtQ_AddUsedBuffer(VirtQ_ChannerlType chl,VirtQ_IdxType idx,uint16 len)
 {
-	ASLOG(VIRTQ,"VirtQ[%d] set used buf idx=%d vq->vring.used->idx=%d\n",
-			chl,idx, virtq.vq[chl].vring.used->idx);
+	ASLOG(VIRTQ,("VirtQ[%d] set used buf idx=%d vq->vring.used->idx=%d\n",
+			chl,idx, virtq.vq[chl].vring.used->idx));
 	virtqueue_set_used_buf(&virtq.vq[chl],idx,len);
 }
 
@@ -145,7 +145,7 @@ void VirtQ_RxNotificatin(VirtQ_ChannerlType chl)
 {
 	asAssert(virtq.initialized);
 
-	ASLOG(VIRTQ,"VirtQ[%d] events\n",chl);
+	ASLOG(VIRTQ, ("VirtQ[%d] events\n", chl));
 	if(virtq.config->queueConfig[chl].rxNotification)
 	{
 		virtq.config->queueConfig[chl].rxNotification(virtq.config->queueConfig[chl].handler);

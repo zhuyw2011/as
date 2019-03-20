@@ -163,7 +163,7 @@ FUNC(StatusType,MEM_ActivateTask)  ActivateTask ( TaskType TaskID )
 	TCB_Type* ptcb;
 	StatusType ercd = E_OK;
 	imask_t imask;
-	ASLOG(TRACE_OS, "activate %d\n",TaskID);
+	ASLOG(TRACE_OS, ("activate %d\n", TaskID));
 	if(TaskID < TASK_NUM)
 	{
 		Irq_Save(imask);
@@ -201,7 +201,7 @@ FUNC(StatusType,MEM_TerminateTask) TerminateTask ( void )
 	imask_t imask;
 	TCB_Type* ptcb;
 	ercd = GetTaskID(&TaskID);
-	ASLOG(TRACE_OS, "terminate %d\n",TaskID);
+	ASLOG(TRACE_OS, ("terminate %d\n", TaskID));
 	if (E_OK == ercd)
 	{
 		Irq_Save(imask);
@@ -295,7 +295,7 @@ StatusType SetEvent ( TaskType TaskID , EventMaskType mask )
 	StatusType ercd;
 	imask_t imask;
 	TCB_Type* ptcb;
-	ASLOG(TRACE_OS, "SetEvent 0x%X of %d\n",mask, TaskID);
+	ASLOG(TRACE_OS, ("SetEvent 0x%X of %d\n", mask, TaskID));
 	if (TaskID < TASK_NUM)
 	{
 		Irq_Save(imask);
@@ -330,7 +330,7 @@ StatusType ClearEvent ( EventMaskType mask )
 	TCB_Type* ptcb;
 
 	ercd = GetTaskID(&TaskID);
-	ASLOG(TRACE_OS, "ClearEvent 0x%X of %d\n",mask, TaskID);
+	ASLOG(TRACE_OS, ("ClearEvent 0x%X of %d\n", mask, TaskID));
 	if (E_OK == ercd)
 	{
 		Irq_Save(imask);
@@ -380,7 +380,7 @@ StatusType WaitEvent ( EventMaskType mask)
 	TCB_Type* ptcb;
 
 	ercd = GetTaskID(&TaskID);
-	ASLOG(TRACE_OS, "WaitEvent 0x%X of %d\n",mask, TaskID);
+	ASLOG(TRACE_OS, ("WaitEvent 0x%X of %d\n", mask, TaskID));
 	if (E_OK == ercd)
 	{
 		Irq_Save(imask);
@@ -413,7 +413,7 @@ FUNC(StatusType,MEM_GetResource) GetResource ( ResourceType ResID )
 	TaskType TaskID;
 
 	ercd = GetTaskID(&TaskID);
-	ASLOG(TRACE_OS, "GetResource %d of %d\n",ResID, TaskID);
+	ASLOG(TRACE_OS, ("GetResource %d of %d\n", ResID, TaskID));
 	if (E_OK == ercd)
 	{
 		pthread_mutex_lock(&res_lock[ResID]);
@@ -431,7 +431,7 @@ FUNC(StatusType,MEM_ReleaseResource) ReleaseResource ( ResourceType ResID )
 	TaskType TaskID;
 
 	ercd = GetTaskID(&TaskID);
-	ASLOG(TRACE_OS, "ReleaseResource %d of %d\n",ResID, TaskID);
+	ASLOG(TRACE_OS, ("ReleaseResource %d of %d\n", ResID, TaskID));
 	if (E_OK == ercd)
 	{
 		pthread_mutex_unlock(&res_lock[ResID]);
@@ -565,7 +565,7 @@ void resource_initialize(void)
 
 TASK(TaskIdle)
 {
-	ASLOG(STDOUT,"TaskIdle is running\n");
+	ASLOG(STDOUT, ("TaskIdle is running\n"));
 	for(;;)
 	{
 		KSM_EXECUTE();

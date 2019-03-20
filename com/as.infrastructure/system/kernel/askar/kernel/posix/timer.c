@@ -65,7 +65,7 @@ static int start_itimer(AlarmType AlarmId, const struct itimerval *new, struct i
 		start = timeval2Ticks(&(new->it_value));
 		period = timeval2Ticks(&(new->it_interval));
 
-		ASLOG(TIMER, "setitimer %d %u %u\n", AlarmId, start, period);
+		ASLOG(TIMER, ("setitimer %d %u %u\n",  AlarmId,  start, period));
 		(void)CancelAlarm(AlarmId);
 		ercd = SetRelAlarm(AlarmId, start, period);
 	}

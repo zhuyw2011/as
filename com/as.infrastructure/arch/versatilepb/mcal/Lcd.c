@@ -250,7 +250,7 @@ static void mouse_pl050_interrupt(void)
 				left_button_down = FALSE;
 			}
 
-			ASLOG(MOUSE, "%s @(%d,%d)\n",left_button_down?"pressed":"released", x, y);
+			ASLOG(MOUSE, ("%s @(%d, %d)\n", left_button_down?"pressed":"released",  x, y));
 		}
 
 		status = read8(pdat->virt + MOUSE_IIR);
@@ -284,10 +284,10 @@ static int mouse_init(void)
 
 	if(((id >> 12) & 0xff) != 0x41 || (id & 0xfff) != 0x050)
 	{
-		ASLOG(MOUSE, "read id fail id:0x%08x\n", id);
+		ASLOG(MOUSE, ("read id fail id:0x%08x\n", id));
 		return -1;
 	}
-	ASLOG(MOUSE,"initialize mouse okay\n");
+	ASLOG(MOUSE, ("initialize mouse okay\n"));
 	memset(pdat, 0, sizeof(struct mouse_pl050_pdata_t));
 
 	pdat->virt = virt;

@@ -83,7 +83,7 @@ static void sys_sleep(TickType tick)
 	GetTaskID(&tskid);
 	if(tskid != TASK_ID_tcpip_task)
 	{
-		ASLOG(ERROR,"LWIP Sleep API only for tcpip task\n");
+		ASLOG(ERROR, ("LWIP Sleep API only for tcpip task\n"));
 		asAssert(0);
 		return;
 	}
@@ -514,7 +514,7 @@ TASK(TaskLwip)
 		ClearEvent(EVENT_MASK_START_TCPIP);
 		if(tcpip_thread != NULL)
 		{
-			ASLOG(LWIP,"TaskLwip is running\n");
+			ASLOG(LWIP, ("TaskLwip is running\n"));
 			tcpip_thread(NULL); // Will never return
 		}
 	}

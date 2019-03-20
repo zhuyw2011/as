@@ -44,7 +44,7 @@ uint32 ISR2Counter;
 static void Os_PortSchedule(void)
 {
 	DECLARE_SMP_PROCESSOR_ID();
-	ASLOG(SMP, "Os_PortSchedule on CPU%d!\n", cpuid);
+	ASLOG(SMP, ("Os_PortSchedule on CPU%d!\n", cpuid));
 }
 #endif
 /* ============================ [ FUNCTIONS ] ====================================================== */
@@ -56,11 +56,11 @@ void Os_PortActivateImpl(void)
 	RunningVar->priority = RunningVar->pConst->runPriority;
 
 #ifdef USE_SMP
-	ASLOG(OS, "%s(%d) is running on CPU %d\n", RunningVar->pConst->name,
-			RunningVar->pConst->initPriority, cpuid);
+	ASLOG(OS, ("%s(%d) is running on CPU %d\n",  RunningVar->pConst->name, 
+			RunningVar->pConst->initPriority, cpuid));
 #else
-	ASLOG(OS, "%s(%d) is running\n", RunningVar->pConst->name,
-			RunningVar->pConst->initPriority);
+	ASLOG(OS, ("%s(%d) is running\n",  RunningVar->pConst->name, 
+			RunningVar->pConst->initPriority));
 #endif
 
 	OSPreTaskHook();
@@ -111,9 +111,9 @@ void Os_PortIdle(void)
 {
 	DECLARE_SMP_PROCESSOR_ID();
 	#ifdef USE_SMP
-	ASLOG(OSE, "!!!CPU%d enter PortIdle!!!\n", SMP_PROCESSOR_ID());
+	ASLOG(OSE, ("!!!CPU%d enter PortIdle!!!\n", SMP_PROCESSOR_ID()));
 	#else
-	ASLOG(OSE, "!!!enter PortIdle!!!\n");
+	ASLOG(OSE, ("!!!enter PortIdle!!!\n"));
 	#endif
 
 	asAssert(0);
@@ -135,7 +135,7 @@ TASK(TaskIdle2)
 
 	RunningVar->priority = 0;
 
-	ASLOG(SMP, "TaskIdle2 is running on CPU%d\n", smp_processor_id());
+	ASLOG(SMP, ("TaskIdle2 is running on CPU%d\n", smp_processor_id()));
 
 	for(;;)
 	{
@@ -147,7 +147,7 @@ void secondary_main(void)
 {
 	DECLARE_SMP_PROCESSOR_ID();
 
-	ASLOG(SMP, "!!!CPU%d is up!!!\n", SMP_PROCESSOR_ID());
+	ASLOG(SMP, ("!!!CPU%d is up!!!\n", SMP_PROCESSOR_ID()));
 
 	Os_PortSpinLock();
 	Sched_GetReady();
@@ -162,7 +162,7 @@ void Os_PortRequestSchedule(uint8 cpu)
 
 void Os_PortStartFirstDispatch(void)
 {
-	ASLOG(SMP, "!!!CPU%d is up!!!\n", smp_processor_id());
+	ASLOG(SMP, ("!!!CPU%d is up!!!\n", smp_processor_id()));
 	smp_boot_secondary(1, secondary_start);
 	Os_PortStartSysTick();
 
@@ -172,7 +172,7 @@ void Os_PortStartFirstDispatch(void)
 
 void Os_PortException(long exception, void* sp, long esr)
 {
-	ASLOG(OSE, "Exception %d happened!\n", exception);
+	ASLOG(OSE, ("Exception %d happened!\n", exception));
 	asAssert(0);
 }
 
@@ -216,7 +216,7 @@ int Os_PortInstallSignal(TaskVarType* pTaskVar, int sig, void* handler)
 	if((sp - pTaskVar->pConst->pStack) < (pTaskVar->pConst->stackSize*3/4))
 	{
 		/* stack 75% usage, ignore this signal call */
-		ASLOG(OS,"install signal %d failed\n", sig);
+		ASLOG(OS, ("install signal %d failed\n", sig));
 		return -1;
 	}
 

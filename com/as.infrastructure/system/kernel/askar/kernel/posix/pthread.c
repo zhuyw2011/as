@@ -185,7 +185,7 @@ int pthread_create (pthread_t *tid, const pthread_attr_t *attr,
 		pTaskVar->priority = pTaskConst->initPriority;
 		Os_PortInitContext(pTaskVar);
 
-		ASLOG(PTHREAD, "pthread%d created\n", (pTaskVar-TaskVarArray-TASK_NUM));
+		ASLOG(PTHREAD, ("pthread%d created\n", (pTaskVar-TaskVarArray-TASK_NUM)));
 		TAILQ_INIT(&pthread->joinList);
 #ifdef USE_PTHREAD_CLEANUP
 		TAILQ_INIT(&pthread->cleanupList);
@@ -271,7 +271,7 @@ void pthread_exit (void *value_ptr)
 
 	LOCK_KERNEL(imask);
 
-	ASLOG(PTHREAD, "pthread%d exit\n", (RunningVar-TaskVarArray-TASK_NUM));
+	ASLOG(PTHREAD, ("pthread%d exit\n", (RunningVar-TaskVarArray-TASK_NUM)));
 
 #ifdef USE_PTHREAD_CLEANUP
 	while(FALSE == TAILQ_EMPTY(&tid->cleanupList))
@@ -290,7 +290,7 @@ void pthread_exit (void *value_ptr)
 
 	if(tid->TaskConst.flag & PTHREAD_JOINABLE_MASK)
 	{
-		ASLOG(PTHREAD, "pthread%d signal jion\n", (RunningVar-TaskVarArray-TASK_NUM));
+		ASLOG(PTHREAD, ("pthread%d signal jion\n", (RunningVar-TaskVarArray-TASK_NUM)));
 		tid->TaskConst.flag |= PTHREAD_JOINED_MASK;
 		tid->ret = value_ptr;
 		if(0 == Os_ListPost(&tid->joinList, FALSE))
@@ -409,9 +409,9 @@ int pthread_join(pthread_t tid, void ** thread_return)
 			*thread_return = tid->ret;
 		}
 
-		ASLOG(PTHREAD, "pthread%d join %d\n",
+		ASLOG(PTHREAD, ("pthread%d join %d\n", 
 				(RunningVar-TaskVarArray-TASK_NUM),
-				(tid->pTaskVar-TaskVarArray-TASK_NUM));
+				(tid->pTaskVar-TaskVarArray-TASK_NUM)));
 		if(tid->TaskConst.flag & PTHREAD_DYNAMIC_CREATED_MASK)
 		{
 			free(tid);
@@ -451,7 +451,7 @@ int pthread_cancel (pthread_t tid)
 	asAssert((tid->pTaskVar-TaskVarArray) >= TASK_NUM);
 	asAssert((tid->pTaskVar-TaskVarArray) < (TASK_NUM+OS_PTHREAD_NUM));
 
-	ASLOG(PTHREAD, "pthread%d cancel\n", (tid->pTaskVar-TaskVarArray-TASK_NUM));
+	ASLOG(PTHREAD, ("pthread%d cancel\n", (tid->pTaskVar-TaskVarArray-TASK_NUM)));
 	if(tid == pthread_self())
 	{
 		ercd = -EINVAL;
@@ -672,7 +672,7 @@ ELF_EXPORT(pthread_once);
 void sched_yield(void)
 {
 	DECLARE_SMP_PROCESSOR_ID();
-	ASLOG(PTHREAD, "pthread%d yield\n", (RunningVar-TaskVarArray-TASK_NUM));
+	ASLOG(PTHREAD, ("pthread%d yield\n", (RunningVar-TaskVarArray-TASK_NUM)));
 	Schedule();
 }
 ELF_EXPORT(sched_yield);

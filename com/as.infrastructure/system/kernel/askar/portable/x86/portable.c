@@ -82,8 +82,8 @@ void Os_PortActivate(void)
 	/* get internal resource or NON schedule */
 	RunningVar->priority = RunningVar->pConst->runPriority;
 
-	ASLOG(OS, "%s(%d) is running\n", RunningVar->pConst->name,
-			RunningVar->pConst->initPriority);
+	ASLOG(OS, ("%s(%d) is running\n",  RunningVar->pConst->name, 
+			RunningVar->pConst->initPriority));
 
 	OSPreTaskHook();
 
@@ -120,9 +120,9 @@ void Os_PortInitContext(TaskVarType* pTaskVar)
 	rpl		= RPL_TASK;
 	eflags = 0x1202; /* IF=1, IOPL=1, bit 2 is always 1 */
 
-	ASLOG(OS, "InitContext %s(%d)\n",
+	ASLOG(OS, ("InitContext %s(%d)\n", 
 			pTaskVar->pConst->name?:"null",
-			pTaskVar->pConst->initPriority);
+			pTaskVar->pConst->initPriority));
 
 	pTaskVar->context.ldt_sel	= selector_ldt;
 	memcpy(&pTaskVar->context.ldts[0], &gdt[SELECTOR_KERNEL_CS >> 3], sizeof(mmu_descriptor_t));
@@ -214,7 +214,7 @@ int Os_PortInstallSignal(TaskVarType* pTaskVar, int sig, void* handler)
 	if((((void*)stk) - pTaskVar->pConst->pStack) < (pTaskVar->pConst->stackSize*3/4))
 	{
 		/* stack 75% usage, ignore this signal call */
-		ASLOG(OS,"install signal %d failed\n", sig);
+		ASLOG(OS, ("install signal %d failed\n", sig));
 		return -1;
 	}
 

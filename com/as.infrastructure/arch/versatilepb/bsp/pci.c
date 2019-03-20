@@ -87,7 +87,7 @@ static int versatile_pci_probe(void)
 		}
 	}
 	if (myslot == -1) {
-		ASLOG(PCI, "Cannot find PCI core!\n");
+		ASLOG(PCI, ("Cannot find PCI core!\n"));
 		return -__LINE__;
 	}
 	/*
@@ -95,7 +95,7 @@ static int versatile_pci_probe(void)
 	 */
 	pci_slot_ignore |= (1 << myslot);
 
-	ASLOG(PCI, "PCI core found (slot %d)\n", myslot);
+	ASLOG(PCI, ("PCI core found (slot %d)\n", myslot));
 
 	writel(myslot, PCI_SELFID);
 	local_pci_cfg_base = versatile_cfg_base[1] + (myslot << 11);

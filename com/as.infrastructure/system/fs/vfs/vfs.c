@@ -229,7 +229,7 @@ static const struct vfs_filesystem_ops* search_ops(const char *type)
 		o++;
 	}
 
-	ASLOG(VFS, "search_ops(%s) = %s\n", type, (NULL != ops) ? ops->name : NULL);
+	ASLOG(VFS, ("search_ops(%s) = %s\n",  type, (NULL != ops) ? ops->name : NULL));
 
 	return ops;
 }
@@ -257,7 +257,7 @@ static const vfs_mount_t* search_mnt(const char *filepath)
 	}
 	VFS_UNLOCK();
 
-	ASLOG(VFS, "search_mnt(%s) = %s\n", filepath, (NULL != mnt) ? mnt->mount_point : NULL);
+	ASLOG(VFS, ("search_mnt(%s) = %s\n",  filepath, (NULL != mnt) ? mnt->mount_point : NULL));
 
 	return mnt;
 }
@@ -350,7 +350,7 @@ static char* relpath(const char * path)
 		*p = '\0';
 	}
 
-	ASLOG(VFS, "relpath(%s) = %s\n", path, abspath);
+	ASLOG(VFS, ("relpath(%s) = %s\n",  path, abspath));
 	return abspath;
 }
 #ifdef USE_SHELL
@@ -619,7 +619,7 @@ VFS_FILE* vfs_fopen (const char *filename, const char *opentype)
 	const vfs_mount_t *mnt;
 	VFS_FILE* file = NULL;
 
-	ASLOG(VFS, "fopen(%s,%s)\n", filename, opentype);
+	ASLOG(VFS, ("fopen(%s, %s)\n",  filename, opentype));
 
 	abspath = relpath(filename);
 
@@ -679,7 +679,7 @@ int vfs_unlink (const char *filename)
 	int rc = EACCES;
 	const vfs_mount_t *mnt;
 
-	ASLOG(VFS, "unlink(%s)\n", filename);
+	ASLOG(VFS, ("unlink(%s)\n", filename));
 
 	abspath = relpath(filename);
 
@@ -703,7 +703,7 @@ int vfs_stat (const char *filename, vfs_stat_t *buf)
 	int rc = EACCES;
 	const vfs_mount_t *mnt;
 
-	ASLOG(VFS, "stat(%s)\n", filename);
+	ASLOG(VFS, ("stat(%s)\n", filename));
 
 	abspath = relpath(filename);
 
@@ -727,7 +727,7 @@ VFS_DIR * vfs_opendir (const char *dirname)
 	const vfs_mount_t *mnt;
 	VFS_DIR* dir = NULL;
 
-	ASLOG(VFS, "opendir(%s)\n", dirname);
+	ASLOG(VFS, ("opendir(%s)\n", dirname));
 
 	abspath = relpath(dirname);
 
@@ -763,7 +763,7 @@ int vfs_chdir (const char *filename)
 	int rc = EACCES;
 	const vfs_mount_t *mnt;
 
-	ASLOG(VFS, "chdir(%s)\n", filename);
+	ASLOG(VFS, ("chdir(%s)\n", filename));
 
 	abspath = relpath(filename);
 
@@ -789,7 +789,7 @@ char * vfs_getcwd  (char *buffer, size_t size)
 {
 	size_t rsize = strlen(vfs_cwd);
 
-	ASLOG(VFS, "getcwd(%s)\n", vfs_cwd);
+	ASLOG(VFS, ("getcwd(%s)\n", vfs_cwd));
 
 	if(NULL == buffer)
 	{
@@ -817,7 +817,7 @@ int vfs_mkdir (const char *filename, uint32_t mode)
 	int rc = EACCES;
 	const vfs_mount_t *mnt;
 
-	ASLOG(VFS, "mkdir(%s, 0x%x)\n", filename, mode);
+	ASLOG(VFS, ("mkdir(%s,  0x%x)\n",  filename, mode));
 
 	abspath = relpath(filename);
 
@@ -841,7 +841,7 @@ int  vfs_rmdir (const char *filename)
 	int rc = EACCES;
 	const vfs_mount_t *mnt;
 
-	ASLOG(VFS, "rmdir(%s)\n", filename);
+	ASLOG(VFS, ("rmdir(%s)\n", filename));
 
 	abspath = relpath(filename);
 
@@ -866,7 +866,7 @@ int vfs_rename (const char *oldname, const char *newname)
 	int rc = EACCES;
 	const vfs_mount_t *mnt;
 
-	ASLOG(VFS, "rename(%s,%s)\n", oldname, newname);
+	ASLOG(VFS, ("rename(%s, %s)\n",  oldname, newname));
 
 	abspath_old = relpath(oldname);
 	abspath_new = relpath(newname);
@@ -924,8 +924,8 @@ int vfs_fprintf (VFS_FILE* fp, const char* format, ...)
 		va_end(arg_ptr);
 		if(n >= VFS_FPRINTF_BUFFER_SIZE)
 		{
-			ASLOG(ERROR, "VFS_FPRINTF_BUFFER_SIZE=%d is too small, enlarge it please\n",
-					VFS_FPRINTF_BUFFER_SIZE);
+			ASLOG(ERROR, ("VFS_FPRINTF_BUFFER_SIZE=%d is too small,  enlarge it please\n", 
+					VFS_FPRINTF_BUFFER_SIZE));
 		}
 
 		n = vfs_fwrite(buf, 1, n, fp);
@@ -1029,8 +1029,8 @@ int vfs_mount (const device_t* device, const char* type, const char* mount_point
 		}
 	}
 
-	ASLOG(VFS, "mount device %s on %s %s\n", device->name, mount_point,
-			(0==ercd)?"okay":"failed");
+	ASLOG(VFS, ("mount device %s on %s %s\n",  device->name,  mount_point, 
+			(0==ercd)?"okay":"failed"));
 
 	return ercd;
 }

@@ -98,7 +98,7 @@ void __weak TaskIdleHook(void)
 TASK(TaskIdle)
 {
 #if !defined(USE_TINYOS) && !defined(USE_CONTIKI)
-	ASLOG(STDOUT,"TaskIdle is running\n");
+	ASLOG(STDOUT, ("TaskIdle is running\n"));
 	for(;;)
 	{
 #endif

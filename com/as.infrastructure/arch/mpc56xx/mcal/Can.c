@@ -391,7 +391,7 @@ static void Can_Err(int unit)
 
     /* Clear bits 16-23 by read */
     esr = canHw->ESR.R;
-    ASLOG(CAN, "CAN%d esr = %X\n", unit, esr);
+    ASLOG(CAN, ("CAN%d esr = %X\n",  unit, esr));
     if( esr & ESR_ERRINT )
     {
 		if (GET_CALLBACKS()->Arc_Error != NULL) {
@@ -513,7 +513,7 @@ static void Can_BusOff(int unit)
 #endif
 
     if (canHw->ESR.B.BOFFINT) {
-        ASLOG(CAN,"CAN%d bus off\n", unit);
+        ASLOG(CAN, ("CAN%d bus off\n", unit));
 #if (USE_CAN_STATISTICS == STD_ON)
         canUnit->stats.boffCnt++;
 #endif
@@ -1198,7 +1198,7 @@ Can_ReturnType Can_SetControllerMode(uint8 controller,
 
     switch (transition) {
     case CAN_T_START:
-        ASLOG(CAN,"start CAN%d\n", controller);
+        ASLOG(CAN, ("start CAN%d\n", controller));
         canHw->MCR.B.HALT = 0;
         canUnit->state = CANIF_CS_STARTED;
         Irq_Save(state);
@@ -1214,7 +1214,7 @@ Can_ReturnType Can_SetControllerMode(uint8 controller,
         // Should be reported to DEM but DET is the next best
         VALIDATE(canUnit->state == CANIF_CS_STOPPED, 0x3, CAN_E_TRANSITION);
     case CAN_T_STOP:
-        ASLOG(CAN,"stop CAN%d\n", controller);
+        ASLOG(CAN, ("stop CAN%d\n", controller));
         // Stop
         canHw->MCR.B.HALT = 1;
         canUnit->state = CANIF_CS_STOPPED;

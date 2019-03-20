@@ -90,7 +90,7 @@ Std_ReturnType PduR_ARC_RouteTransmit(const PduRDestPdu_type * destination, cons
 #endif
 		break;
 	default:
-		ASLOG(PDURE, "TX with invalid destination module %d\n", destination->DestModule);
+		ASLOG(PDURE, ("TX with invalid destination module %d\n", destination->DestModule));
 		retVal = E_NOT_OK;
 		break;
 	}
@@ -112,7 +112,7 @@ void PduR_ARC_RouteRxIndication(const PduRDestPdu_type * destination, const PduI
 #endif
 		break;
 	default:
-		ASLOG(PDURE, "RX with invalid destination module %d\n", destination->DestModule);
+		ASLOG(PDURE, ("RX with invalid destination module %d\n", destination->DestModule));
 		break;
 	}
 	// TODO error reporting here.

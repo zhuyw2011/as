@@ -36,7 +36,7 @@ Std_ReturnType BL_GetProgramSessionSeed (uint8 *securityAccessDataRecord, uint8 
 	*errorCode = DCM_E_POSITIVE_RESPONSE;
 	bl_prgs_seed = bl_prgs_seed ^ u32Seed ^ u32Time ^ 0xfeedbeef;
 
-	ASLOG(BL,"%s(seed = %X)\n",__func__,bl_prgs_seed);
+	ASLOG(BL, (("%s(seed = %X)\n",  __func__, bl_prgs_seed)));
 
 	seed[0] = (uint8)(bl_prgs_seed>>24);
 	seed[1] = (uint8)(bl_prgs_seed>>16);
@@ -50,7 +50,7 @@ Std_ReturnType BL_CompareProgramSessionKey (uint8 *key)
 	uint32 u32Key = ((uint32)key[0]<<24) + ((uint32)key[1]<<16) + ((uint32)key[2]<<8) +((uint32)key[3]);
 	uint32 u32KeyExpected = bl_prgs_seed ^ 0x94586792;
 
-	ASLOG(BL,"%s(key = %X(%X))\n",__func__,u32Key,u32KeyExpected);
+	ASLOG(BL, (("%s(key = %X(%X))\n",  __func__,  u32Key, u32KeyExpected)));
 
 	if(u32KeyExpected == u32Key)
 	{
@@ -75,7 +75,7 @@ Std_ReturnType BL_GetExtendedSessionSeed (uint8 *securityAccessDataRecord, uint8
 
 	bl_extds_seed = bl_extds_seed ^ u32Seed ^ u32Time ^ 0x95774321;
 
-	ASLOG(BL,"%s(seed = %X)\n",__func__,bl_extds_seed);
+	ASLOG(BL, (("%s(seed = %X)\n",  __func__, bl_extds_seed)));
 
 	seed[0] = (uint8)(bl_extds_seed>>24);
 	seed[1] = (uint8)(bl_extds_seed>>16);
@@ -89,7 +89,7 @@ Std_ReturnType BL_CompareExtendedSessionKey (uint8 *key)
 	uint32 u32Key = ((uint32)key[0]<<24) + ((uint32)key[1]<<16) + ((uint32)key[2]<<8) +((uint32)key[3]);
 	uint32 u32KeyExpected = bl_extds_seed ^ 0x78934673;
 
-	ASLOG(BL,"%s(key = %X(%X))\n",__func__,u32Key,u32KeyExpected);
+	ASLOG(BL, (("%s(key = %X(%X))\n",  __func__,  u32Key, u32KeyExpected)));
 
 	if(u32KeyExpected == u32Key)
 	{
@@ -103,18 +103,18 @@ Std_ReturnType BL_CompareExtendedSessionKey (uint8 *key)
 }
 Std_ReturnType BL_StartProtocolCbk (Dcm_ProtocolType protocolID)
 {
-	ASLOG(BL,"%s(protocolID=%d)\n",__func__,protocolID);
+	ASLOG(BL, (("%s(protocolID=%d)\n",  __func__, protocolID)));
 	// TODO: check pre-condition such as battery...
 	return E_OK;
 }
 Std_ReturnType BL_StopProtocolCbk (Dcm_ProtocolType protocolID)
 {
-	ASLOG(BL,"%s(protocolID=%d)\n",__func__,protocolID);
+	ASLOG(BL, (("%s(protocolID=%d)\n",  __func__, protocolID)));
 	return E_OK;
 }
 Std_ReturnType BL_ProtocolIndicationCbk(uint8 *requestData, uint16 dataSize)
 {
-	ASLOG(BL,"%s(dataSize=%d)\n",__func__,dataSize);
+	ASLOG(BL, (("%s(dataSize=%d)\n",  __func__, dataSize)));
 	return E_OK;
 }
 
@@ -122,7 +122,7 @@ Std_ReturnType BL_GetSessionChangePermission(Dcm_SesCtrlType sesCtrlTypeActive, 
 
 {
 	Std_ReturnType ercd = E_OK;
-	ASLOG(BL,"%s(%d --> %d)\n",__func__,sesCtrlTypeActive,sesCtrlTypeNew);
+	ASLOG(BL, (("%s(%d --> %d)\n",  __func__,  sesCtrlTypeActive, sesCtrlTypeNew)));
 
 	/* program session can only be entered through EXTDS session */
 	if(( DCM_PROGRAMMING_SESSION == sesCtrlTypeNew) && (DCM_EXTENDED_DIAGNOSTIC_SESSION != sesCtrlTypeActive))

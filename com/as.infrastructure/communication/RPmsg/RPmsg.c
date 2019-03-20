@@ -38,7 +38,7 @@ static Std_ReturnType sendMessage(const RPmsg_ChannelConfigType* chlConfig, uint
 	RPmsg_HandlerType* msg;
 	uint16 length;
 	const RPmsg_PortConfigType* portConfig = chlConfig->portConfig;
-	ASLOG(RPMSG,"RPmsg send(dst=%Xh,src=%Xh,data=%Xh,len=%d)\n",dstEndpt,srcEndpt,(uint32)data,len);
+	ASLOG(RPMSG, ("RPmsg send(dst=%Xh, src=%Xh, data=%Xh, len=%d)\n", dstEndpt, srcEndpt, (uint32)data, len));
 	ercd = VirtQ_GetAvailiableBuffer(portConfig->txChl,&idx,(void**)&msg,&length);
 	if(E_OK == ercd)
 	{
@@ -56,7 +56,7 @@ static Std_ReturnType sendMessage(const RPmsg_ChannelConfigType* chlConfig, uint
 	}
 	else
 	{
-		ASLOG(RPMSG,"transmit message failed as buffer not availiable.\n");
+		ASLOG(RPMSG, ("transmit message failed as buffer not availiable.\n"));
 	}
 	return ercd;
 }
@@ -69,7 +69,7 @@ static void sendNamseServiceMessage(const RPmsg_ChannelConfigType* chlConfig, RP
 	nsMsg.addr = portConfig->port;
 	nsMsg.flags = flags;
 
-	ASLOG(RPMSG,"RPmsg create <%s> on port=0x%X\n",chlConfig->name,portConfig->port);
+	ASLOG(RPMSG, ("RPmsg create <%s> on port=0x%X\n", chlConfig->name, portConfig->port));
 	ercd = sendMessage(chlConfig,RPMSG_NAME_SERVICE_PORT, portConfig->port, &nsMsg, sizeof(nsMsg));
 	asAssert(E_OK == ercd);
 }
@@ -108,7 +108,7 @@ void RPmsg_RxNotification(RPmsg_PortType port)
 	ercd = VirtQ_GetAvailiableBuffer(portConfig->rxChl,&idx,(void**)&msg,&length);
 	if(E_OK == ercd)
 	{
-		ASLOG(RPMSG,"RPmsg rx(dst=%Xh,src=%Xh,data=%Xh,len=%d/%d)\n",msg->dst,msg->src,(uint32)msg->data,msg->len,length);
+		ASLOG(RPMSG, ("RPmsg rx(dst=%Xh, src=%Xh, data=%Xh, len=%d/%d)\n", msg->dst, msg->src, (uint32)msg->data, msg->len, length));
 		for(chl=0;chl<RPMSG_CHL_NUM;chl++)
 		{
 			if( (portConfig==rpmsg.config->chlConfig[chl].portConfig) &&
@@ -126,7 +126,7 @@ void RPmsg_RxNotification(RPmsg_PortType port)
 		else
 		{
 			/* ignore invalid message */
-			ASWARNING("RPMSG: invalid message, ignore it\n");
+			ASWARNING(("RPMSG: invalid message, ignore it\n"));
 		}
 
 		VirtQ_AddUsedBuffer(portConfig->rxChl, idx, length);
@@ -135,7 +135,7 @@ void RPmsg_RxNotification(RPmsg_PortType port)
 	else
 	{
 		/* asAssert(0); */
-		ASLOG(RPMSG,"invalid RPmsg_RxNotification\n");
+		ASLOG(RPMSG, ("invalid RPmsg_RxNotification\n"));
 	}
 }
 
@@ -155,11 +155,11 @@ void RPmsg_TxConfirmation(RPmsg_PortType port)
 	if(rpmsg.online)
 	{
 		// TODO:
-		ASLOG(RPMSG,"RPmsg_TxConfirmation(%d)\n",port);
+		ASLOG(RPMSG, ("RPmsg_TxConfirmation(%d)\n", port));
 	}
 	else
 	{
-		ASLOG(RPMSG,"RPmsg_TxConfirmation(offline-->online)\n");
+		ASLOG(RPMSG, ("RPmsg_TxConfirmation(offline-->online)\n"));
 		VirtQ_InitVq(portConfig->rxChl);
 		VirtQ_InitVq(portConfig->txChl);
 		for(chl = 0; chl < RPMSG_CHL_NUM; chl ++)

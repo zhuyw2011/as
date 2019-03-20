@@ -436,11 +436,11 @@ void Fls_Init(const Fls_ConfigType *ConfigPtr) {
 		vfs_fclose(fp);
 		Irq_Restore(imask);
 
-		ASLOG(FLS,"simulation on new created image %s(%dKb)\n",FLASH_IMG,FLS_TOTAL_SIZE/1024);
+		ASLOG(FLS, ("simulation on new created image %s(%dKb)\n", FLASH_IMG, FLS_TOTAL_SIZE/1024));
 	}
 	else
 	{
-		ASLOG(FLS,"simulation on old existed image %s(%dKb)\n",FLASH_IMG,FLS_TOTAL_SIZE/1024);
+		ASLOG(FLS, ("simulation on old existed image %s(%dKb)\n", FLASH_IMG, FLS_TOTAL_SIZE/1024));
 		vfs_fclose(fp);
 	}
 

@@ -146,7 +146,7 @@ static VFS_FILE* fatfs_fopen (const vfs_mount_t* mnt, const char *filename, cons
 	BYTE flags = 0;
 	FRESULT r;
 
-	ASLOG(FATFS, "fopen(%s,%s)\n", filename, opentype);
+	ASLOG(FATFS, ("fopen(%s, %s)\n",  filename, opentype));
 
 	f = malloc(sizeof(VFS_FILE));
 	if(NULL == f)
@@ -206,7 +206,7 @@ static int fatfs_fclose(VFS_FILE* stream)
 	r = f_close(stream->priv);
 	if (FR_OK != r)
 	{
-		ASLOG(FATFS, "fclose failed!(%d)\n", r);
+		ASLOG(FATFS, ("fclose failed!(%d)\n", r));
 		return EOF;
 	}
 
@@ -221,12 +221,12 @@ static int fatfs_fread (void *data, size_t size, size_t count, VFS_FILE *stream)
 	UINT bytesread;
 	FRESULT r;
 
-	ASLOG(FATFS, "fread(%p,%d,%d,%p)\n", data, size, count, stream);
+	ASLOG(FATFS, ("fread(%p, %d, %d, %p)\n",  data,  size,  count, stream));
 
 	r = f_read(stream->priv, data, size*count, &bytesread);
 	if (FR_OK != r)
 	{
-		ASLOG(FATFS, "fread failed!(%d)\n", r);
+		ASLOG(FATFS, ("fread failed!(%d)\n", r));
 		return 0;
 	}
 
@@ -238,12 +238,12 @@ static int fatfs_fwrite (const void *data, size_t size, size_t count, VFS_FILE *
 	UINT byteswritten;
 	FRESULT r;
 
-	ASLOG(FATFS, "fwrite(%p,%d,%d,%p)\n", data, size, count, stream);
+	ASLOG(FATFS, ("fwrite(%p, %d, %d, %p)\n",  data,  size,  count, stream));
 
 	r = f_write(stream->priv, data, size*count, &byteswritten);
 	if (FR_OK != r)
 	{
-		ASLOG(FATFS, "fwrite failed!(%d)\n", r);
+		ASLOG(FATFS, ("fwrite failed!(%d)\n", r));
 		return 0;
 	}
 
@@ -275,7 +275,7 @@ static int fatfs_fseek (VFS_FILE *stream, long int offset, int whence)
 		return 0;
 	}
 
-	ASLOG(FATFS, "fseek failed!(%d)\n", r);
+	ASLOG(FATFS, ("fseek failed!(%d)\n", r));
 
 	return EOF;
 }
@@ -289,7 +289,7 @@ static int fatfs_unlink (const vfs_mount_t* mnt, const char *filename)
 {
 	FRESULT r;
 
-	ASLOG(FATFS, "unlink(%s)\n", filename);
+	ASLOG(FATFS, ("unlink(%s)\n", filename));
 
 	BEGIN_FATFS_PATH(filename);
 	r = f_unlink(TO_FATFS_PATH(filename));
@@ -307,7 +307,7 @@ static int fatfs_stat (const vfs_mount_t* mnt, const char *filename, vfs_stat_t 
 	FILINFO f;
 	FRESULT r;
 
-	ASLOG(FATFS, "stat(%s)\n", filename);
+	ASLOG(FATFS, ("stat(%s)\n", filename));
 	BEGIN_FATFS_PATH(filename);
 	if(fatfs_is_root(TO_FATFS_PATH(filename)))
 	{	/* just the root */
@@ -320,7 +320,7 @@ static int fatfs_stat (const vfs_mount_t* mnt, const char *filename, vfs_stat_t 
 
 		if (FR_OK != r)
 		{
-			ASLOG(FATFS, "stat failed!(%d)\n", r);
+			ASLOG(FATFS, ("stat failed!(%d)\n", r));
 			return ENOENT;
 		}
 	}
@@ -355,7 +355,7 @@ static VFS_DIR * fatfs_opendir (const vfs_mount_t* mnt, const char *dirname)
 	VFS_DIR* dir;
 	FRESULT r;
 
-	ASLOG(FATFS, "opendir(%s)\n", dirname);
+	ASLOG(FATFS, ("opendir(%s)\n", dirname));
 
 	dir = malloc(sizeof(VFS_DIR));
 
@@ -375,7 +375,7 @@ static VFS_DIR * fatfs_opendir (const vfs_mount_t* mnt, const char *dirname)
 	ENDOF_FATFS_PATH(dirname);
 	if (FR_OK != r)
 	{
-		ASLOG(FATFS, "opendir(%s) failed!(%d)\n", dirname, r);
+		ASLOG(FATFS, ("opendir(%s) failed!(%d)\n",  dirname, r));
 		free(dir->priv);
 		free(dir);
 		return NULL;
@@ -431,7 +431,7 @@ static int fatfs_chdir (const vfs_mount_t* mnt, const char *filename)
 {
 	FRESULT r;
 
-	ASLOG(FATFS, "chdir(%s)\n", filename);
+	ASLOG(FATFS, ("chdir(%s)\n", filename));
 	BEGIN_FATFS_PATH(filename);
 	if(('\0' == TO_FATFS_PATH(filename)[0]))
 	{
@@ -447,7 +447,7 @@ static int fatfs_chdir (const vfs_mount_t* mnt, const char *filename)
 		return 0;
 	}
 
-	ASLOG(FATFS, "chdir(%s) failed!(%d)\n", filename, r);
+	ASLOG(FATFS, ("chdir(%s) failed!(%d)\n",  filename, r));
 
 	return ENOTDIR;
 }
@@ -456,7 +456,7 @@ static int fatfs_mkdir (const vfs_mount_t* mnt, const char *filename, uint32_t m
 {
 	FRESULT r;
 
-	ASLOG(FATFS, "mkdir(%s, 0x%x)\n", filename, mode);
+	ASLOG(FATFS, ("mkdir(%s,  0x%x)\n",  filename, mode));
 	BEGIN_FATFS_PATH(filename);
 	r = f_mkdir(TO_FATFS_PATH(filename));
 	ENDOF_FATFS_PATH(filename);
@@ -466,7 +466,7 @@ static int fatfs_mkdir (const vfs_mount_t* mnt, const char *filename, uint32_t m
 		return 0;
 	}
 
-	ASLOG(FATFS, "mkdir failed!(%d)\n", r);
+	ASLOG(FATFS, ("mkdir failed!(%d)\n", r));
 	if ( FR_EXIST == r )
 	{
 		return EEXIST;
@@ -479,7 +479,7 @@ static int fatfs_rmdir (const vfs_mount_t* mnt, const char *filename)
 {
 	FRESULT r;
 
-	ASLOG(FATFS, "rmdir(%s)\n", filename);
+	ASLOG(FATFS, ("rmdir(%s)\n", filename));
 
 	BEGIN_FATFS_PATH(filename);
 	r = f_rmdir(TO_FATFS_PATH(filename));
@@ -497,7 +497,7 @@ static int fatfs_rename (const vfs_mount_t* mnt, const char *oldname, const char
 {
 	FRESULT r;
 
-	ASLOG(FATFS, "rename(%s,%s)\n", oldname, newname);
+	ASLOG(FATFS, ("rename(%s, %s)\n",  oldname, newname));
 
 	BEGIN_FATFS_PATHAB(oldname,newname);
 	r = f_rename(TO_FATFS_PATHA(oldname),TO_FATFS_PATHB(newname));
@@ -630,7 +630,7 @@ DSTATUS disk_initialize (
 	DSTATUS stat = STA_NOINIT;
 	const device_t* device;
 
-	ASLOG(FATFS,"%s %d\n",__func__,pdrv);
+	ASLOG(FATFS, ("%s %d\n", __func__, pdrv));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -652,7 +652,7 @@ DRESULT disk_read (
 {
 	DRESULT res = RES_PARERR;
 	const device_t* device;
-	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
+	ASLOG(FATFS, ("%s %d %d %d\n", __func__, pdrv, sector, count));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -674,7 +674,7 @@ DRESULT disk_write (
 {
 	DRESULT res = RES_PARERR;
 	const device_t* device;
-	ASLOG(FATFS,"%s %d %d %d\n",__func__,pdrv,sector,count);
+	ASLOG(FATFS, ("%s %d %d %d\n", __func__, pdrv, sector, count));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -697,7 +697,7 @@ DRESULT disk_ioctl (
 	DRESULT res = RES_PARERR;
 	const device_t* device;
 	size_t sz;
-	ASLOG(FATFS,"%s %d %d\n",__func__,pdrv,cmd);
+	ASLOG(FATFS, ("%s %d %d\n", __func__, pdrv, cmd));
 
 	if(pdrv < FF_VOLUMES)
 	{

@@ -79,7 +79,7 @@ static boolean rpmsg_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_de
 
 	if(handle)
 	{
-		ASWARNING("CAN RPMSG port=%d is already on-line, no need to probe it again!\n",port);
+		ASWARNING(("CAN RPMSG port=%d is already on-line, no need to probe it again!\n",port));
 		rv = FALSE;
 	}
 	else
@@ -107,9 +107,9 @@ static boolean rpmsg_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t 
 		pduInfo.id = canid;
 		pduInfo.length = dlc;
 		memcpy(pduInfo.sdu,data,dlc);
-		ASLOG(LUA,"LUA TX CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
+		ASLOG(LUA,("LUA TX CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
 			  pduInfo.id,pduInfo.length,pduInfo.sdu[0],pduInfo.sdu[1],pduInfo.sdu[2],pduInfo.sdu[3],
-			  pduInfo.sdu[4],pduInfo.sdu[5],pduInfo.sdu[6],pduInfo.sdu[7]);
+			  pduInfo.sdu[4],pduInfo.sdu[5],pduInfo.sdu[6],pduInfo.sdu[7]));
 
 		do {
 			ercd = RPmsg_Send(RPMSG_CHL_CAN,&pduInfo,sizeof(pduInfo));
@@ -118,7 +118,7 @@ static boolean rpmsg_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t 
 	else
 	{
 		rv = FALSE;
-		ASWARNING("CAN RPMSG port=%d is not on-line, not able to send message!\n",port);
+		ASWARNING(("CAN RPMSG port=%d is not on-line, not able to send message!\n",port));
 	}
 
 	return rv;
@@ -149,17 +149,17 @@ void Can_RPmsg_RxNotitication(RPmsg_ChannelType chl,void* data, uint16 len)
 		}
 		else
 		{
-			ASWARNING("RPMSG CAN RX notification of bus <%d> is NULL\n",pduInfo->bus);
+			ASWARNING(("RPMSG CAN RX notification of bus <%d> is NULL\n",pduInfo->bus));
 		}
 	}
 	else
 	{
-		ASWARNING("RPMSG CAN RX bus <%d> out of range\n",pduInfo->bus);
+		ASWARNING(("RPMSG CAN RX bus <%d> out of range\n",pduInfo->bus));
 	}
 
-    ASLOG(LUA,"RPMAG RX CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
+    ASLOG(LUA,("RPMAG RX CAN ID=0x%08X LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
 		  pduInfo->id,pduInfo->length,pduInfo->sdu[0],pduInfo->sdu[1],pduInfo->sdu[2],pduInfo->sdu[3],
-		  pduInfo->sdu[4],pduInfo->sdu[5],pduInfo->sdu[6],pduInfo->sdu[7]);
+		  pduInfo->sdu[4],pduInfo->sdu[5],pduInfo->sdu[6],pduInfo->sdu[7]));
 }
 void Can_RPmsg_TxConfirmation(RPmsg_ChannelType chl)
 {

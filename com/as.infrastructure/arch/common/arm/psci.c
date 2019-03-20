@@ -48,7 +48,7 @@ void psci_cpu_die(void)
 {
 	int err = psci_invoke(PSCI_0_2_FN_CPU_OFF,
 			PSCI_POWER_STATE_TYPE_POWER_DOWN, 0, 0);
-	ASLOG(ERROR, "CPU%d unable to power off (error = %d)\n", smp_processor_id(), err);
+	ASLOG(ERROR, ("CPU%d unable to power off (error = %d)\n",  smp_processor_id(), err));
 }
 
 void psci_sys_reset(void)
