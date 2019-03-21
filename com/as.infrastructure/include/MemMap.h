@@ -129,7 +129,7 @@
 
 #elif defined(__ICCHCS12__)
    #define SECTION_RAMLOG   __no_init
-#elif defined(__ICCARM__)
+#elif defined(__ICCARM__) || defined(__HIWARE__)
 
 #else
 #error Compiler not set

@@ -532,11 +532,12 @@ static void HandleRequestDownloadOrUpload(PduIdType Instance, Dcm_UDTStateType s
 				(Dcm_CheckDataFormatIdentifier(dataFormatIdentifier)))
 			{
 				uint32 memoryAddress=0u,memorySize=0u;
-				for(int i=0;i<addressFormat;i++)
+				int i;
+				for(i=0;i<addressFormat;i++)
 				{
 					memoryAddress = (memoryAddress<<8) + DCM_RXSDU_DATA[3+i];
 				}
-				for(int i=0;i<lengthFormat;i++)
+				for(i=0;i<lengthFormat;i++)
 				{
 					memorySize = (memorySize<<8) + DCM_RXSDU_DATA[3+addressFormat+i];
 				}

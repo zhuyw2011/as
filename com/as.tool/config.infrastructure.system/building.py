@@ -1238,7 +1238,7 @@ def Building(target, sobjs, env=None):
     BuildDTS(dts,bdir)
     BuildOFS(ofs)
     BuildingSWCS(swcs)
-    if('Program' in env):
+    if(('Program' in env) and (not GetOption('clean'))):
         # special program for some compiler
         env['Program'](target, objs, env)
     else:

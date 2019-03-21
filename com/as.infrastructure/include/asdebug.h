@@ -87,6 +87,17 @@
 #endif
 
 #if defined(USE_DET) || defined(USE_ASLOG)
+#if defined(__HIWARE__)
+#define asAssert(e)  																					\
+	do {																								\
+		if(!(e))																						\
+		{																								\
+			ASLOG(STDERR,("assert error on condition(%s) at line %d of %s\n",							\
+						#e, __LINE__, __FILE__));														\
+			asAssertErrorHook();																		\
+		}																								\
+	}while(0)
+#else
 #define asAssert(e)  																					\
 	do {																								\
 		if(!(e))																						\
@@ -96,6 +107,7 @@
 			asAssertErrorHook();																		\
 		}																								\
 	}while(0)
+#endif
 #else
 #define asAssert(e)
 #endif

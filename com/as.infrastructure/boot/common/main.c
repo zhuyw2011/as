@@ -167,8 +167,8 @@ void OsTick(void)
 
 void StartOS( AppModeType mode )
 {
-	(void) mode;
 	static TickType preTick = 1;
+	(void) mode;
 	StartupHook();
 	OsTickCounter = 1;
 	StartOsTick();

@@ -61,6 +61,7 @@
 #define N_Cr_     200
 #define N_STmin_  1
 #define N_BS_     8
+
 #define CANTP_LL_DL_ CAN_LL_DL
 
 #define CANIF_CANTP_TXPDUID CANTP_RTE.parameter[0]
@@ -68,8 +69,11 @@
 #define N_Cr                CANTP_RTE.parameter[2]
 #define N_STmin             CANTP_RTE.parameter[3]
 #define N_BS                CANTP_RTE.parameter[4]
+#if defined(__HIWARE__)
+#define CANTP_LL_DL CAN_LL_DL
+#else
 #define CANTP_LL_DL         CANTP_RTE.parameter[5]
-
+#endif
 #define CANTP_PADDING_VALUE 0x55
 
 #define CANTP_INSTANCE_DEFAULT_PARAMETER	\
@@ -151,7 +155,7 @@ static void ReceiveSF(uint8 Instance, uint8* Data)
 	uint8 length;
 	uint8 *pData;
 	BufReq_ReturnType ret;
-	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
+	ASLOG(CANTP, ("[%d]ReceiveSF\n",  Instance));
 	if(CANTP_RTE.state != CANTP_IDLE)
 	{
 		ASLOG(CANTPE, ("[%d]Received SF when in state %d.\n",  Instance, CANTP_RTE.state));
@@ -191,7 +195,7 @@ static void ReceiveFF(PduIdType Instance, uint8* Data)
 	uint8 *pData;
 	BufReq_ReturnType ret;
 
-	ASLOG(CANTP, ("[%d]%s\n", Instance, __func__));
+	ASLOG(CANTP, ("[%d]ReceiveFF\n", Instance));
 	if(CANTP_RTE.state != CANTP_IDLE)
 	{
 		ASLOG(CANTPE, ("[%d]Received FF when in state %d.\n", Instance, CANTP_RTE.state));
@@ -230,13 +234,13 @@ static void ReceiveFF(PduIdType Instance, uint8* Data)
 static void ReceiveCF(PduIdType Instance, uint8* Data)
 {
 	PduLengthType doSz;
-	ASLOG(CANTP, ("[%d]%s %d/%d [%02X%02X%02X%02X%02X%02X%02X%02X]\n",  Instance,  __func__, 
+	ASLOG(CANTP, ("[%d]ReceiveCF %d/%d [%02X%02X%02X%02X%02X%02X%02X%02X]\n", Instance,
 			CANTP_RTE.SduIndex , CANTP_RTE.SduLength,
 			Data[0], Data[1], Data[2], Data[3], Data[4], Data[5], Data[6], Data[7]));
 
 	if(CANTP_RTE.state != CANTP_WAIT_CF)
 	{
-		ASLOG(CANTPE, ("[%d]Received CF when in state %d.\n",  Instance, CANTP_RTE.state));
+		ASLOG(CANTPE, ("[%d]Received CF when in state %d.\n", Instance, CANTP_RTE.state));
 	}
 	else
 	{
@@ -276,7 +280,7 @@ static void ReceiveCF(PduIdType Instance, uint8* Data)
 
 static void ReceiveFC(PduIdType Instance, uint8* Data)
 {
-	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
+	ASLOG(CANTP, ("[%d]ReceiveFC\n",  Instance));
 	if(CANTP_RTE.state != CANTP_WAIT_FC)
 	{
 		ASLOG(CANTPE, ("[%d]Receive FC when in state %d.\n",  Instance, CANTP_RTE.state));
@@ -306,7 +310,7 @@ static void SendFC(PduIdType Instance)
 	PduInfoType pdu;
 	uint8 data[CANTP_LL_DL];
 
-	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
+	ASLOG(CANTP, ("[%d]SendFC\n", Instance));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	data[0] = N_PCI_FC|N_PCI_CTS;
@@ -337,7 +341,7 @@ static void SendCF(PduIdType Instance)
 	PduLengthType doSz;
 	uint8 data[CANTP_LL_DL];
 
-	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
+	ASLOG(CANTP, ("[%d]SendCF\n",  Instance));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	if(tpIsAlarmStarted())
@@ -404,7 +408,7 @@ static void SendSF(PduIdType Instance)
 	uint8 data[CANTP_LL_DL];
 	uint8* pData;
 
-	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
+	ASLOG(CANTP, ("[%d]SendSF\n",  Instance));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	if(CANTP_LL_DL > 8)
@@ -442,7 +446,7 @@ static void SendFF(PduIdType Instance)
 	uint8* pData;
 	uint8 i;
 
-	ASLOG(CANTP, ("[%d]%s\n",  Instance, __func__));
+	ASLOG(CANTP, ("[%d]SendFF\n",  Instance));
 	memset(data, CANTP_PADDING_VALUE, CANTP_LL_DL);
 
 	if(CANTP_LL_DL > 8)
@@ -541,7 +545,7 @@ Std_ReturnType CanTp_Transmit( PduIdType CanTpTxSduId, const PduInfoType * pdu )
 	/* NOTE: RX IDs FIRST and THEN TX IDs */
 	PduIdType Instance = CanTpTxSduId - CANTP_INSTANCE_NUM;
 	asAssert(Instance < CANTP_INSTANCE_NUM);
-	ASLOG(CANTP, ("[%d]%s\n",Instance,__func__));
+	ASLOG(CANTP, ("[%d]CanTp_Transmit\n",Instance));
 	if((CANTP_BUSY == CANTP_RTE.state) || (CANTP_IDLE == CANTP_RTE.state))
 	{
 		ret = Dcm_ProvideTxBuffer(Instance, &(CANTP_RTE.pdu), pdu->SduLength);
@@ -562,7 +566,7 @@ Std_ReturnType CanTp_Transmit( PduIdType CanTpTxSduId, const PduInfoType * pdu )
 	}
 	else
 	{
-		ASLOG(CANTPE, ("[%d]CANTP is not busy in receiving,  current state is %d\n", Instance, CANTP_RTE.state));
+		ASLOG(CANTPE, ("[%d]CANTP is not busy in receiving, current state is %d\n", Instance, CANTP_RTE.state));
 		ercd = E_NOT_OK;
 	}
 	return ercd;

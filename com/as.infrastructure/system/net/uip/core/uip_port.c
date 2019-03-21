@@ -47,7 +47,7 @@ PROCESS_THREAD(protoUIPMain, ev, data)
 
 	PROCESS_BEGIN();
 
-	ASLOG(UIP, "startup uip!\n");
+	ASLOG(UIP, ("startup uip!\n"));
 
 	process_start(&tcpip_process, NULL);
 	uip_ipaddr(&ipaddr, 172, 18, 0, 200);

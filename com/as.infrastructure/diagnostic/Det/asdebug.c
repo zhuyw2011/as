@@ -169,11 +169,19 @@ void asAssertErrorHook(void)
 }
 ELF_EXPORT(asAssertErrorHook);
 
+#if defined(__HIWARE__)
+int _assert (unsigned long line, const char* name)
+{
+	printf("assert(%s) failed @ %u\n", name, line);
+	asAssertErrorHook();
+}
+#else
 void _assert (const char *_Message, const char *_File, unsigned _Line)
 {
 	printf("assert(%s) failed @ %s %u\n", _Message, _File, _Line);
 	asAssertErrorHook();
 }
+#endif
 ELF_EXPORT(_assert);
 
 void __assert_func (const char * file, int line, const char * func, const char * msg)

@@ -71,9 +71,9 @@
 #elif defined(__HIWARE__)
 #define __balign(x)
 #define inline
-# define __naked
-# define __weak
-# define __packed
+#define __naked
+#define __weak
+#define __packed
 #else
 #error Compiler not defined.
 #endif

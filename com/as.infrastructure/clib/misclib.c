@@ -28,8 +28,13 @@
 /*****************************************************************************/
 /* Config */
 /*****************************************************************************/
+#ifndef PINKIE_CFG_SSCANF_MAX_INT
+#ifdef IS_ARCH16
+#define PINKIE_CFG_SSCANF_MAX_INT 4
+#else
 #define PINKIE_CFG_SSCANF_MAX_INT 8
-
+#endif
+#endif
 
 /*****************************************************************************/
 /* Defines */
@@ -525,10 +530,10 @@ unsigned long int __weak strtoul(const char* string, char ** tailptr, int base)
 {
 	unsigned long int result;
 	uint32_t v;
+	const char *s;
 
 	result = 0;
-
-	const char *s = string;
+	s = string;
 
 	while (*s != 0)
 	{
@@ -604,7 +609,6 @@ int __weak atoi (const char *s)
 }
 
 
-
 /*****************************************************************************/
 /** Pinkie Just Enough Sscanf To Work
  *
@@ -676,10 +680,12 @@ int __weak sscanf(
                         str = pinkie_s2i(str, sizeof(uint32_t), UINT32_MAX, va_arg(ap, uint32_t *), flg_neg, ('x' == *fmt) ? 16 : 0);
                     }
 #endif
+#ifndef IS_ARCH16
 #if (PINKIE_CFG_SSCANF_MAX_INT >= 8) && (UINT64_MAX != UINT_MAX)
                     else if (sizeof(uint64_t) == int_width) {
                         str = pinkie_s2i(str, sizeof(uint64_t), UINT64_MAX, va_arg(ap, uint64_t *), flg_neg, ('x' == *fmt) ? 16 : 0);
                     }
+#endif
 #endif
 
                     /* reset integer width */

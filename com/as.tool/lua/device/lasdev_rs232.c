@@ -112,7 +112,7 @@ static int lasdev_open  (const char* device, const char* option, void** param)
 				ASWARNING(("Serial TCP connect failed: %d\n", WSAGetLastError()));
 				closesocket(s);
 				#else
-				ASWARNING("Serial TCP connect failed!\n");
+				ASWARNING(("Serial TCP connect failed!\n"));
 				close(s);
 				#endif
 				rv = FALSE;

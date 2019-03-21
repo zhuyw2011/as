@@ -74,7 +74,7 @@ Std_ReturnType Xcp_FlashErase(uint32 address, uint32 length)
 {
 	Std_ReturnType ercd = E_OK;
 
-	ASLOG(PBL, (("Flash erase @%X size %X.\n",   address, length)));
+	ASLOG(PBL, ("Flash erase @%X size %X.\n",   address, length));
 
 	if(kFlashOk != pblFlashParam.errorcode)
 	{
@@ -91,7 +91,7 @@ Std_ReturnType Xcp_FlashErase(uint32 address, uint32 length)
 			FLASH_DRIVER_ERASE(FLASH_DRIVER_STARTADDRESS,&pblFlashParam);
 			if(kFlashOk != pblFlashParam.errorcode)
 			{
-				ASLOG(PBL, (("Flash erase failed %d.\n", pblFlashParam.errorcode)));
+				ASLOG(PBL, ("Flash erase failed %d.\n", pblFlashParam.errorcode));
 				ercd = E_NOT_OK;
 			}
 		}
@@ -131,7 +131,7 @@ Std_ReturnType Xcp_FlashWrite(uint32 address, uint8* data, uint32 length)
 			FLASH_DRIVER_WRITE(FLASH_DRIVER_STARTADDRESS,&pblFlashParam);
 			if(kFlashOk != pblFlashParam.errorcode)
 			{
-				ASLOG(PBL, (("Flash write failed %d.\n", pblFlashParam.errorcode)));
+				ASLOG(PBL, ("Flash write failed %d.\n", pblFlashParam.errorcode));
 				ercd = E_NOT_OK;
 				break;
 			}
@@ -150,7 +150,7 @@ Std_ReturnType Xcp_ProgramReset(void* data, int len)
 	}
 	else
 	{
-		ASLOG(PBL, (("invalid application entry point, stay in bootloader.\n")));
+		ASLOG(PBL, ("invalid application entry point, stay in bootloader.\n"));
 	}
 	return E_OK;
 }

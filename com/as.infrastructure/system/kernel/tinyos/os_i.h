@@ -18,36 +18,36 @@
 #include "Std_Types.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #ifdef USE_OSAL
-#define DeclareTask(Name,Autostart,AppMode,StackSize)		\
-    {											\
-        .main = TaskMain##Name,					\
-        .priority = TASK_ID_##Name,				\
-        .autostart = Autostart,					\
-        .app_mode = AppMode,					\
-		.stk_size = StackSize,					\
-		.pstk = TaskStk##Name,					\
-		.name = #Name                           \
-    }
+#define DeclareTask(Name,Autostart,AppMode,StackSize)	\
+	{													\
+		/* .main = */ TaskMain##Name,					\
+		/* .priority = */ TASK_ID_##Name,				\
+		/* .autostart = */ Autostart,					\
+		/* .app_mode = */ AppMode,						\
+		/* .stk_size = */ StackSize,					\
+		/* .pstk = */ TaskStk##Name,					\
+		/* .name = */ #Name								\
+	}
 
 #define DeclareAlarm(Name)						\
-    {											\
-	    .main = AlarmMain##Name,				\
-		.name = #Name                           \
-    }
+	{											\
+		/* .main = */ AlarmMain##Name,			\
+		/* .name = */ #Name						\
+	}
 
 #else
 #define DeclareTask(Name,Autostart,AppMode)		\
-    {											\
-        .main = TaskMain##Name,					\
-        .priority = TASK_ID_##Name,				\
-        .autostart = Autostart,					\
-        .app_mode = AppMode						\
-    }
+	{											\
+		/* .main = */ TaskMain##Name,			\
+		/* .priority = */ TASK_ID_##Name,		\
+		/* .autostart = */ Autostart,			\
+		/* .app_mode = */ AppMode				\
+	}
 
 #define DeclareAlarm(Name)						\
-    {											\
-        .main = AlarmMain##Name					\
-    }
+	{											\
+		/* .main = */ AlarmMain##Name			\
+	}
 
 #endif
 
