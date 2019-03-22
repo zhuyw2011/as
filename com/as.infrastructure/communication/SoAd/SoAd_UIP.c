@@ -113,7 +113,7 @@ int SoAd_SocketCloseImpl(int s)
 {
 	int r = -1;
 
-	ASLOG(SOAD, "%s(%d)\n", __func__, s);
+	ASLOG(SOAD, ("%s(%d)\n", __func__, s));
 	
 	if((s < 32) && ((1<<s)&tcpSocketFlag))
 	{
@@ -159,7 +159,7 @@ int SoAd_CreateSocketImpl(int domain, int type, int protocol)
 	if((SOCK_STREAM == type) && (0xFFFFFFFFUL != tcpSocketFlag))
 	{
 		slot = ffs(~tcpSocketFlag) - 1;
-		ASLOG(SOAD, "create uip socket on slot %d\n", slot);
+		ASLOG(SOAD, ("create uip socket on slot %d\n", slot));
 		if(slot < SOAD_TCP_SOCKET_NUM)
 		{
 			tcpSocket[slot].ptr = (void*)(long)slot;
@@ -176,7 +176,7 @@ int SoAd_CreateSocketImpl(int domain, int type, int protocol)
 	}
 	else
 	{
-		ASLOG(SOADE, "socket on UIP UDP not supported!\n");
+		ASLOG(SOADE, ("socket on UIP UDP not supported!\n"));
 	}
 	return r;
 }

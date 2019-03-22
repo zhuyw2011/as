@@ -204,6 +204,7 @@ static const Dcm_CallbackCompareKeyFncType compareKeyList[] = { Dcm_CompareKey, 
 static const uint32 dcmInstanceDefaultParameter[] = DCM_INSTANCE_DEFAULT_PARAMETER;
 
 /* ============================ [ LOCALS    ] ====================================================== */
+#if !defined(__HIWARE__)
 Std_ReturnType __weak Dcm_GetSessionChangePermission(Dcm_SesCtrlType sesCtrlTypeActive, Dcm_SesCtrlType sesCtrlTypeNew)
 {
 	Std_ReturnType ercd = E_OK;
@@ -234,7 +235,7 @@ boolean __weak Dcm_CheckDataFormatIdentifier(uint8 dataFormatIdentifier)
 	return TRUE;
 }
 #endif
-
+#endif
 
 static void HandleSubFunction(PduIdType Instance)
 {

@@ -27,11 +27,6 @@
 #endif
 
 /* ============================ [ MACROS    ] ====================================================== */
-/* Definitions of physical drive number for each drive */
-#define DEV_MMC		0	/* Example: Map MMC/SD card to physical drive 0 : default */
-#define DEV_RAM		1	/* Example: Map Ramdisk to physical drive 1 */
-#define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
-
 enum {
 	IMG_FATFS = 0,
 	IMG_EXT4,
@@ -55,12 +50,13 @@ int PciBlk_Init(uint32_t blkid);
 int PciBlk_Read(uint32_t blkid, uint32_t blksz, uint32_t blknbr, uint8_t* data);
 int PciBlk_Write(uint32_t blkid, uint32_t blksz, uint32_t blknbr, const uint8_t* data);
 int PciBlk_Size(uint32_t blkid, uint32_t *size);
-
+#ifdef USE_DEV
 static int asblk_open  (const device_t* device);
 static int asblk_close (const device_t* device);
 static int asblk_read  (const device_t* device, size_t pos, void *buffer, size_t size);
 static int asblk_write (const device_t* device, size_t pos, const void *buffer, size_t size);
 static int asblk_ctrl  (const device_t* device, int cmd,    void *args);
+#endif
 /* ============================ [ DATAS     ] ====================================================== */
 static pci_dev *pdev = NULL;
 static void* __iobase= NULL;
@@ -71,6 +67,7 @@ static struct rt_mutex lock[IMG_MAX];
 static struct rt_semaphore sem[IMG_MAX];
 #endif /* RT_USING_DFS */
 
+#ifdef USE_DEV
 const device_t device_asblk0 = {
 	"asblk0",
 	{
@@ -94,8 +91,9 @@ const device_t device_asblk1 = {
 	},
 	(void*) 1
 };
+#endif
 /* ============================ [ LOCALS    ] ====================================================== */
-
+#ifdef USE_DEV
 static int asblk_open  (const device_t* device)
 {
 	uint32_t blkid = (uint32_t)(unsigned long)device->priv;
@@ -163,7 +161,7 @@ static int asblk_ctrl  (const device_t* device, int cmd,    void *args)
 
 	return ercd;
 }
-
+#endif
 #ifdef RT_USING_DFS
 static rt_err_t rt_asblk_init_internal(rt_device_t dev)
 {

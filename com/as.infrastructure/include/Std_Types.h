@@ -229,7 +229,7 @@ typedef sint32 s32;
 typedef sint16 s16;
 typedef sint8  s8;
 
-typedef uint32 imask_t;
+typedef unsigned int imask_t;
 
 typedef struct {
 	// TODO: not done!!

@@ -148,13 +148,14 @@ Std_ReturnType CanIf_Transmit(PduIdType CanTxPduId,
 #endif
 
 #ifdef USE_ANYOS
+#if !defined(__HIWARE__)
 void __weak BL_HwMonitor(void)
 {
 	/* this weak function need to be re-implemented for each board
 	 * to do hardware monitoring, for example, call OsTick
 	 * each 1ms */
 }
-
+#endif
 void OsTick(void)
 {
 	OsTickCounter ++;
@@ -200,11 +201,13 @@ void StartOS( AppModeType mode )
 #endif
 
 #ifndef USE_ECUM
+#if !defined(__HIWARE__)
 void __weak BL_HwInit(void)
 {
 	/* this weak function need to be re-implemented for each board
 	 * to do hardware initialization */
 }
+#endif
 void EcuM_Init(void)
 {
 #ifdef USE_MCU

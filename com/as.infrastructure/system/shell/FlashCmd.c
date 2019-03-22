@@ -139,7 +139,7 @@ static int shellFlashErase(int argc, char *argv[] ) {
 	{
 		cmdFlashParam.address  = strtoul(argv[1], NULL, 16);
 		cmdFlashParam.length = strtoul(argv[2], NULL, 16);
-		ASLOG(FLASH, "erase %08X %08X\n", cmdFlashParam.address, cmdFlashParam.length);
+		ASLOG(FLASH, ("erase %08X %08X\n", cmdFlashParam.address, cmdFlashParam.length));
 		Irq_Save(imask);
 		FLASH_DRIVER_ERASE(FLASH_DRIVER_STARTADDRESS,&cmdFlashParam);
 		Irq_Restore(imask);
@@ -163,9 +163,9 @@ static int shellFlashWrite(int argc, char *argv[] ) {
 		cmdFlashParam.length = parse_data(argv[2]);
 		if(cmdFlashParam.length > 0)
 		{
-			ASLOG(FLASH, "write %08X (len=%d) %08X%08X...\n",
+			ASLOG(FLASH, ("write %08X (len=%d) %08X%08X...\n",
 					cmdFlashParam.address, cmdFlashParam.length,
-					cmdFlashParam.data[0],cmdFlashParam.data[1]);
+					cmdFlashParam.data[0],cmdFlashParam.data[1]));
 
 			Irq_Save(imask);
 			FLASH_DRIVER_WRITE(FLASH_DRIVER_STARTADDRESS,&cmdFlashParam);
