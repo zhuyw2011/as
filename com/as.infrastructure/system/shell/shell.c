@@ -49,6 +49,11 @@ StatusType OsClearEvent(uint32_t id, uint32_t mask);
 #include "ringbuffer.h"
 /* ----------------------------[Private define]------------------------------*/
 
+#if !defined(USE_SHELL_WITHOUT_TASK) && ( \
+		defined(USE_TINYOS) || defined(USE_CONTIKI) \
+	)
+#define USE_SHELL_WITHOUT_TASK
+#endif
 /* The maximum number of arguments when calling a shell function */
 #if defined(__LINUX__) || defined(__WINDOWS__)
 #define MAX_ARGS		128
@@ -70,7 +75,7 @@ StatusType OsClearEvent(uint32_t id, uint32_t mask);
 
 struct shellWord {
 	int initialized;
-	TAILQ_HEAD(,ShellCmd) cmdHead;
+	TAILQ_HEAD(shell_cmd_s,ShellCmd) cmdHead;
 };
 
 /* ----------------------------[Private function prototypes]-----------------*/
@@ -155,7 +160,7 @@ void SHELL_input(char c)
 {
 	imask_t imask;
 	rb_size_t r;
-#if defined(USE_TINYOS) || defined(USE_CONTIKI)
+#ifdef USE_SHELL_WITHOUT_TASK
 #else
 	StatusType ercd;
 #endif
@@ -169,9 +174,9 @@ void SHELL_input(char c)
 	{
 		ASWARNING(("shell input buffer overflow!\n"));
 	}
-#if defined(USE_TINYOS) || defined(USE_CONTIKI)
-	OsActivateTask(TaskShell);
+#ifdef USE_SHELL_WITHOUT_TASK
 #else
+	OsActivateTask(TaskShell);
 	ercd = OsSetEvent(TaskShell, EventShellInput);
 	if(E_OK != ercd)
 	{
@@ -193,7 +198,7 @@ static char SHELL_getc(void)
 		Irq_Restore(imask);
 		if(0 == r)
 		{
-			#if !defined(USE_TINYOS) && !defined(USE_CONTIKI)
+			#ifndef USE_SHELL_WITHOUT_TASK
 			StatusType ercd = OsWaitEvent(TaskShell, EventShellInput);
 			if(E_OK != ercd)
 			{
@@ -468,7 +473,7 @@ int SHELL_RunCmd(const char *cmdArgs, int *cmdRv ) {
 		SHELL_printf("\nexit(%d)\n", *cmdRv);
 
 	} else {
-		SHELL_printf("No such command:\"%s\",strlen=%d\n",cmdStr,(int)strlen(cmdStr));
+		SHELL_printf("No such command:\"%s\"\n",cmdStr);
 		return SHELL_E_NO_SUCH_CMD;
 	}
 	return SHELL_E_OK;
@@ -481,25 +486,25 @@ static void doPrompt( void ) {
 
 int SHELL_Mainloop( void ) {
 	char c;
-#if defined(USE_TINYOS) || defined(USE_CONTIKI)
+#ifdef USE_SHELL_WITHOUT_TASK
 	static int lineIndex = -1;
 #else
 	int lineIndex = 0;
 #endif
 	int cmdRv;
 
-#if defined(USE_TINYOS) || defined(USE_CONTIKI)
+#ifdef USE_SHELL_WITHOUT_TASK
   if(-1 == lineIndex) {
 #endif
 	SHELL_puts("AS Shell version 0.1\n");
 	doPrompt();
-#if defined(USE_TINYOS) || defined(USE_CONTIKI)
+#ifdef USE_SHELL_WITHOUT_TASK
 	lineIndex = 0;
   }
 #endif
 	for(;;) {
 		c = SHELL_getc();
-#if defined(USE_TINYOS) || defined(USE_CONTIKI)
+#ifdef USE_SHELL_WITHOUT_TASK
 		if((char)-1 == c) return 0;
 #endif
 		if( lineIndex >= CMDLINE_MAX ) {

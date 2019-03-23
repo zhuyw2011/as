@@ -268,46 +268,48 @@ static const Can_FilterMaskType vCanFilterMask0=
 };\n\n""")
     List=GLGet('ControllerList')
     cstr=''
-    for ctrl in List:
+    for id, ctrl in enumerate(List):
         cstr += 'static const Can_HardwareObjectType %s_HOHCfgData[]=\n{\n'%(GAGet(ctrl,'Name'))
-        for hoh in GLGet(ctrl,'HohList'):
+        hohList = GLGet(ctrl,'HohList')
+        for hid, hoh in enumerate(hohList):
+            if((id+1 == len(List)) and (hid+1 == len(hohList))):
+                isEol = 'TRUE'
+            else:
+                isEol = 'FALSE'
             cstr +="""
     {    /* %s */
-        .CanHandleType=CAN_ARC_HANDLE_TYPE_%s,
-        .CanIdType=CAN_ID_TYPE_%s,
-        .CanIdValue=0x00,/*TODO*/
-        .CanObjectId=%s,
-        .CanObjectType=CAN_OBJECT_TYPE_%s,
-        .CanFilterMaskRef=&vCanFilterMask0,/*TODO*/
-        .Can_MbMask=0x00000000,/*TODO*/
-        .Can_Arc_EOL=FALSE
+        /*.CanHandleType=*/ CAN_ARC_HANDLE_TYPE_%s,
+        /*.CanIdType=*/ CAN_ID_TYPE_%s,
+        /*.CanIdValue=*/ 0x00,/*TODO*/
+        /*.CanObjectId=*/ %s,
+        /*.CanObjectType=*/ CAN_OBJECT_TYPE_%s,
+        /*.CanFilterMaskRef=*/ &vCanFilterMask0,/*TODO*/
+        /*.Can_MbMask=*/ 0x00000000,/*TODO*/
+        /*.Can_Arc_EOL=*/ %s
     },\n"""%(GAGet(hoh,'Name'),
              GAGet(hoh,'HohType'),
              GAGet(hoh,'IdentifierType'),
              GAGet(hoh,'Name'),
-             GAGet(hoh,'ObjectType')
+             GAGet(hoh,'ObjectType'),
+             isEol
              )
-        cstr += """
-    {
-        .Can_Arc_EOL = TRUE,
-    }
-};\n\n"""
+    cstr += '};\n\n'
     fp.write(cstr)
     cstr='const Can_ControllerConfigType  Can_ControllerCfgData[]=\n{\n'
     for ctrl in List:
         cstr += """
     {
-        .CanControllerId=%s,
-        .CanRxProcessing=CAN_ARC_PROCESS_TYPE_INTERRUPT,
-        .CanTxProcessing=CAN_ARC_PROCESS_TYPE_INTERRUPT,
-        .CanWakeupProcessing=CAN_ARC_PROCESS_TYPE_INTERRUPT,
-        .CanBusOffProcessing=CAN_ARC_PROCESS_TYPE_INTERRUPT,
-        .CanControllerBaudRate=%s,
-        .CanControllerPropSeg=0,/* (SJW) */
-        .CanControllerSeg1=%s,
-        .CanControllerSeg2=%s,
-        .Can_Arc_Hoh=%s_HOHCfgData,
-        .Can_Arc_Loopback=FALSE
+        /*.CanControllerId=*/ %s,
+        /*.CanRxProcessing=*/ CAN_ARC_PROCESS_TYPE_INTERRUPT,
+        /*.CanTxProcessing=*/ CAN_ARC_PROCESS_TYPE_INTERRUPT,
+        /*.CanWakeupProcessing=*/ CAN_ARC_PROCESS_TYPE_INTERRUPT,
+        /*.CanBusOffProcessing=*/ CAN_ARC_PROCESS_TYPE_INTERRUPT,
+        /*.CanControllerBaudRate=*/ %s,
+        /*.CanControllerPropSeg=*/ 0,/* (SJW) */
+        /*.CanControllerSeg1=*/ %s,
+        /*.CanControllerSeg2=*/ %s,
+        /*.Can_Arc_Hoh=*/ %s_HOHCfgData,
+        /*.Can_Arc_Loopback=*/ FALSE
     },\n"""%(GAGet(ctrl,'Name'),
              GAGet(ctrl,'Baudrate'),
              GAGet(ctrl,'Seg1'),

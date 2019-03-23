@@ -74,6 +74,7 @@
 #define __naked
 #define __weak
 #define __packed
+#define __restrict
 #else
 #error Compiler not defined.
 #endif

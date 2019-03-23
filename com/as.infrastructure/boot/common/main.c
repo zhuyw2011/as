@@ -33,7 +33,9 @@
 #ifdef USE_XCP
 #include "Xcp.h"
 #endif
-
+#ifdef USE_SHELL
+#include "shell.h"
+#endif
 #include "bootloader.h"
 
 #include "CanIf.h"
@@ -177,10 +179,13 @@ void StartOS( AppModeType mode )
 	{
 		Irq_Enable();
 		BL_HwMonitor();
-#ifdef USE_CAN
+		#ifdef USE_CAN
 		Can_MainFunction_Read();
 		Can_MainFunction_Write();
-#endif
+		#endif
+		#ifdef USE_SHELL
+		SHELL_Mainloop();
+		#endif
 
 		if(preTick != OsTickCounter)
 		{
@@ -218,6 +223,9 @@ void EcuM_Init(void)
 
 	BL_HwInit();
 
+#ifdef USE_SHELL
+	SHELL_Init();
+#endif
 #ifdef USE_CAN
 	Can_Init(&Can_ConfigData);
 	Can_InitController(0, Can_ControllerCfgData);

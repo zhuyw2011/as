@@ -101,7 +101,7 @@ CPU_CORE_NUMBER="1"
 <Can>
 <General Comment="*" DevelopmentErrorDetection="ON" VersionInfoApi="ON" />
 <ControllerList Max="TBD">
-<Controller Baudrate="1000" Comment="*" Name="CAN_CTRL_0" Seg1="13" Seg2="2">
+<Controller Baudrate="250" Comment="*" Name="CAN_CTRL_0" Seg1="12" Seg2="1">
 <HohList Max="TBD">
 <Hoh Comment="*" HohType="BASIC" IdentifierType="STANDARD" Name="Can0Hrh" ObjectType="RECEIVE" />
 <Hoh Comment="*" HohType="BASIC" IdentifierType="STANDARD" Name="Can0Hth" ObjectType="TRANSMIT" />
