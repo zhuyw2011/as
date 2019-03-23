@@ -718,7 +718,7 @@ def GetELFEnv(so=True):
         env['SHLINKCOM'] = '$SHLINK $SHLINKFLAGS $SOURCES -o $TARGET'
     return env
 
-def ForkEnv(father=None):
+def ForkEnv(father=None, attr={}):
     if(father is None):
         father = Env
     child = Environment()
@@ -733,6 +733,8 @@ def ForkEnv(father=None):
             child[key] = SCons.Util.CLVar(v)
         else:
             child[key] = v
+    for key,v in attr.items():
+        child[key] = v
     return child
 
 class Qemu():
@@ -1211,7 +1213,9 @@ def Building(target, sobjs, env=None):
         shaO = open(cfgdone).read()
         if(shaN != shaO):
             forceGen = True
-    if(((not os.path.exists(cfgdone)) and (not GetOption('clean'))) or forceGen):
+    if( (arxml!=None) and ( 
+        ( (not os.path.exists(cfgdone)) and (not GetOption('clean')) ) 
+            or forceGen ) ):
         MKDir(cfgdir)
         RMFile(cfgdone)
         xcc.XCC(cfgdir, env, True)
@@ -1248,8 +1252,9 @@ def Building(target, sobjs, env=None):
     if(GetOption('memory')):
         MemoryUsage(target, env.Object(objs))
     #env['POSTACTION'].append('readelf -l %s'%(target))
-    for action in env['POSTACTION']:
-        env.AddPostAction(target, action)
+    if('POSTACTION' in env):
+        for action in env['POSTACTION']:
+            env.AddPostAction(target, action)
 
 if((not IsPlatformWindows()) and bScons):
     AddOption('--prepare',

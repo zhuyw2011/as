@@ -52,6 +52,43 @@ class s19:
             ss['data'].append(b)
         ss['size'] += sz
 
+    def __s1__(self,el,linno):
+        bytes = []
+        sz = int(el[2:4],16)-3
+        address = int(el[4:8],16)
+        for i in range(sz):
+            bytes.append(int(el[(8+2*i):(10+2*i)],16))
+        ck = int(el[(8+2*sz):(10+2*sz)],16)
+        checksum = sz+3
+        checksum += ((address>>8)&0xFF) +((address>>0)&0xFF)
+        for d in bytes:
+            checksum += d
+        if((checksum&0xFF)+ck == 0xFF):
+            pass
+        else:
+            print("%s::checksum error @ line %d %s",self.file,linno,el)
+            return False
+        self.append(address, bytes)
+        return True
+
+    def __s2__(self,el,linno):
+        bytes = []
+        sz = int(el[2:4],16)-4
+        address = int(el[4:10],16)
+        for i in range(sz):
+            bytes.append(int(el[(10+2*i):(12+2*i)],16))
+        ck = int(el[(10+2*sz):(12+2*sz)],16)
+        checksum = sz+4
+        checksum += ((address>>16)&0xFF) + ((address>>8)&0xFF) +((address>>0)&0xFF)
+        for d in bytes:
+            checksum += d
+        if((checksum&0xFF)+ck == 0xFF):
+            pass
+        else:
+            print("%s::checksum error @ line %d %s",self.file,linno,el)
+            return False
+        self.append(address, bytes)
+        return True
     def __s3__(self,el,linno):
         bytes = []
         sz = int(el[2:4],16)-5
@@ -68,9 +105,7 @@ class s19:
         else:
             print("%s::checksum error @ line %d %s",self.file,linno,el)
             return False
-        
         self.append(address, bytes)
-        
         return True
 
     def parse(self,file):
@@ -78,6 +113,10 @@ class s19:
         for linno,el in enumerate(fp.readlines()):
             if el[:2] == 'S0':
                 pass # this is a header
+            elif el[:2] == 'S1':
+                if(self.__s1__(el,linno+1) == False): break
+            elif el[:2] == 'S2':
+                if(self.__s2__(el,linno+1) == False): break
             elif el[:2] == 'S3':
                 if(self.__s3__(el,linno+1) == False): break
             elif el[:2] == 'S7':
