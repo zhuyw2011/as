@@ -121,7 +121,7 @@ int DisableInterrupts() {
 }
 
 static unsigned long isrDisableCounter = 0;
-unsigned long __attribute__((weak)) __Irq_Save(void)
+imask_t __attribute__((weak)) __Irq_Save(void)
 {
 	isrDisableCounter ++ ;
 	if(1u == isrDisableCounter)
@@ -131,7 +131,7 @@ unsigned long __attribute__((weak)) __Irq_Save(void)
 	return 0;
 }
 
-void __attribute__((weak)) Irq_Restore(unsigned long irq_state)
+void __attribute__((weak)) Irq_Restore(imask_t irq_state)
 {
 
 	isrDisableCounter --;

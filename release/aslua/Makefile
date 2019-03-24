@@ -140,7 +140,7 @@ ldflags-y += $(src-dir)/ControlCAN.lib
 endif
 ldflags-y += -lm -lstdc++
 # inter processor communication		 
-def-y += -DUSE_IPC -DUSE_VIRTQ -DUSE_RPMSG -DUSE_SHELL
+def-y += -DUSE_IPC -DUSE_VIRTQ -DUSE_RPMSG -DUSE_SHELL -DUSE_SHELL_WITHOUT_TASK
 
 cflags-y +=-Wextra 
 dllflags-y += -Wl,--version-script=$(VIRTUAL)/source/asvirtual.version
