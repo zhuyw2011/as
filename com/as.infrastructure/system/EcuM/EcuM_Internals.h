@@ -106,5 +106,4 @@ char *GetMainStateAsString( EcuM_StateType state );
 #define DEBUG_ECUM_CALLOUT_W_ARG(_call,_farg0,_arg0)    ASLOG(ECUM, ("  CALLOUT->: " _call " "_farg0 "\n",_arg0))
 #define DEBUG_ECUM_CALLIN_W_ARG(_call,_farg0,_arg0)     ASLOG(ECUM, ("  <-CALLIN : " _call " "_farg0 "\n",_arg0))
 
-#define GetWakeupReactionAsString(a) "?"
 #endif /*_ECUM_INTERNALS_H_*/

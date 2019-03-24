@@ -53,7 +53,9 @@ def GenH():
 #define CANIF_DEV_ERROR_DETECT   STD_%s
 #define CANIF_DLC_CHECK          STD_%s
 
+#ifndef CANIF_TASK_FIFO_MODE
 #define CANIF_TASK_FIFO_MODE     STD_%s
+#endif
 #define CANIF_RX_FIFO_SIZE       %s
 #define CANIF_TX_FIFO_SIZE       %s
 
@@ -113,16 +115,16 @@ def GenC():
     fp = open('%s/CanIf_Cfg.c'%(__dir),'w')
     fp.write(GHeader('CanIf'))
     fp.write('#ifdef USE_CANIF\n')
-    cstr1=cstr2=cstr3=''    
+    cstr1=cstr2=cstr3=''
     for chl in GLGet('ChannelList'):
         cstr1+='\t%-32s,/* %-32s */\n'%(GAGet(chl,'ControllerRef'),GAGet(chl,'Name'))
         cstr2+='\t%s_CONFIG_0,\n'%(GAGet(chl,'Name'))
         cstr3+="""
     {
         /* .WakeupSupport = CANIF_WAKEUP_SUPPORT_NO_WAKEUP, */
-        .CanIfControllerIdRef = %s,
+        /* .CanIfControllerIdRef =*/ %s,
         /* .CanIfDriverNameRef = "FLEXCAN", */  /* Not used */
-        .CanIfInitControllerRef = &Can_ControllerCfgData[INDEX_OF_%s],
+        /* .CanIfInitControllerRef =*/ &Can_ControllerCfgData[INDEX_OF_%s],
     },\n"""%(GAGet(chl,'Name'),GAGet(chl,'ControllerRef'))
     fp.write("""
 /* ============================ [ INCLUDES  ] ====================================================== */
@@ -189,10 +191,10 @@ const CanIf_ControllerConfigType CanIfControllerConfig[] = {
 /* Function callbacks for higher layers */
 const CanIf_DispatchConfigType CanIfDispatchConfig =
 {
-    .CanIfBusOffNotification = %s,
-    .CanIfWakeUpNotification = NULL,        /* Not used */
-    .CanIfWakeupValidNotification = NULL,   /* Not used */
-    .CanIfErrorNotificaton = %s,
+    /*.CanIfBusOffNotification =*/ %s,
+    /*.CanIfWakeUpNotification =*/ NULL,        /* Not used */
+    /*.CanIfWakeupValidNotification =*/ NULL,   /* Not used */
+    /*.CanIfErrorNotificaton =*/ %s,
 };\n"""%(GAGet(GLGet('General'),'BusOffNotification'),GAGet(GLGet('General'),'ErrorNotification')))
 
 
@@ -208,10 +210,10 @@ const CanIf_DispatchConfigType CanIfDispatchConfig =
                     isEol='FALSE'
                 cstr += """
     {
-        .CanIfHthType = CAN_ARC_HANDLE_TYPE_BASIC, /* TODO */
-        .CanIfCanControllerIdRef = %s,
-        .CanIfHthIdSymRef = %s,
-        .CanIf_Arc_EOL = %s
+        /*.CanIfHthType =*/ CAN_ARC_HANDLE_TYPE_BASIC, /* TODO */
+        /*.CanIfCanControllerIdRef =*/ %s,
+        /*.CanIfHthIdSymRef =*/ %s,
+        /*.CanIf_Arc_EOL =*/ %s
     },\n"""%(GAGet(chl,'Name'),GAGet(hth,'HthRef'),isEol)
             cstr += '};\n\n'
             fp.write(cstr)
@@ -227,12 +229,12 @@ const CanIf_DispatchConfigType CanIfDispatchConfig =
                     isEol='FALSE'
                 cstr += """
     {
-        .CanIfHrhType = CAN_ARC_HANDLE_TYPE_BASIC, /* TODO: not used by CanIf now. */
-        .CanIfSoftwareFilterHrh = TRUE, /* Must Be True */
-        .CanIfCanControllerHrhIdRef = %s,
-        .CanIfHrhIdSymRef = %s,
-        .CanIfHrhRangeConfig = NULL,
-        .CanIf_Arc_EOL = %s
+        /*.CanIfHrhType =*/ CAN_ARC_HANDLE_TYPE_BASIC, /* TODO: not used by CanIf now. */
+        /*.CanIfSoftwareFilterHrh =*/ TRUE, /* Must Be True */
+        /*.CanIfCanControllerHrhIdRef =*/ %s,
+        /*.CanIfHrhIdSymRef =*/ %s,
+        /*.CanIfHrhRangeConfig =*/ NULL,
+        /*.CanIf_Arc_EOL =*/ %s
     },\n"""%(GAGet(chl,'Name'),GAGet(hrh,'HrhRef'),isEol)
             cstr += '};\n\n'
             fp.write(cstr)
@@ -246,9 +248,9 @@ const CanIf_DispatchConfigType CanIfDispatchConfig =
             isEol='FALSE'
         cstr += """
     {
-        .CanIfHrhConfig = CanIfHrhConfigData_%s,
-        .CanIfHthConfig = CanIfHthConfigData_%s,
-        .CanIf_Arc_EOL = %s
+        /*.CanIfHrhConfig =*/ CanIfHrhConfigData_%s,
+        /*.CanIfHthConfig =*/ CanIfHthConfigData_%s,
+        /*.CanIf_Arc_EOL =*/ %s
     },\n"""%(GAGet(chl,'Name'),GAGet(chl,'Name'),isEol)
     cstr+='};\n\n'
     fp.write(cstr)
@@ -290,17 +292,17 @@ const CanIf_DispatchConfigType CanIfDispatchConfig =
                 IdType='CANIF_CAN_ID_TYPE_11'
             cstr += """
     {
-        .CanIfTxPduId = %s_%s,
-        .CanIfCanTxPduIdCanId = %s, 
-        .CanIfCanTxPduIdDlc = %s,
-        .CanIfCanTxPduType = CANIF_PDU_TYPE_STATIC,
+        /*.CanIfTxPduId =*/ %s_%s,
+        /*.CanIfCanTxPduIdCanId =*/ %s, 
+        /*.CanIfCanTxPduIdDlc =*/ %s,
+        /*.CanIfCanTxPduType =*/ CANIF_PDU_TYPE_STATIC,
     #if ( CANIF_READTXPDU_NOTIFY_STATUS_API == STD_ON )
-        .CanIfReadTxPduNotifyStatus = TRUE,
+        /*.CanIfReadTxPduNotifyStatus =*/ TRUE,
     #endif
-        .CanIfTxPduIdCanIdType = %s,
-        .CanIfUserTxConfirmation = %s,
-        .CanIfCanTxPduHthRef = &CanIfHthConfigData_%s[%s],
-        .PduIdRef = NULL
+        /*.CanIfTxPduIdCanIdType =*/ %s,
+        /*.CanIfUserTxConfirmation =*/ %s,
+        /*.CanIfCanTxPduHthRef =*/ &CanIfHthConfigData_%s[%s],
+        /*.PduIdRef =*/ NULL
     },\n"""%(IdPrfix,GAGet(pdu,'EcuCPduRef'),
          GAGet(pdu,'Identifier'),
          GAGet(pdu,'DataLengthCode'),
@@ -353,22 +355,22 @@ CanIf_TxPduConfigType CanIfTxPduConfigData[] =
                 IdType='CANIF_CAN_ID_TYPE_11'
             cstr += """
     {
-        .CanIfCanRxPduId = %s_ID_%s,
-        .CanIfCanRxPduCanId = %s,
-        .CanIfCanRxPduDlc = %s,
+        /*.CanIfCanRxPduId =*/ %s_ID_%s,
+        /*.CanIfCanRxPduCanId =*/ %s,
+        /*.CanIfCanRxPduDlc =*/ %s,
 #if ( CANIF_CANPDUID_READDATA_API == STD_ON )
-        .CanIfReadRxPduData = TRUE,
+        /*.CanIfReadRxPduData =*/ TRUE,
 #endif
 #if ( CANIF_READTXPDU_NOTIFY_STATUS_API == STD_ON )
-        .CanIfReadRxPduNotifyStatus = TRUE,
+        /*.CanIfReadRxPduNotifyStatus =*/ TRUE,
 #endif
-        .CanIfRxPduIdCanIdType = %s,
-        .CanIfRxUserType = %s,
-        .CanIfUserRxIndication = %s,
-        .CanIfCanRxPduHrhRef = &CanIfHrhConfigData_%s[%s],
-        .PduIdRef = NULL,
-        .CanIfSoftwareFilterType = CANIF_SOFTFILTER_TYPE_MASK,
-        .CanIfCanRxPduCanIdMask = %s
+        /*.CanIfRxPduIdCanIdType =*/ %s,
+        /*.CanIfRxUserType =*/ %s,
+        /*.CanIfUserRxIndication =*/ %s,
+        /*.CanIfCanRxPduHrhRef =*/ &CanIfHrhConfigData_%s[%s],
+        /*.PduIdRef =*/ NULL,
+        /*.CanIfSoftwareFilterType =*/ CANIF_SOFTFILTER_TYPE_MASK,
+        /*.CanIfCanRxPduCanIdMask =*/ %s
     },\n"""%(IdPrfix,GAGet(pdu,'EcuCPduRef'),
              GAGet(pdu,'Identifier'),
              GAGet(pdu,'DataLengthCode'),
@@ -387,25 +389,25 @@ static const CanIf_RxPduConfigType CanIfRxPduConfigData[] =
  * Multiplicity 1..* */
 const CanIf_InitConfigType CanIfInitConfig =
 {
-    .CanIfConfigSet = 0, /* Not used */
-    .CanIfNumberOfCanRxPduIds = sizeof(CanIfRxPduConfigData)/sizeof(CanIf_RxPduConfigType),
-    .CanIfNumberOfCanTXPduIds = sizeof(CanIfTxPduConfigData)/sizeof(CanIf_TxPduConfigType),
-    .CanIfNumberOfDynamicCanTXPduIds = 0, /* Not used */
+    /*.CanIfConfigSet =*/ 0, /* Not used */
+    /*.CanIfNumberOfCanRxPduIds =*/ sizeof(CanIfRxPduConfigData)/sizeof(CanIf_RxPduConfigType),
+    /*.CanIfNumberOfCanTXPduIds =*/ sizeof(CanIfTxPduConfigData)/sizeof(CanIf_TxPduConfigType),
+    /*.CanIfNumberOfDynamicCanTXPduIds =*/ 0, /* Not used */
     /* Containers */
-    .CanIfHohConfigPtr = CanIfHohConfigData,
-    .CanIfRxPduConfigPtr = CanIfRxPduConfigData,
-    .CanIfTxPduConfigPtr = CanIfTxPduConfigData,
+    /*.CanIfHohConfigPtr =*/ CanIfHohConfigData,
+    /*.CanIfRxPduConfigPtr =*/ CanIfRxPduConfigData,
+   /*.CanIfTxPduConfigPtr =*/ CanIfTxPduConfigData,
 };
 /* This container includes all necessary configuration sub-containers
  * according the CAN Interface configuration structure */
 const CanIf_ConfigType CanIf_Config =
 {
-    .ControllerConfig = CanIfControllerConfig,
-    .DispatchConfig = &CanIfDispatchConfig,
-    .InitConfig = &CanIfInitConfig,
-    .TransceiverConfig = NULL, /* Not used */
-    .Arc_ChannelToControllerMap = CanIf_Arc_ChannelToControllerMap,
-    .Arc_ChannelDefaultConfIndex = CanIf_Arc_ChannelDefaultConfIndex,
+    /*.ControllerConfig =*/ CanIfControllerConfig,
+    /*.DispatchConfig =*/ &CanIfDispatchConfig,
+    /*.InitConfig =*/ &CanIfInitConfig,
+    /*.TransceiverConfig =*/ NULL, /* Not used */
+    /*.Arc_ChannelToControllerMap =*/ CanIf_Arc_ChannelToControllerMap,
+    /*.Arc_ChannelDefaultConfIndex =*/ CanIf_Arc_ChannelDefaultConfIndex,
 };
 /* ============================ [ LOCALS    ] ====================================================== */
 /* ============================ [ FUNCTIONS ] ====================================================== */

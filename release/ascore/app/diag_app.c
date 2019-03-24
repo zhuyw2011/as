@@ -62,7 +62,7 @@ Std_ReturnType Diag_GetSeedEXTDS(uint8 *securityAccessDataRecord, uint8 *seed, D
 
 	bl_extds_seed = bl_extds_seed ^ u32Seed ^ u32Time ^ 0x95774321;
 
-	ASLOG(DIAG,("%s(seed = %X)\n",__func__,bl_extds_seed));
+	ASLOG(DIAG,("Diag_GetSeedEXTDS(seed = %X)\n",bl_extds_seed));
 
 	seed[0] = (uint8)(bl_extds_seed>>24);
 	seed[1] = (uint8)(bl_extds_seed>>16);
@@ -75,7 +75,7 @@ Std_ReturnType Diag_CompareKeyEXTDS(uint8 *key){
 	uint32 u32Key = ((uint32)key[0]<<24) + ((uint32)key[1]<<16) + ((uint32)key[2]<<8) +((uint32)key[3]);
 	uint32 u32KeyExpected = bl_extds_seed ^ 0x78934673;
 
-	ASLOG(DIAG,("%s(key = %X(%X))\n",__func__,u32Key,u32KeyExpected));
+	ASLOG(DIAG,("Diag_CompareKeyEXTDS(key = %X(%X))\n",u32Key,u32KeyExpected));
 
 	if(u32KeyExpected == u32Key)
 	{

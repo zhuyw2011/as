@@ -111,7 +111,7 @@
 #endif
 
 #ifndef CONFIG_ARCH_VEXPRESS
-#if defined(__ICCHCS12__) || defined(__ICCARM__) || defined(__CWCC__)
+#if defined(__ICCHCS12__) || defined(__ICCARM__) || defined(__CWCC__) || defined(__HIWARE__)
 static inline int ilog2(unsigned long v)
 {
 	int l = 0;

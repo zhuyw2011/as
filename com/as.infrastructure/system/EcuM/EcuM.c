@@ -120,14 +120,17 @@ EcuM_GlobalType EcuM_World;
 #endif
 DECLARE_WEAK void InitOS(void){}
 DECLARE_WEAK void Os_IsrInit(void){}
+#if !defined(__HIWARE__)
 DECLARE_WEAK Std_ReturnType Rte_Start(void){ return E_OK; }
-
+#endif
 extern void SchM_RunMemory(void);
 /**
  * Initialize EcuM.
  */
 void EcuM_Init(void) {
 	Std_ReturnType status;
+	AppModeType appMode;
+
 	set_current_state(ECUM_STATE_STARTUP_ONE);
 
 	// Initialize drivers that are needed to determine PostBuild configuration
@@ -191,7 +194,6 @@ void EcuM_Init(void) {
 	EcuM_World.postrun_requests = 0;
 
 	// Start this baby up
-	AppModeType appMode;
 	status = EcuM_GetApplicationMode(&appMode);
 	if (status != E_OK) {
 		//TODO: Report error.

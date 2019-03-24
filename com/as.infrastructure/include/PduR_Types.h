@@ -130,7 +130,7 @@ typedef struct {
 
 typedef struct {
 	uint8 ElementBytePosition;
-	uint8 DefaultValueElement[];
+	//uint8 DefaultValueElement[];
 } PduRDefaultValueElement_type;
 
 

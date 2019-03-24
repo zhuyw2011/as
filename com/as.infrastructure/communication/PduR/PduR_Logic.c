@@ -42,7 +42,8 @@
 
 BufReq_ReturnType PduR_ARC_AllocateUpRxBuffer(PduIdType PduId, PduInfoType** PduInfoPtr) {
 	BufReq_ReturnType retVal = BUFREQ_BUSY;
-	for (uint8 i = 0; i < PDUR_N_TP_BUFFERS; i++) {
+	uint8 i;
+	for (i = 0; i < PDUR_N_TP_BUFFERS; i++) {
 		if (PduRTpBuffer(i)->status == PDUR_BUFFER_NOT_ALLOCATED_FROM_UP_MODULE) {
 			PduRTpRouteBuffer(PduId) = PduRTpBuffer(i);
 			PduRTpRouteBuffer(PduId)->pduInfoPtr = *PduInfoPtr;
@@ -57,7 +58,8 @@ BufReq_ReturnType PduR_ARC_AllocateUpRxBuffer(PduIdType PduId, PduInfoType** Pdu
 
 BufReq_ReturnType PduR_ARC_AllocateRxBuffer(PduIdType PduId, PduLengthType TpSduLength) {
 	BufReq_ReturnType retVal = BUFREQ_BUSY;
-	for (uint8 i = 0; i < PDUR_N_TP_BUFFERS; i++) {
+	uint8 i;
+	for (i = 0; i < PDUR_N_TP_BUFFERS; i++) {
 		if (PduRTpBuffer(i)->status == PDUR_BUFFER_FREE) {
 			if (PduRTpBuffer(i)->bufferSize < TpSduLength) {
 				retVal = BUFREQ_OVFL;
@@ -122,13 +124,15 @@ BufReq_ReturnType PduR_ARC_ReleaseTxBuffer(PduIdType PduId) {
 }
 
 Std_ReturnType PduR_ARC_Transmit(PduIdType PduId, const PduInfoType* PduInfo, uint8 serviceId) {
+	Std_ReturnType retVal = E_OK;
+	uint8 i;
+	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
+
 	PDUR_VALIDATE_INITIALIZED(serviceId,E_NOT_OK);
 	PDUR_VALIDATE_PDUPTR(serviceId, PduInfo, E_NOT_OK);
 	PDUR_VALIDATE_PDUID(serviceId, PduId, E_NOT_OK);
 
-	Std_ReturnType retVal = E_OK;
-	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
-	for (uint8 i = 0; route->PduRDestPdus[i] != NULL; i++) {
+	for (i = 0; route->PduRDestPdus[i] != NULL; i++) {
 		const PduRDestPdu_type * destination = route->PduRDestPdus[i];
 
 		retVal |= PduR_ARC_RouteTransmit(destination, PduInfo);
@@ -187,6 +191,7 @@ void PduR_ARC_RxIndicationDirect(const PduRDestPdu_type * destination, const Pdu
 static void PduR_ARC_RxIndicationWithUpBuffer(PduIdType PduId, const PduInfoType* PduInfo, uint8 serviceId) {
 	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
 	const PduRDestPdu_type * destination = route->PduRDestPdus[0];
+	uint8 i;
 
 	// Save current buffer
 	PduInfoType *upBuffer = PduRTpRouteBuffer(PduId)->pduInfoPtr;
@@ -210,7 +215,7 @@ static void PduR_ARC_RxIndicationWithUpBuffer(PduIdType PduId, const PduInfoType
 	PduR_ARC_RouteRxIndication(destination, PduInfo);
 
 	// Then first transmit to all other destinations.
-	for (uint8 i = 1; route->PduRDestPdus[i] != NULL; i++) {
+	for (i = 1; route->PduRDestPdus[i] != NULL; i++) {
 		const PduRDestPdu_type * d = route->PduRDestPdus[i];
 		Std_ReturnType status = PduR_ARC_RouteTransmit(d, PduRTpRouteBuffer(PduId)->pduInfoPtr);
 		if(status!=E_OK){
@@ -221,19 +226,20 @@ static void PduR_ARC_RxIndicationWithUpBuffer(PduIdType PduId, const PduInfoType
 }
 
 void PduR_ARC_TpRxIndication(PduIdType PduId, NotifResultType Result, uint8 serviceId) {
+	PduInfoType PduInfo = {
+		/*.SduDataPtr =*/ &Result,
+		/*.SduLength =*/ 0 // To fix PC-Lint 785
+	};
+	uint8 i;
+
 	PDUR_VALIDATE_INITIALIZED(serviceId);
 	PDUR_VALIDATE_PDUID(serviceId, PduId);
-
-	PduInfoType PduInfo = {
-		.SduDataPtr = &Result,
-		.SduLength = 0 // To fix PC-Lint 785
-	};
 
 	if (Result != NTFRSLT_OK) {
 		// There was an error in the lower layer while receiving the PDU.
 		// Release any buffers and notify upper layers
 		PduR_ARC_ReleaseRxBuffer(PduId);
-		for (uint8 i = 0; PduRConfig->RoutingPaths[PduId]->PduRDestPdus[i] != NULL; i++) {
+		for (i = 0; PduRConfig->RoutingPaths[PduId]->PduRDestPdus[i] != NULL; i++) {
 			const PduRDestPdu_type * destination = PduRConfig->RoutingPaths[PduId]->PduRDestPdus[i];
 			if (PduR_IsUpModule(destination->DestModule)) {
 				PduR_ARC_RouteRxIndication(destination, &PduInfo);
@@ -246,11 +252,12 @@ void PduR_ARC_TpRxIndication(PduIdType PduId, NotifResultType Result, uint8 serv
 }
 
 void PduR_ARC_RxIndication(PduIdType PduId, const PduInfoType* PduInfo, uint8 serviceId) {
+	uint8 i;
+	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
+
 	PDUR_VALIDATE_INITIALIZED(serviceId);
 	PDUR_VALIDATE_PDUPTR(serviceId, PduInfo);
 	PDUR_VALIDATE_PDUID(serviceId, PduId);
-
-	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
 
 	/* Do not route incoming PDUs out again unless specified */
     if (route != NULL && !PduR_IsLoModule(route->SrcModule)) {
@@ -261,8 +268,7 @@ void PduR_ARC_RxIndication(PduIdType PduId, const PduInfoType* PduInfo, uint8 se
 		PduR_ARC_RxIndicationWithUpBuffer(PduId, PduInfo, serviceId);
 
 	} else {
-
-		for (uint8 i = 0; route->PduRDestPdus[i] != NULL; i++) {
+		for (i = 0; route->PduRDestPdus[i] != NULL; i++) {
 			const PduRDestPdu_type * destination = route->PduRDestPdus[i];
 
 			if (PduR_IsUpModule(destination->DestModule)) {
@@ -298,10 +304,12 @@ void PduR_ARC_RxIndication(PduIdType PduId, const PduInfoType* PduInfo, uint8 se
 }
 
 void PduR_ARC_TxConfirmation(PduIdType PduId, uint8 result, uint8 serviceId) {
+	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
+	uint8 i;
+	uint8 nDests;
 	PDUR_VALIDATE_INITIALIZED(serviceId);
 	PDUR_VALIDATE_PDUID(serviceId, PduId);
 
-	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
 
 	if (PduR_IsUpModule(route->SrcModule)) {
 		PduR_ARC_RouteTxConfirmation(route, result);
@@ -309,8 +317,8 @@ void PduR_ARC_TxConfirmation(PduIdType PduId, uint8 result, uint8 serviceId) {
 	} else if (PduR_IsLoModule(route->SrcModule) && HAS_BUFFER_STATUS(PduId, PDUR_BUFFER_TX_BUSY)) {
 		PduRTpRouteBuffer(PduId)->nAcc++;
 
-		uint8 nDests = 0;
-		for (uint8 i = 0; route->PduRDestPdus[i] != NULL; i++) {
+		nDests = 0;
+		for (i = 0; route->PduRDestPdus[i] != NULL; i++) {
 			if (!PduR_IsUpModule(route->PduRDestPdus[i]->DestModule)) nDests++;
 		}
 
@@ -327,13 +335,14 @@ void PduR_ARC_TxConfirmation(PduIdType PduId, uint8 result, uint8 serviceId) {
 
 Std_ReturnType PduR_ARC_TriggerTransmit(PduIdType PduId, PduInfoType* PduInfo, uint8 serviceId) {
 	/*lint -esym(613,PduInfo)*/ /* PC-Lint 613 misunderstanding: PduInfo is not null since it is validated in PDUR_VALIDATE_PDUPTR */
+	Std_ReturnType retVal = E_OK;
+	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
+	const PduRDestPdu_type * destination = route->PduRDestPdus[0];
+
 	PDUR_VALIDATE_INITIALIZED(serviceId, E_NOT_OK);
 	PDUR_VALIDATE_PDUPTR(serviceId, PduInfo, E_NOT_OK);
 	PDUR_VALIDATE_PDUID(serviceId, PduId, E_NOT_OK);
 
-	Std_ReturnType retVal = E_OK;
-	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
-	const PduRDestPdu_type * destination = route->PduRDestPdus[0];
 
 	if (PduR_IsUpModule(route->SrcModule)) {
 		retVal |= PduR_ARC_RouteTriggerTransmit(route, PduInfo);
@@ -355,13 +364,13 @@ Std_ReturnType PduR_ARC_TriggerTransmit(PduIdType PduId, PduInfoType* PduInfo, u
 }
 
 BufReq_ReturnType PduR_ARC_ProvideRxBuffer(PduIdType PduId, PduLengthType TpSduLength, PduInfoType** PduInfoPtr, uint8 serviceId) {
-	PDUR_VALIDATE_INITIALIZED(serviceId,BUFREQ_NOT_OK);
-	PDUR_VALIDATE_PDUPTR(serviceId, PduInfoPtr, BUFREQ_NOT_OK);
-	PDUR_VALIDATE_PDUID(serviceId, PduId, BUFREQ_NOT_OK);
-
 	BufReq_ReturnType retVal;
 	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
 	const PduRDestPdu_type * destination = route->PduRDestPdus[0];
+
+	PDUR_VALIDATE_INITIALIZED(serviceId,BUFREQ_NOT_OK);
+	PDUR_VALIDATE_PDUPTR(serviceId, PduInfoPtr, BUFREQ_NOT_OK);
+	PDUR_VALIDATE_PDUID(serviceId, PduId, BUFREQ_NOT_OK);
 
 	if (PduR_IsUpModule(destination->DestModule)) {
 		retVal = PduR_ARC_RouteProvideRxBuffer(destination, TpSduLength, PduInfoPtr);
@@ -393,12 +402,12 @@ BufReq_ReturnType PduR_ARC_ProvideRxBuffer(PduIdType PduId, PduLengthType TpSduL
 }
 
 BufReq_ReturnType PduR_ARC_ProvideTxBuffer(PduIdType PduId, PduInfoType** PduInfoPtr, uint16 Length, uint8 serviceId) {
+	BufReq_ReturnType retVal;
+	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
+
 	PDUR_VALIDATE_INITIALIZED(serviceId,BUFREQ_NOT_OK);
 	PDUR_VALIDATE_PDUPTR(serviceId, PduInfoPtr, BUFREQ_NOT_OK);
 	PDUR_VALIDATE_PDUID(serviceId, PduId, BUFREQ_NOT_OK);
-
-	BufReq_ReturnType retVal;
-	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
 
 	if (PduR_IsUpModule(route->SrcModule)) {
 		retVal = PduR_ARC_RouteProvideTxBuffer(route, Length, PduInfoPtr);

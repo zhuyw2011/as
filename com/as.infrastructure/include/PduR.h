@@ -101,30 +101,30 @@ extern PduR_StateType PduRState;
 
 #define PDUR_DET_REPORTERROR(_x,_y,_z,_o) Det_ReportError(_x,_y,_z,_o)
 
-#define PDUR_VALIDATE_INITIALIZED(_api,...) \
+#define PDUR_VALIDATE_INITIALIZED(_api,ercd) \
 	if ((PduRState == PDUR_UNINIT) || (PduRState == PDUR_REDUCED)) { \
 		Det_ReportError(MODULE_ID_PDUR, PDUR_INSTANCE_ID, _api, PDUR_E_INVALID_REQUEST); \
-		return __VA_ARGS__; \
+		return ercd; \
 	}
 
-#define PDUR_VALIDATE_PDUPTR(_api, _pduPtr, ...) \
+#define PDUR_VALIDATE_PDUPTR(_api, _pduPtr, ercd) \
 	if ((_pduPtr == NULL) && (PDUR_DEV_ERROR_DETECT)) { \
 		Det_ReportError(MODULE_ID_PDUR, PDUR_INSTANCE_ID, _api, PDUR_E_DATA_PTR_INVALID); \
-		return __VA_ARGS__; \
+		return ercd; \
 	}
 
-#define PDUR_VALIDATE_PDUID(_api, _pduId, ...) \
+#define PDUR_VALIDATE_PDUID(_api, _pduId, ercd) \
 	if ((_pduId >= PduRConfig->NRoutingPaths) && PDUR_DEV_ERROR_DETECT) { \
 		Det_ReportError(MODULE_ID_PDUR, PDUR_INSTANCE_ID, _api, PDUR_E_PDU_ID_INVALID); \
-		return __VA_ARGS__; \
+		return ercd; \
 	}
 
 
 #else
 #define PDUR_DET_REPORTERROR(_x,_y,_z,_o)
-#define PDUR_VALIDATE_INITIALIZED(_api,...)
-#define PDUR_VALIDATE_PDUPTR(_api, _pduPtr, ...)
-#define PDUR_VALIDATE_PDUID(_api, _pduId, ...)
+#define PDUR_VALIDATE_INITIALIZED(_api,ercd)
+#define PDUR_VALIDATE_PDUPTR(_api, _pduPtr, ercd)
+#define PDUR_VALIDATE_PDUID(_api, _pduId, ercd)
 
 #endif
 
@@ -137,9 +137,9 @@ void PduR_ChangeParameterRequest(PduR_ParameterValueType PduParameterValue,
  * These macros replaces the original functions if zero cost
  * operation is desired. */
 #if PDUR_ZERO_COST_OPERATION == STD_ON
-#define PduR_Init(...)
-#define PduR_GetVersionInfo(...)
-#define PduR_GetConfigurationId(...) 0
+#define PduR_Init(ConfigPtr)
+#define PduR_GetVersionInfo(versionInfo)
+#define PduR_GetConfigurationId() 0
 
 #else // Not zero cost operation
 //#error fail

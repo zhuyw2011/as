@@ -265,10 +265,10 @@ def GenC():
         for dest in GLGet(path,'DestinationList'):
             cstr += """
     {
-        .DataProvision =  PDUR_NO_PROVISION,
-        .DestPduId =  %s_ID_%s,
-        .TxBufferRef =  NULL,
-        .DestModule =  ARC_PDUR_%s
+        /*.DataProvision =*/  PDUR_NO_PROVISION,
+        /*.DestPduId =*/  %s_ID_%s,
+        /*.TxBufferRef =*/  NULL,
+        /*.DestModule =*/  ARC_PDUR_%s
     },\n"""%(GAGet(dest,'Module').upper(),GAGet(dest,'PduRef'),
              GAGet(dest,'Module').upper())
     fp.write("""
@@ -315,10 +315,12 @@ const PduRDestPdu_type PduR_PduRDestination[] = {
     for path in GLGet('RoutineList'):
         cstr += """
 const PduRRoutingPath_type %s_PduRRoutingPath = {
-    .SduLength =  8,
-    .SrcPduId =  %s_ID_%s,
-    .SrcModule =  ARC_PDUR_%s,
-    .PduRDestPdus =  %s_PduRDestinations
+    /*.SduLength =*/  8,
+    /*.TpChunkSize =*/ -1,
+    /*.PduRDefaultValue =*/ {-1, NULL},
+    /*.SrcPduId =*/  %s_ID_%s,
+    /*.SrcModule =*/  ARC_PDUR_%s,
+    /*.PduRDestPdus =*/  %s_PduRDestinations
 };\n"""%(GAGet(path,'PduRef'),
          GAGet(path,'Module').upper(),GAGet(path,'PduRef'),
          GAGet(path,'Module').upper(),
@@ -334,11 +336,11 @@ const PduRRoutingPath_type * const PduRRoutingPaths[] = {
 };  
 
 const PduR_PBConfigType PduR_Config = {
-    .PduRConfigurationId =  0,
-    .NRoutingPaths =  %s,       
-    .RoutingPaths =  PduRRoutingPaths,
-    .TpBuffers =  NULL,
-    .TpRouteBuffers =  NULL
+    /*.PduRConfigurationId =*/  0,
+    /*.NRoutingPaths =*/  %s,       
+    /*.RoutingPaths =*/  PduRRoutingPaths,
+    /*.TpBuffers =*/  NULL,
+    /*.TpRouteBuffers =*/  NULL
 };
 
 #endif //(PDUR_ZERO_COST_OPERATION == STD_OFF)  

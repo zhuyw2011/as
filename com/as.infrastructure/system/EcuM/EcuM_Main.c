@@ -40,7 +40,7 @@
 
 #define ECUM_STR   "ECUM:"
 
-#if defined(USE_LDEBUG_PRINTF)
+#if defined(USE_DET) || defined(USE_ASLOG)
 char *GetMainStateAsString( EcuM_StateType state ) {
 	char *str = NULL;
 
@@ -118,7 +118,7 @@ char *GetMainStateAsString( EcuM_StateType state ) {
 }
 
 const char *GetWakeupReactionAsString( EcuM_WakeupReactionType reaction ) {
-	const char *WakeupReactionAsString[] = {
+	static const char *WakeupReactionAsString[] = {
 			"ECUM_WKACT_RUN",
 			"??????",
 			"ECUM_WKACT_TTII",
@@ -499,6 +499,8 @@ void EcuM_MainFunction(void) {
 	static uint32 validationMask;
 	static uint32 validationMaxTime;
 	static uint32 pendingWkupMask = 0;
+	const EcuM_WakeupSourceConfigType *wkupCfgPtr;
+	int i;
 
 	VALIDATE_NO_RV(EcuM_World.initiated, ECUM_MAINFUNCTION_ID, ECUM_E_NOT_INITIATED);
 
@@ -577,7 +579,6 @@ void EcuM_MainFunction(void) {
 
 		validationMask = 0;
 		validationMaxTime = 0;
-		const EcuM_WakeupSourceConfigType *wkupCfgPtr;
 
 		set_current_state(ECUM_STATE_WAKEUP_VALIDATION);
 
@@ -602,7 +603,7 @@ void EcuM_MainFunction(void) {
 #endif
 
 		/* Calculate the validation timing , if any*/
-		for (int i = 0; i < ECUM_WKSOURCE_USER_CNT; i++) {
+		for (i = 0; i < ECUM_WKSOURCE_USER_CNT; i++) {
 			wkupCfgPtr = &EcuM_World.config->EcuMWakeupSourceConfig[i];
 
 			/* Can't validate something that is not pending */
@@ -682,7 +683,7 @@ void EcuM_MainFunction(void) {
 			const EcuM_WakeupSourceConfigType *wkupCfgPtr;
 			uint32 validated = EcuM_GetValidatedWakeupEvents();
 
-			for(int i=0;i<ECUM_WKSOURCE_USER_CNT;i++) {
+			for(i=0;i<ECUM_WKSOURCE_USER_CNT;i++) {
 				wkupCfgPtr = &EcuM_World.config->EcuMWakeupSourceConfig[i];
 
 				/* Call wakeup indication for all validated events with a channel assigned */

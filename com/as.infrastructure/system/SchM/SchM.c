@@ -387,7 +387,7 @@ void SchM_RunMemory(void)
 /**
  * Startup task.
  */
-#ifndef __WINDOWS__
+#if !defined(__WINDOWS__) && !defined(__HIWARE__)
 void __weak SchM_StartupHook(void){}
 #else
 extern void SchM_StartupHook(void);
