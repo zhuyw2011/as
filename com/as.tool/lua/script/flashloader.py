@@ -392,12 +392,13 @@ class AsFlashloader(QThread):
         return self.enable[8]
     def is_check_flash_driver_enabled(self):
         return self.enable[5]
-    def setTarget(self,app,flsdrv=None, eraseProperty='512', writeProperty='8', signature='8'):
+    def setTarget(self,app,flsdrv=None, eraseProperty='512', writeProperty='8', signature='8', busPorperty='4096'):
         self.app = app
         self.flsdrv = flsdrv
         self.eraseProperty = eval(str(eraseProperty))
         self.writeProperty = eval(str(writeProperty))
         self.flsSignature = eval(str(signature))
+        self.ability = eval(str(busPorperty))
 
     def GetSteps(self):
         ss = []
@@ -563,32 +564,56 @@ class AsFlashloader(QThread):
         flsdrvr.dump('read_%s'%(os.path.basename(self.flsdrv)))
         return ercd,res
 
-    def get_app_erase_range(self):
-        app = self.apps
-        ary = app.getData(True)
-        saddr = ary[0]['address']
-        eaddr = ary[0]['address'] + ary[0]['size']
-        for ss in ary:
-            if(ss['address']< saddr):
-                saddr = ss['address']
-            if(ss['address']+ss['size'] > eaddr):
-                eaddr = ss['address']+ss['size']
+    def get_app_erase_range(self, section=None):
+        if(section != None):
+            saddr = section['address']
+            eaddr = section['address'] + section['size']
+        else:
+            app = self.apps
+            ary = app.getData(True)
+            saddr = ary[0]['address']
+            eaddr = ary[0]['address'] + ary[0]['size']
+            for ss in ary:
+                if(ss['address']< saddr):
+                    saddr = ss['address']
+                if(ss['address']+ss['size'] > eaddr):
+                    eaddr = ss['address']+ss['size']
         if(type(self.eraseProperty) == list):
             for addr in self.eraseProperty:
                 if(eaddr <= addr):
                     eaddr = addr
                     break
         else:
+            saddrAligned = int(saddr/self.eraseProperty)*self.eraseProperty
+            if(saddrAligned != saddr):
+                saddr = saddrAligned
             eaddr = int((eaddr+self.eraseProperty-1)/self.eraseProperty)*self.eraseProperty
         return saddr, eaddr
 
     def routine_erase_flash(self):
-        saddr, eaddr = self.get_app_erase_range()
-        eaddr = eaddr - saddr # get the length
-        return self.transmit([0x31,0x01,0xFF,0x01,
-                              (saddr>>24)&0xFF,(saddr>>16)&0xFF,(saddr>>8)&0xFF,(saddr>>0)&0xFF,
-                              (eaddr>>24)&0xFF,(eaddr>>16)&0xFF,(eaddr>>8)&0xFF,(eaddr>>0)&0xFF,
-                              0xFF],[0x71,0x01,0xFF,0x01])
+        if(self.apps.hasS3):
+            saddr, eaddr = self.get_app_erase_range()
+            eaddr = eaddr - saddr # get the length
+            return self.transmit([0x31,0x01,0xFF,0x01,
+                                  (saddr>>24)&0xFF,(saddr>>16)&0xFF,(saddr>>8)&0xFF,(saddr>>0)&0xFF,
+                                  (eaddr>>24)&0xFF,(eaddr>>16)&0xFF,(eaddr>>8)&0xFF,(eaddr>>0)&0xFF,
+                                  0xFF],[0x71,0x01,0xFF,0x01])
+        else:
+            # if no S3 record, generally it's a 16 bit banked MCU
+            # and the FLASH address is not continious
+            ercd,res = False,None
+            app = self.apps
+            ary = app.getData(True)
+            for section in ary:
+                saddr, eaddr = self.get_app_erase_range(section)
+                eaddr = eaddr - saddr # get the length
+                ercd,res = self.transmit([0x31,0x01,0xFF,0x01,
+                                      (saddr>>24)&0xFF,(saddr>>16)&0xFF,(saddr>>8)&0xFF,(saddr>>0)&0xFF,
+                                      (eaddr>>24)&0xFF,(eaddr>>16)&0xFF,(eaddr>>8)&0xFF,(eaddr>>0)&0xFF,
+                                      0xFF],[0x71,0x01,0xFF,0x01])
+                if(ercd != True):
+                    break
+            return ercd,res
     
     def download_application(self):
         app = self.apps
@@ -750,6 +775,10 @@ class UIFlashloader(QWidget):
         grid.addWidget(QLabel('Erase Property:'),4,0)
         self.leFlsEraseProperty = QLineEdit()
         grid.addWidget(self.leFlsEraseProperty,4,1)
+        grid.addWidget(QLabel('Bus Property:'),4,2)
+        self.leFlsBusProperty = QLineEdit()
+        self.leFlsBusProperty.setText('4096')
+        grid.addWidget(self.leFlsBusProperty,4,3)
         self.leFlsEraseProperty.setToolTip('Sector start address list or the smallest sector size\nfor example:\n  list:[0,128*1024,...]\n  size: 512')
         self.leFlsEraseProperty.setText('128*1024')
         grid.addWidget(QLabel('Write Property:'),5,0)
@@ -837,7 +866,7 @@ class UIFlashloader(QWidget):
             self.pgbProgress.setValue(1)
             self.loader.setTarget(str(self.leApplication.text()), str(self.leFlsDrv.text()),
                                   str(self.leFlsEraseProperty.text()),str(self.leFlsWriteProperty.text()),
-                                  str(self.leFlsSignature.text()))
+                                  str(self.leFlsSignature.text()),str(self.leFlsBusProperty.text()))
             self.loader.start()
         else:
             QMessageBox.information(self, 'Tips', 'Please load a valid application first!')

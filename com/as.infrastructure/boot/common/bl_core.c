@@ -74,6 +74,7 @@ static BL_MemoryInfoType blMemoryList[] = {
 	/* STM32F017VC  */ { 0x00010000, 0x00040000, 0xFF, 0x04|0x02|0x01 },
 	/* VERSATILEPB  */ { 0x00040000, 0x08000000, 0xFF, 0x04|0x02|0x01 },
 	/* MPC56XX      */ { 0x00020000, 0x00180000, 0xFF, 0x04|0x02|0x01 },
+	/* MC9S12XEP100 */ { 0x00004000, 0x00FBC000, 0xFF, 0x04|0x02|0x01 },
 	/* FLASH DRIVER */ { 0x00000000, 0x00001000, 0xFD, 0x04|0x02|0x01 },
 };
 /* ============================ [ LOCALS    ] ====================================================== */
@@ -124,8 +125,8 @@ static Dcm_ReturnEraseMemoryType eraseFlash(Dcm_OpStatusType OpStatus,uint32 Mem
 			}
 			else
 			{
-				ASLOG(BL,("erase faile: errorcode = %X(addr=%X,size=%X)\n",
-						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length));
+				ASLOG(BL,("erase failed: errorcode = %X(addr=%X,size=%X)\n",
+						(uint32)blFlashParam.errorcode,(uint32)blFlashParam.address,(uint32)blFlashParam.length));
 				rv = DCM_ERASE_FAILED;
 			}
 			break;
@@ -179,8 +180,8 @@ static Dcm_ReturnWriteMemoryType writeFlash(Dcm_OpStatusType OpStatus,uint32 Mem
 			}
 			else
 			{
-				ASLOG(BL,("write faile: errorcode = %X(addr=%X,size=%X)\n",
-						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length));
+				ASLOG(BL,("write failed: errorcode = %X(addr=%X,size=%X)\n",
+						(uint32)blFlashParam.errorcode,(uint32)blFlashParam.address,(uint32)blFlashParam.length));
 				rv = DCM_WRITE_FAILED;
 			}
 			break;
@@ -234,8 +235,8 @@ static Dcm_ReturnReadMemoryType readFlash(Dcm_OpStatusType OpStatus,uint32 Memor
 			}
 			else
 			{
-				ASLOG(BL,("read faile: errorcode = %X(addr=%X,size=%X)\n",
-						blFlashParam.errorcode,blFlashParam.address,blFlashParam.length));
+				ASLOG(BL,("read failed: errorcode = %X(addr=%X,size=%X)\n",
+						(uint32)blFlashParam.errorcode,(uint32)blFlashParam.address,(uint32)blFlashParam.length));
 				rv = DCM_READ_FAILED;
 			}
 			break;
@@ -272,7 +273,7 @@ Dcm_ReturnEraseMemoryType Dcm_EraseMemory(Dcm_OpStatusType OpStatus,
 	Dcm_ReturnEraseMemoryType rv;
 
 	ASLOG(BL,("Dcm_EraseMemory(%X,%X,%X,%X)\n",
-			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize));
+			(uint32)OpStatus,(uint32)MemoryIdentifier,(uint32)MemoryAddress,(uint32)MemorySize));
 	StopTimer(&appTimer);
 	if(DCM_INITIAL == OpStatus)
 	{
@@ -302,7 +303,7 @@ Dcm_ReturnWriteMemoryType Dcm_WriteMemory(Dcm_OpStatusType OpStatus,
 	imask_t imask;
 	Dcm_ReturnEraseMemoryType rv;
 	ASLOG(BL,("Dcm_WriteMemory(%X,%X,%X,%X)\n",
-			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize));
+			(uint32)OpStatus,(uint32)MemoryIdentifier,(uint32)MemoryAddress,(uint32)MemorySize));
 	StopTimer(&appTimer);
 	if(DCM_INITIAL == OpStatus)
 	{
@@ -336,7 +337,7 @@ Dcm_ReturnReadMemoryType Dcm_ReadMemory(Dcm_OpStatusType OpStatus,
 	imask_t imask;
 	Dcm_ReturnReadMemoryType rv;
 	ASLOG(BL,("Dcm_ReadMemory(%X,%X,%X,%X)\n",
-			OpStatus,MemoryIdentifier,MemoryAddress,MemorySize));
+			(uint32)OpStatus,(uint32)MemoryIdentifier,(uint32)MemoryAddress,(uint32)MemorySize));
 	if(DCM_INITIAL == OpStatus)
 	{
 		blMemoryIdentifier = MemoryIdentifier;
@@ -363,6 +364,9 @@ boolean Dcm_CheckMemory(uint8 attr, uint8 memoryIdentifier, uint32 memoryAddress
 {
 	boolean rv = FALSE;
 	uint32 i;
+
+	ASLOG(BL,("Dcm_CheckMemory(%X,%X,%X,%X)\n",
+				(uint32)attr,(uint32)memoryIdentifier,(uint32)memoryAddress,(uint32)length));
 	for(i=0; i<(sizeof(blMemoryList)/sizeof(BL_MemoryInfoType)); i++)
 	{
 		if( (memoryIdentifier == blMemoryList[i].identifier) &&
@@ -438,9 +442,9 @@ void BL_MainFunction(void)
 		Irq_Save(imask);
 
 		ASLOG(BL,("appTimer timeout, jump to application @%p 0x%X FLSDRV@%X!\n",
-				application_main,
-				*(uint32_t*)application_main,
-				FLASH_DRIVER_STARTADDRESS));
+				(uint32)application_main,
+				(uint32)*(uint32_t*)application_main,
+				(uint32)FLASH_DRIVER_STARTADDRESS));
 		if( ((*(uint32_t*)application_main) != 0)
 			&& ((*(uint32_t*)application_main) != 0xFFFFFFFF)
 #ifdef STM32F10X_CL

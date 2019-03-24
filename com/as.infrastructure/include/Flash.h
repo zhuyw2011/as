@@ -25,11 +25,11 @@
 #define FLASH_DRIVER_VERSION_PATCH 0x00 /* bugfix / patchlevel */
 
 
-#define FLASH_DRIVER_INIT_OFFSET    0x00000004
-#define FLASH_DRIVER_DEINIT_OFFSET  0x00000008
-#define FLASH_DRIVER_ERASE_OFFSET   0x0000000C
-#define FLASH_DRIVER_WRITE_OFFSET   0x00000010
-#define FLASH_DRIVER_READ_OFFSET    0x00000014
+#define FLASH_DRIVER_INIT_OFFSET    sizeof(unsigned long)
+#define FLASH_DRIVER_DEINIT_OFFSET  (sizeof(unsigned long)+sizeof(tFlashFct)*1)
+#define FLASH_DRIVER_ERASE_OFFSET   (sizeof(unsigned long)+sizeof(tFlashFct)*2)
+#define FLASH_DRIVER_WRITE_OFFSET   (sizeof(unsigned long)+sizeof(tFlashFct)*3)
+#define FLASH_DRIVER_READ_OFFSET    (sizeof(unsigned long)+sizeof(tFlashFct)*4)
 
 /* sa holds flash driver start address, 
  * pp contains pointer the pointer to the parameter structure */

@@ -23,6 +23,7 @@ class s19:
         self.gap = gap
         self.file = file
         self.data = []
+        self.hasS3 = False
         if(file != None):self.parse(file)
 
     def append(self,address,bytes):
@@ -106,6 +107,7 @@ class s19:
             print("%s::checksum error @ line %d %s",self.file,linno,el)
             return False
         self.append(address, bytes)
+        self.hasS3 = True
         return True
 
     def parse(self,file):

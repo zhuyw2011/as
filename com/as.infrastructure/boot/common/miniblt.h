@@ -50,7 +50,8 @@
 #define DCM_E_SECUTITY_ACCESS_DENIED						((Dcm_NegativeResponseCodeType)0x33)
 #define DCM_E_INVALID_KEY									((Dcm_NegativeResponseCodeType)0x35)
 #define DCM_E_GENERAL_PROGRAMMING_FAILURE					((Dcm_NegativeResponseCodeType)0x72)
-#define DCM_E_WRONG_BLOCK_SEQUENCE_COUNTER                  ((Dcm_NegativeResponseCodeType)0x73)
+#define DCM_E_WRONG_BLOCK_SEQUENCE_COUNTER					((Dcm_NegativeResponseCodeType)0x73)
+#define DCM_E_SUB_FUNCTION_NOT_SUPPORTED_IN_ACTIVE_SESSION	((Dcm_NegativeResponseCodeType)0x7E)
 
 #define DCM_DEFAULT_SESSION					((Dcm_SesCtrlType)0x01)
 #define DCM_PROGRAMMING_SESSION				((Dcm_SesCtrlType)0x02)

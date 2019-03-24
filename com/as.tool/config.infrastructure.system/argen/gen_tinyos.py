@@ -125,6 +125,7 @@ def genForTinyOS_C(gendir,os_list):
         if((int(isr.attrib['Vector'],10)+1)>isr_num):
             isr_num = int(isr.attrib['Vector'],10)+1
     if(isr_num > 0):
+        fp.write('#ifdef __HIWARE__\n#pragma DATA_SEG __NEAR_SEG .vectors\n#endif\n')
         fp.write('const FP tisr_pc[ %s ] = {\n'%(isr_num))
         for iid in range(isr_num):
             iname = 'NULL'
@@ -134,6 +135,7 @@ def genForTinyOS_C(gendir,os_list):
                     break
             fp.write('\t%s, /* %s */\n'%(iname,iid))
         fp.write('};\n\n')
+        fp.write('#ifdef __HIWARE__\n#pragma DATA_SEG DEFAULT\n#endif\n')
     fp.write('\n\n')
     fp.close()
 def gen_tinyos(gendir,os_list):

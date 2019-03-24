@@ -69,7 +69,7 @@ do{										\
 #ifdef __AS_BOOTLOADER__
 #define DCM_GET_SESSION_CHANGE_PERMISSION_FNC BL_GetSessionChangePermission
 #else
-#define DCM_GET_SESSION_CHANGE_PERMISSION_FNC Dcm_GetSessionChangePermission
+#define DCM_GET_SESSION_CHANGE_PERMISSION_FNC Diag_GetSesChgPer
 #endif
 
 #define DCM_RXSDU   ((const PduInfoType *)DCM_RTE.parameter[0])
@@ -163,9 +163,12 @@ Std_ReturnType BL_GetExtendedSessionSeed (uint8 *securityAccessDataRecord, uint8
 Std_ReturnType BL_CompareExtendedSessionKey (uint8 *key);
 #endif
 
-Std_ReturnType Dcm_GetSessionChangePermission(Dcm_SesCtrlType sesCtrlTypeActive, Dcm_SesCtrlType sesCtrlTypeNew);
-Std_ReturnType Dcm_GetSeed(uint8 *securityAccessDataRecord, uint8 *seed, Dcm_NegativeResponseCodeType *errorCode);
-Std_ReturnType Dcm_CompareKey(uint8 *key);
+Std_ReturnType Diag_GetSesChgPer(Dcm_SesCtrlType sesCtrlTypeActive, Dcm_SesCtrlType sesCtrlTypeNew);
+Std_ReturnType Diag_GetSeedEXTDS(uint8 *securityAccessDataRecord, uint8 *seed, Dcm_NegativeResponseCodeType *errorCode);
+Std_ReturnType Diag_CompareKeyEXTDS(uint8 *key);
+
+boolean Dcm_CheckMemory(uint8 attr, uint8 memoryIdentifier, uint32 memoryAddress, uint32 length);
+boolean Dcm_CheckDataFormatIdentifier(uint8 dataFormatIdentifier);
 /* ============================ [ DATAS     ] ====================================================== */
 static Dcm_RuntimeType dcmRTE[DCM_INSTANCE_NUM];
 /* uint64 for 8 byte alignment */
@@ -198,26 +201,26 @@ static const uint8 secSeedKeySizeList[] = { 4 /* EXTDS */, 4 /* PRGS */ };
 static const Dcm_CallbackGetSeedFncType getSeedList[] = { BL_GetExtendedSessionSeed, BL_GetProgramSessionSeed };
 static const Dcm_CallbackCompareKeyFncType compareKeyList[] = { BL_CompareExtendedSessionKey, BL_CompareProgramSessionKey };
 #else
-static const Dcm_CallbackGetSeedFncType getSeedList[] = { Dcm_GetSeed, Dcm_GetSeed };
-static const Dcm_CallbackCompareKeyFncType compareKeyList[] = { Dcm_CompareKey, Dcm_CompareKey };
+static const Dcm_CallbackGetSeedFncType getSeedList[] = { Diag_GetSeedEXTDS, NULL /* NO PRGS session for APP */ };
+static const Dcm_CallbackCompareKeyFncType compareKeyList[] = { Diag_CompareKeyEXTDS, NULL };
 #endif
 static const uint32 dcmInstanceDefaultParameter[] = DCM_INSTANCE_DEFAULT_PARAMETER;
 
 /* ============================ [ LOCALS    ] ====================================================== */
 #if !defined(__HIWARE__)
-Std_ReturnType __weak Dcm_GetSessionChangePermission(Dcm_SesCtrlType sesCtrlTypeActive, Dcm_SesCtrlType sesCtrlTypeNew)
+Std_ReturnType __weak Diag_GetSesChgPer(Dcm_SesCtrlType sesCtrlTypeActive, Dcm_SesCtrlType sesCtrlTypeNew)
 {
 	Std_ReturnType ercd = E_OK;
 	return ercd;
 }
 
-Std_ReturnType __weak Dcm_GetSeed(uint8 *securityAccessDataRecord, uint8 *seed, Dcm_NegativeResponseCodeType *errorCode)
+Std_ReturnType __weak Diag_GetSeedEXTDS(uint8 *securityAccessDataRecord, uint8 *seed, Dcm_NegativeResponseCodeType *errorCode)
 {
 	Std_ReturnType ercd = E_OK;
 	*errorCode = DCM_E_POSITIVE_RESPONSE;
 	return ercd;
 }
-Std_ReturnType __weak Dcm_CompareKey(uint8 *key)
+Std_ReturnType __weak Diag_CompareKeyEXTDS(uint8 *key)
 {
 	Std_ReturnType ercd = E_OK;
 	return ercd;
@@ -323,6 +326,10 @@ static void HandleSecurityAccess(PduIdType Instance)
 				{
 					SendNRC(Instance, DCM_E_INCORRECT_MESSAGE_LENGTH_OR_INVALID_FORMAT);
 				}
+				else if(NULL == DCM_SECURITY_GET_SEED_FNC_LIST[index])
+				{
+					SendNRC(Instance, DCM_E_SUB_FUNCTION_NOT_SUPPORTED_IN_ACTIVE_SESSION);
+				}
 				else
 				{
 					if(level == DCM_RTE.currentLevel)
@@ -334,7 +341,7 @@ static void HandleSecurityAccess(PduIdType Instance)
 					}
 					else
 					{
-						ercd = DCM_SECURITY_GET_SEED_FNC_LIST[index](NULL, &DCM_TXSDU_DATA[2], &errorCode);
+						ercd = DCM_SECURITY_GET_SEED_FNC_LIST[index](&DCM_RXSDU_DATA[1], &DCM_TXSDU_DATA[2], &errorCode);
 						if(E_OK == ercd)
 						{
 							DCM_TXSDU_DATA[1] = DCM_RXSDU_DATA[1];
@@ -359,6 +366,10 @@ static void HandleSecurityAccess(PduIdType Instance)
 				else if(FALSE == DCM_RTE.seedRequested)
 				{
 					SendNRC(Instance, DCM_E_REQUEST_SEQUENCE_ERROR);
+				}
+				else if(NULL == DCM_SECURITY_COMPARE_KEY_FNC_LIST[index])
+				{
+					SendNRC(Instance, DCM_E_SUB_FUNCTION_NOT_SUPPORTED_IN_ACTIVE_SESSION);
 				}
 				else
 				{

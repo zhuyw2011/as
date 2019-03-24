@@ -103,18 +103,18 @@ Std_ReturnType BL_CompareExtendedSessionKey (uint8 *key)
 }
 Std_ReturnType BL_StartProtocolCbk (Dcm_ProtocolType protocolID)
 {
-	ASLOG(BL, ("BL_StartProtocolCbk(protocolID=%d)\n", protocolID));
+	ASLOG(BL, ("BL_StartProtocolCbk(protocolID=%d)\n", (uint32)protocolID));
 	// TODO: check pre-condition such as battery...
 	return E_OK;
 }
 Std_ReturnType BL_StopProtocolCbk (Dcm_ProtocolType protocolID)
 {
-	ASLOG(BL, ("BL_StopProtocolCbk(protocolID=%d)\n", protocolID));
+	ASLOG(BL, ("BL_StopProtocolCbk(protocolID=%d)\n", (uint32)protocolID));
 	return E_OK;
 }
 Std_ReturnType BL_ProtocolIndicationCbk(uint8 *requestData, uint16 dataSize)
 {
-	ASLOG(BL, ("BL_ProtocolIndicationCbk(dataSize=%d)\n", dataSize));
+	ASLOG(BL, ("BL_ProtocolIndicationCbk(dataSize=%d)\n", (uint32)dataSize));
 	return E_OK;
 }
 
@@ -122,7 +122,7 @@ Std_ReturnType BL_GetSessionChangePermission(Dcm_SesCtrlType sesCtrlTypeActive, 
 
 {
 	Std_ReturnType ercd = E_OK;
-	ASLOG(BL, ("BL_GetSessionChangePermission(%d --> %d)\n",  sesCtrlTypeActive, sesCtrlTypeNew));
+	ASLOG(BL, ("BL_GetSessionChangePermission(%d --> %d)\n",  (uint32)sesCtrlTypeActive, (uint32)sesCtrlTypeNew));
 
 	/* program session can only be entered through EXTDS session */
 	if(( DCM_PROGRAMMING_SESSION == sesCtrlTypeNew) && (DCM_EXTENDED_DIAGNOSTIC_SESSION != sesCtrlTypeActive))

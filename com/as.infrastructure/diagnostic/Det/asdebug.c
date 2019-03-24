@@ -76,7 +76,7 @@ void asmem(const char* prefix, const void* address,size_t size)
 		{
 			if((i*16+j)<size)
 			{
-				printf(" %02X",src[i*16+j]);
+				printf(" %02X",(uint32_t)src[i*16+j]);
 			}
 			else
 			{
