@@ -92,9 +92,11 @@ KSMState_Type KsmGetState(KsmID_Type Ksm)
 #endif /* KSM_NUM  */
 
 #ifndef __POSIX_OSAL__
+#if !defined(__HIWARE__)
 void __weak TaskIdleHook(void)
 {
 }
+#endif
 TASK(TaskIdle)
 {
 #if !defined(USE_TINYOS) && !defined(USE_CONTIKI)

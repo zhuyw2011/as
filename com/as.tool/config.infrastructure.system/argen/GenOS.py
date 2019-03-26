@@ -216,8 +216,8 @@ def GenH(gendir,os_list):
     isr_list = ScanFrom(os_list,'ISR')
     isr_num = len(isr_list)
     for isr in isr_list:
-        if((int(isr.attrib['Vector'],10)+1)>isr_num):
-            isr_num = int(isr.attrib['Vector'],10)+1
+        if((eval(isr.attrib['Vector'])+1)>isr_num):
+            isr_num = eval(isr.attrib['Vector'])+1
     fp.write('#define ISR_NUM  %s\n\n'%(isr_num))
     fp.write('\n\n')
     fp.write('/* ============================ [ TYPES     ] ====================================================== */\n')
@@ -261,11 +261,14 @@ def GenC(gendir,os_list):
     fp.write('#include "kernel_internal.h"\n')
     fp.write('/* ============================ [ MACROS    ] ====================================================== */\n')
     fp.write('#ifndef OS_STK_SIZE_SCALER\n#define OS_STK_SIZE_SCALER 1\n#endif\n')
+    fp.write('#ifndef ISR_ATTR\n#define ISR_ATTR\n#endif\n')
+    fp.write('#ifndef ISR_ADDR(isr)\n#define ISR_ADDR(isr) isr\n#endif\n')
     fp.write('/* ============================ [ TYPES     ] ====================================================== */\n')
     fp.write('/* ============================ [ DECLARES  ] ====================================================== */\n')
     isr_list = ScanFrom(os_list,'ISR')
     for isr in isr_list:
-        fp.write('extern void %s (void);\n'%(isr.attrib['Name']))
+        fp.write('extern void ISR_ATTR %s (void);\n'%(isr.attrib['Name']))
+    fp.write('void ISR_ATTR __weak default_isr_handle(void) { ShutdownOS(0xEE); }\n')
     fp.write('/* ============================ [ DATAS     ] ====================================================== */\n')
     general = ScanFrom(os_list,'General')[0]
     CPU_CORE_NUMBER = 0
@@ -512,21 +515,25 @@ def GenC(gendir,os_list):
     fp.write('#endif\n')
     isr_num = len(isr_list)
     for isr in isr_list:
-        if((int(isr.attrib['Vector'],10)+1)>isr_num):
-            isr_num = int(isr.attrib['Vector'],10)+1
+        if((eval(isr.attrib['Vector'])+1)>isr_num):
+            isr_num = eval(isr.attrib['Vector'])+1
     if(isr_num > 0):
+        fp.write('#ifdef __HIWARE__\n#pragma DATA_SEG __NEAR_SEG .vectors\n')
+        fp.write('const uint16 tisr_pc[ %s ] = {\n'%(isr_num))
+        fp.write('#else\n')
         fp.write('const FP tisr_pc[ %s ] = {\n'%(isr_num))
+        fp.write('#endif\n')
         for iid in range(isr_num):
-            iname = 'NULL'
+            iname = 'default_isr_handle'
             for isr in isr_list:
-                if(iid == int(isr.attrib['Vector'])):
+                if(iid == eval(isr.attrib['Vector'])):
                     iname = isr.attrib['Name']
                     break
-            fp.write('\t%s, /* %s */\n'%(iname,iid))
+            fp.write('\tISR_ADDR(%s), /* %s */\n'%(iname,iid))
         fp.write('};\n\n')
+        fp.write('#ifdef __HIWARE__\n#pragma DATA_SEG DEFAULT\n#endif\n')
     fp.write('/* ============================ [ LOCALS    ] ====================================================== */\n')
     fp.write('/* ============================ [ FUNCTIONS ] ====================================================== */\n')
-    
     fp.close()
 
 def gen_askar(gendir,os_list):

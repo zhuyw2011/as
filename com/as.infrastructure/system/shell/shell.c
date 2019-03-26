@@ -49,10 +49,10 @@ StatusType OsClearEvent(uint32_t id, uint32_t mask);
 #include "ringbuffer.h"
 /* ----------------------------[Private define]------------------------------*/
 
-#if !defined(USE_SHELL_WITHOUT_TASK) && ( \
+#if !defined(USE_SHELL_WITHOUT_EVENT) && ( \
 		defined(USE_TINYOS) || defined(USE_CONTIKI) \
 	)
-#define USE_SHELL_WITHOUT_TASK
+#define USE_SHELL_WITHOUT_EVENT
 #endif
 /* The maximum number of arguments when calling a shell function */
 #if defined(__LINUX__) || defined(__WINDOWS__)
@@ -176,12 +176,15 @@ void SHELL_input(char c)
 	}
 #ifdef USE_SHELL_WITHOUT_TASK
 #else
+#ifdef USE_SHELL_WITHOUT_EVENT
 	OsActivateTask(TaskShell);
+#else
 	ercd = OsSetEvent(TaskShell, EventShellInput);
 	if(E_OK != ercd)
 	{
 		asAssert(0);
 	}
+#endif
 #endif
 }
 
@@ -198,7 +201,7 @@ static char SHELL_getc(void)
 		Irq_Restore(imask);
 		if(0 == r)
 		{
-			#ifndef USE_SHELL_WITHOUT_TASK
+			#if !defined(USE_SHELL_WITHOUT_TASK) && !defined(USE_SHELL_WITHOUT_EVENT)
 			StatusType ercd = OsWaitEvent(TaskShell, EventShellInput);
 			if(E_OK != ercd)
 			{
@@ -486,25 +489,25 @@ static void doPrompt( void ) {
 
 int SHELL_Mainloop( void ) {
 	char c;
-#ifdef USE_SHELL_WITHOUT_TASK
+#if defined(USE_SHELL_WITHOUT_TASK) || defined(USE_SHELL_WITHOUT_EVENT)
 	static int lineIndex = -1;
 #else
 	int lineIndex = 0;
 #endif
 	int cmdRv;
 
-#ifdef USE_SHELL_WITHOUT_TASK
+#if defined(USE_SHELL_WITHOUT_TASK) || defined(USE_SHELL_WITHOUT_EVENT)
   if(-1 == lineIndex) {
 #endif
 	SHELL_puts("AS Shell version 0.1\n");
 	doPrompt();
-#ifdef USE_SHELL_WITHOUT_TASK
+#if defined(USE_SHELL_WITHOUT_TASK) || defined(USE_SHELL_WITHOUT_EVENT)
 	lineIndex = 0;
   }
 #endif
 	for(;;) {
 		c = SHELL_getc();
-#ifdef USE_SHELL_WITHOUT_TASK
+#if defined(USE_SHELL_WITHOUT_TASK) || defined(USE_SHELL_WITHOUT_EVENT)
 		if((char)-1 == c) return 0;
 #endif
 		if( lineIndex >= CMDLINE_MAX ) {

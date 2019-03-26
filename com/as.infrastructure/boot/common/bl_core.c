@@ -441,7 +441,7 @@ void BL_MainFunction(void)
 
 		Irq_Save(imask);
 
-		ASLOG(BL,("appTimer timeout, jump to application @%p 0x%X FLSDRV@%X!\n",
+		ASLOG(BL,("appTimer timeout, jump to application @0x%X 0x%X FLSDRV@%X!\n",
 				(uint32)application_main,
 				(uint32)*(uint32_t*)application_main,
 				(uint32)FLASH_DRIVER_STARTADDRESS));

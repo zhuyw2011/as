@@ -74,8 +74,8 @@ def genForTinyOS_H(gendir,os_list):
     isr_list = ScanFrom(os_list,'ISR')
     isr_num = len(isr_list)
     for isr in isr_list:
-        if((int(isr.attrib['Vector'],10)+1)>isr_num):
-            isr_num = int(isr.attrib['Vector'],10)+1
+        if((eval(isr.attrib['Vector'])+1)>isr_num):
+            isr_num = eval(isr.attrib['Vector'])+1
     fp.write('#define ISR_NUM  %s\n\n'%(isr_num))
     fp.write('\n\n')
     fp.write('/* ============================ [ TYPES     ] ====================================================== */\n')
@@ -101,13 +101,16 @@ def genForTinyOS_C(gendir,os_list):
     fp.write('/* ============================ [ INCLUDES  ] ====================================================== */\n')
     fp.write('#include "Os.h"\n')
     fp.write('/* ============================ [ MACROS    ] ====================================================== */\n')
+    fp.write('#ifndef ISR_ATTR\n#define ISR_ATTR\n#endif\n')
+    fp.write('#ifndef ISR_ADDR(isr)\n#define ISR_ADDR(isr) isr\n#endif\n')
     fp.write('/* ============================ [ TYPES     ] ====================================================== */\n')
     fp.write('/* ============================ [ DECLARES  ] ====================================================== */\n')
     isr_list = ScanFrom(os_list,'ISR')
     for isr in isr_list:
-        fp.write('extern void %s (void);\n'%(isr.attrib['Name']))
+        fp.write('extern void ISR_ATTR %s (void);\n'%(isr.attrib['Name']))
     fp.write('/* ============================ [ DATAS     ] ====================================================== */\n')
     fp.write('/* ============================ [ LOCALS    ] ====================================================== */\n')
+    fp.write('void ISR_ATTR __weak default_isr_handle(void) { ShutdownOS(0xEE); }\n')
     fp.write('/* ============================ [ FUNCTIONS ] ====================================================== */\n')
     task_list = TinyOS_TaskList(os_list)
     fp.write('CONST(task_declare_t,AUTOMATIC)  TaskList[TASK_NUM] = \n{\n')
@@ -122,18 +125,21 @@ def genForTinyOS_C(gendir,os_list):
     fp.write('};\n\n')
     isr_num = len(isr_list)
     for isr in isr_list:
-        if((int(isr.attrib['Vector'],10)+1)>isr_num):
-            isr_num = int(isr.attrib['Vector'],10)+1
+        if((eval(isr.attrib['Vector'])+1)>isr_num):
+            isr_num = eval(isr.attrib['Vector'])+1
     if(isr_num > 0):
-        fp.write('#ifdef __HIWARE__\n#pragma DATA_SEG __NEAR_SEG .vectors\n#endif\n')
+        fp.write('#ifdef __HIWARE__\n#pragma DATA_SEG __NEAR_SEG .vectors\n')
+        fp.write('const uint16 tisr_pc[ %s ] = {\n'%(isr_num))
+        fp.write('#else\n')
         fp.write('const FP tisr_pc[ %s ] = {\n'%(isr_num))
+        fp.write('#endif\n')
         for iid in range(isr_num):
-            iname = 'NULL'
+            iname = 'default_isr_handle'
             for isr in isr_list:
-                if(iid == int(isr.attrib['Vector'])):
+                if(iid == eval(isr.attrib['Vector'])):
                     iname = isr.attrib['Name']
                     break
-            fp.write('\t%s, /* %s */\n'%(iname,iid))
+            fp.write('\tISR_ADDR(%s), /* %s */\n'%(iname,iid))
         fp.write('};\n\n')
         fp.write('#ifdef __HIWARE__\n#pragma DATA_SEG DEFAULT\n#endif\n')
     fp.write('\n\n')

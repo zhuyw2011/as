@@ -1176,7 +1176,7 @@ def Building(target, sobjs, env=None):
     arxml= None
 
     cfgdir = '%s/config'%(bdir)
-    os.makedirs(cfgdir, exist_ok=True)
+    MKDir(cfgdir)
     env.Append(CPPPATH=['%s'%(cfgdir)])
     env.Append(ASFLAGS='-I%s'%(cfgdir))
     if('gcc' in env['CC']):
