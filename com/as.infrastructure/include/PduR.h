@@ -119,13 +119,33 @@ extern PduR_StateType PduRState;
 		return ercd; \
 	}
 
+#define PDUR_VALIDATE_INITIALIZED_NORV(_api) \
+	if ((PduRState == PDUR_UNINIT) || (PduRState == PDUR_REDUCED)) { \
+		Det_ReportError(MODULE_ID_PDUR, PDUR_INSTANCE_ID, _api, PDUR_E_INVALID_REQUEST); \
+		return; \
+	}
+
+#define PDUR_VALIDATE_PDUPTR_NORV(_api, _pduPtr) \
+	if ((_pduPtr == NULL) && (PDUR_DEV_ERROR_DETECT)) { \
+		Det_ReportError(MODULE_ID_PDUR, PDUR_INSTANCE_ID, _api, PDUR_E_DATA_PTR_INVALID); \
+		return; \
+	}
+
+#define PDUR_VALIDATE_PDUID_NORV(_api, _pduId) \
+	if ((_pduId >= PduRConfig->NRoutingPaths) && PDUR_DEV_ERROR_DETECT) { \
+		Det_ReportError(MODULE_ID_PDUR, PDUR_INSTANCE_ID, _api, PDUR_E_PDU_ID_INVALID); \
+		return; \
+	}
+
 
 #else
 #define PDUR_DET_REPORTERROR(_x,_y,_z,_o)
 #define PDUR_VALIDATE_INITIALIZED(_api,ercd)
 #define PDUR_VALIDATE_PDUPTR(_api, _pduPtr, ercd)
 #define PDUR_VALIDATE_PDUID(_api, _pduId, ercd)
-
+#define PDUR_VALIDATE_INITIALIZED_NORV(_api,ercd)
+#define PDUR_VALIDATE_PDUPTR_NORV(_api, _pduPtr, ercd)
+#define PDUR_VALIDATE_PDUID_NORV(_api, _pduId, ercd)
 #endif
 
 Std_ReturnType PduR_CancelTransmitRequest(

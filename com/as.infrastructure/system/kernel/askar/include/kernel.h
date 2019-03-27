@@ -168,6 +168,8 @@ typedef union {
 		AppModeType			mode;
 		CounterType			cntid;
 } _ErrorHook_Par;
+
+typedef void	(*FP)(void);
 /* ============================ [ DECLARES  ] ====================================================== */
 /* ============================ [ DATAS     ] ====================================================== */
 extern OSServiceIdType _errorhook_svcid;

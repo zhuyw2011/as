@@ -232,8 +232,8 @@ void PduR_ARC_TpRxIndication(PduIdType PduId, NotifResultType Result, uint8 serv
 	};
 	uint8 i;
 
-	PDUR_VALIDATE_INITIALIZED(serviceId);
-	PDUR_VALIDATE_PDUID(serviceId, PduId);
+	PDUR_VALIDATE_INITIALIZED_NORV(serviceId);
+	PDUR_VALIDATE_PDUID_NORV(serviceId, PduId);
 
 	if (Result != NTFRSLT_OK) {
 		// There was an error in the lower layer while receiving the PDU.
@@ -255,9 +255,9 @@ void PduR_ARC_RxIndication(PduIdType PduId, const PduInfoType* PduInfo, uint8 se
 	uint8 i;
 	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
 
-	PDUR_VALIDATE_INITIALIZED(serviceId);
-	PDUR_VALIDATE_PDUPTR(serviceId, PduInfo);
-	PDUR_VALIDATE_PDUID(serviceId, PduId);
+	PDUR_VALIDATE_INITIALIZED_NORV(serviceId);
+	PDUR_VALIDATE_PDUPTR_NORV(serviceId, PduInfo);
+	PDUR_VALIDATE_PDUID_NORV(serviceId, PduId);
 
 	/* Do not route incoming PDUs out again unless specified */
     if (route != NULL && !PduR_IsLoModule(route->SrcModule)) {
@@ -307,8 +307,8 @@ void PduR_ARC_TxConfirmation(PduIdType PduId, uint8 result, uint8 serviceId) {
 	const PduRRoutingPath_type *route = PduRConfig->RoutingPaths[PduId];
 	uint8 i;
 	uint8 nDests;
-	PDUR_VALIDATE_INITIALIZED(serviceId);
-	PDUR_VALIDATE_PDUID(serviceId, PduId);
+	PDUR_VALIDATE_INITIALIZED_NORV(serviceId);
+	PDUR_VALIDATE_PDUID_NORV(serviceId, PduId);
 
 
 	if (PduR_IsUpModule(route->SrcModule)) {

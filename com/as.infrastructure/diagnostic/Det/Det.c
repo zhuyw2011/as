@@ -172,7 +172,8 @@ void Det_ReportError(uint16 ModuleId, uint8 InstanceId, uint8 ApiId, uint8 Error
 #endif
 
 #if ( DET_USE_STDERR == STD_ON )
-        ASLOG(STDOUT, ("Det Error: ModuleId=%d,  InstanceId=%d,  ApiId=%d,  ErrorId=%d\n",  ModuleId,  InstanceId,  ApiId,  ErrorId));
+        ASLOG(STDOUT, ("Det Error: ModuleId=%d,  InstanceId=%d,  ApiId=%d,  ErrorId=%d\n",
+                    (uint32)ModuleId, (uint32)InstanceId, (uint32)ApiId, (uint32)ErrorId));
 #endif
     }
 }

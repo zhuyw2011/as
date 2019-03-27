@@ -147,8 +147,15 @@ void asPrintCallStack( void )
 	*f = 0;
 }
 #endif
+#if !defined(__HIWARE__)
 void __weak Sched_ShowRdyQ(void) {}
+#endif
 void __weak flush_stdio(void) {}
+#ifdef USE_ASKAR
+#ifdef USE_SHELL
+extern int statOsFunc(int argc, char* argv[]);
+#endif
+#endif
 void asAssertErrorHook(void)
 {
 #if defined(__WINDOWS__) || defined(__LINUX__)
@@ -158,7 +165,6 @@ void asAssertErrorHook(void)
 	Irq_Disable();
 #ifdef USE_ASKAR
 #ifdef USE_SHELL
-	extern int statOsFunc(int argc, char* argv[]);
 	statOsFunc(1, NULL);
 	Sched_ShowRdyQ();
 	while(1) flush_stdio();
