@@ -53,6 +53,7 @@ General supported CPU architecture list:
 * arm64: cortex-a57 (multicore is supported)
 * ppc: mpc5634
 * intel: i386
+* s12cpuv2: mc9s12xep100
 
 
 ## 3. BSW configuration tool

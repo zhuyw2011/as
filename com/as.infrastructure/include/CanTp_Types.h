@@ -117,6 +117,7 @@ typedef struct {
 	const PduIdType PduR_PduId; // The polite PduR index.
 	const PduIdType CanTp_FcPduId;
 	const CanTp_AddressingFormantType CanTpAddressingMode; /** @req CANTP262 */
+	const uint8  reserved0;
 	const uint16 CanTpNas; /** @req CANTP263 */ /* N_As timeout for transmission of any CAN frame. */
 	const uint16 CanTpNbs; /** @req CANTP264 */ /* N_Bs timeout of transmission until reception of next Flow Control. */
 	const uint16 CanTpNcs; /** @req CANTP265 */ /* N_Bs timeout of transmission until reception of next Flow Control. */
@@ -126,6 +127,8 @@ typedef struct {
 	CanTp_StateType CanTpTxPaddingActivation; /** @req CANTP269 */ /* Enable use of padding. */
 	CanTp_TaTypeType CanTpTxTaType; /** @req CANTP270 */ /* Functional or physical addressing. */
 	/*const uint32						CanTpNSduRef ** req: CanTp261. This is PDU id - typeless enum. */
+	const uint8 reserved1; /** @req CANTP251 */ /* Max number FC wait that can be transmitted consecutively. */
+	const uint16 reserved2;
 	const CanTp_NSaType *CanTpNSa;
 	const CanTp_NTaType *CanTpNTa;
 	uint8_t ll_dl;

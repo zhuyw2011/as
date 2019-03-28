@@ -575,9 +575,10 @@ void DspUdsDiagnosticSessionControl(const PduInfoType *pduRxData, PduIdType txPd
 				if( E_OK == DslGetActiveProtocol(&activeProtocolID) ) {
 					// Create positive response
 					if( DCM_UDS_ON_CAN == activeProtocolID ) {
+						uint16_t p2ServerStarMax10ms;
 						pduTxData->SduDataPtr[2] = sessionRow->DspSessionP2ServerMax >> 8;
 						pduTxData->SduDataPtr[3] = sessionRow->DspSessionP2ServerMax;
-						uint16_t p2ServerStarMax10ms = sessionRow->DspSessionP2StarServerMax / 10;
+						p2ServerStarMax10ms = sessionRow->DspSessionP2StarServerMax / 10;
 						pduTxData->SduDataPtr[4] = p2ServerStarMax10ms >> 8;
 						pduTxData->SduDataPtr[5] = p2ServerStarMax10ms;
 						pduTxData->SduLength = 6;
@@ -3395,11 +3396,10 @@ void DspIOControlByDataIdentifier(const PduInfoType *pduRxData,PduInfoType *pduT
 
 							if( pduRxData->SduLength == SID_LEN + IOI_LEN + IOCP_LEN + controlRecordSizes->DspDidControlOptionRecordSize + controlRecordSizes->DspDidControlEnableMaskRecordSize )
 							{
-								responseCode = DCM_E_REQUEST_OUT_OF_RANGE; // Value to use if no callback found
-
 								uint8* controlOptionRecord = &pduRxData->SduDataPtr[COR_INDEX];
 								uint8* controlEnableMaskRecord = &pduRxData->SduDataPtr[COR_INDEX + controlRecordSizes->DspDidControlOptionRecordSize];
 
+								responseCode = DCM_E_REQUEST_OUT_OF_RANGE; // Value to use if no callback found
 								switch(pduRxData->SduDataPtr[IOCP_INDEX])
 								{
 								case DCM_RETURN_CONTROL_TO_ECU:

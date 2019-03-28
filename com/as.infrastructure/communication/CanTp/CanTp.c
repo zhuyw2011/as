@@ -218,8 +218,10 @@ typedef struct {
 
 // - - - - - - - - - - - - - -
 
-CanTp_RunTimeDataType CanTpRunTimeData = { .initRun = FALSE,
-		.internalState = CANTP_OFF }; /** @req CANTP168 */
+CanTp_RunTimeDataType CanTpRunTimeData = {
+		/*.initRun =*/ FALSE,
+		/*.internalState =*/ CANTP_OFF
+}; /** @req CANTP168 */
 
 // - - - - - - - - - - - - - -
 
@@ -382,9 +384,10 @@ static boolean copySegmentToLocalRxBuffer /*writeDataSegmentToLocalBuffer*/(
 		CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,
 		PduLengthType segmentSize) {
 	boolean ret = FALSE;
+	int i;
 
 	if ( segmentSize < MAX_SEGMENT_DATA_SIZE ) {
-		for (int i=0; i < segmentSize; i++) {
+		for (i=0; i < segmentSize; i++) {
 			rxRuntime->canFrameBuffer.data[i] = segment[i];
 		}
 		rxRuntime->canFrameBuffer.byteCount = segmentSize;
@@ -399,6 +402,7 @@ static Std_ReturnType canReceivePaddingHelper(
 		const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime,
 		PduInfoType *PduInfoPtr) {
 	PduLengthType llLen;
+	int i;
 
 	if (rxConfig->CanTpRxPaddingActivation == CANTP_ON) {
 		if(PduInfoPtr->SduLength <= 8) {
@@ -406,7 +410,7 @@ static Std_ReturnType canReceivePaddingHelper(
 		} else {
 			llLen = MAX_SEGMENT_DATA_SIZE;
 		}
-		for (int i = PduInfoPtr->SduLength; i < llLen; i++) {
+		for (i = PduInfoPtr->SduLength; i < llLen; i++) {
 			PduInfoPtr->SduDataPtr[i] = 0x0; // TODO: Does it have to be padded with zeroes?
 		}
 		PduInfoPtr->SduLength = llLen;
@@ -422,6 +426,7 @@ static Std_ReturnType canTansmitPaddingHelper(
 		const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime,
 		PduInfoType *PduInfoPtr) {
 	PduLengthType llLen;
+	int i;
 	/** @req CANTP114 */
 	/** @req CANTP040 */
 	/** @req CANTP098 */
@@ -434,7 +439,7 @@ static Std_ReturnType canTansmitPaddingHelper(
 		} else {
 			llLen = MAX_SEGMENT_DATA_SIZE;
 		}
-		for (int i = PduInfoPtr->SduLength; i < llLen; i++) {
+		for (i = PduInfoPtr->SduLength; i < llLen; i++) {
 			PduInfoPtr->SduDataPtr[i] = 0x0; // TODO: Does it have to be padded with zeroes?
 		}
 		PduInfoPtr->SduLength = llLen;
@@ -1066,8 +1071,9 @@ void CanTp_Init(void)
 	CanTp_ChannelPrivateType *runtimeData;
 	const CanTp_TxNSduType *txConfigParams;
 	const CanTp_RxNSduType *rxConfigParams;
+	int i;
 
-	for (int i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++) {
+	for (i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++) {
 		if ( CanTpConfig.CanTpNSduList[i].direction == IS015765_TRANSMIT ) {
 			txConfigParams = (CanTp_TxNSduType*)&CanTpConfig.CanTpNSduList[i].configData;
 			if (txConfigParams->CanTpTxChannel < CANTP_NSDU_RUNTIME_LIST_SIZE) {
@@ -1217,8 +1223,9 @@ void CanTp_TxConfirmation(PduIdType CanTpTxPduId) /** @req CANTP076 */
 	if( CanTpConfig.CanTpRxIdList[CanTpTxPduId].CanTpNSduIndex != 0xFFFF ) {
 		CanTpNSduId = CanTpConfig.CanTpRxIdList[CanTpTxPduId].CanTpNSduIndex;
 		if ( CanTpConfig.CanTpNSduList[CanTpNSduId].direction == IS015765_TRANSMIT ) {
+			CanTp_ChannelPrivateType *txRuntime;
 			txConfigParams = (CanTp_TxNSduType*)&CanTpConfig.CanTpNSduList[CanTpNSduId].configData;
-			CanTp_ChannelPrivateType *txRuntime = &CanTpRunTimeData.runtimeDataList[txConfigParams->CanTpTxChannel];
+			txRuntime = &CanTpRunTimeData.runtimeDataList[txConfigParams->CanTpTxChannel];
 			if(txRuntime->iso15765.state == TX_WAIT_TX_CONFIRMATION) {
 				handleNextTxFrameSent(txConfigParams, txRuntime);
 			}
@@ -1272,12 +1279,14 @@ void CanTp_MainFunction(void)
 	const CanTp_TxNSduType *txConfigListItem = NULL;
 	const CanTp_RxNSduType *rxConfigListItem = NULL;
 
+	int i;
+
 	if( CanTpRunTimeData.internalState != CANTP_ON ) {
 		DET_REPORTERROR(MODULE_ID_CANTP, 0, SERVICE_ID_CANTP_MAIN_FUNCTION, CANTP_E_UNINIT ); /** @req CANTP031 */
 		return;
 	}
 
-	for( int i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++ ) {
+	for( i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++ ) {
 		if ( CanTpConfig.CanTpNSduList[i].direction == IS015765_TRANSMIT ) {
 			txConfigListItem = (CanTp_TxNSduType*)&CanTpConfig.CanTpNSduList[i].configData;
 			txRuntimeListItem = &CanTpRunTimeData.runtimeDataList[txConfigListItem->CanTpTxChannel];

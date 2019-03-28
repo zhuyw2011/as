@@ -195,42 +195,42 @@ def GenC():
     cstr = 'static const Dcm_DspSecurityRowType DspSecurityList[] = {\n'
     for sec in GLGet('SecurityList'):
         cstr += '\t{ // %s\n'%(GAGet(sec,'Name'));
-        cstr += '\t\t.DspSecurityLevel =  %s,\n'%(GAGet(sec,'Identifier'));
-        cstr += '\t\t.DspSecurityDelayTimeOnBoot =  0,/* Value is not configurable */\n';
-        cstr += '\t\t.DspSecurityNumAttDelay =  0,     /* Value is not configurable */\n';
-        cstr += '\t\t.DspSecurityDelayTime =  0,     /* Value is not configurable */\n';
-        cstr += '\t\t.DspSecurityNumAttLock =  0,     /* Value is not configurable */\n';
-        cstr += '\t\t.DspSecurityADRSize =  0, // TODO:\n';
-        cstr += '\t\t.DspSecuritySeedSize =  %s,\n'%(GAGet(sec,'SeedSize'));
-        cstr += '\t\t.DspSecurityKeySize =  %s,\n'%(GAGet(sec,'KeySize'));
-        cstr += '\t\t.GetSeed =  %s,\n'%(GAGet(sec,'GetSeedCallback'));
-        cstr += '\t\t.CompareKey =  %s,\n'%(GAGet(sec,'CompareKeyCallback'));
-        cstr += '\t\t.Arc_EOL =  FALSE\n';
+        cstr += '\t\t/*.DspSecurityLevel =*/  %s,\n'%(GAGet(sec,'Identifier'));
+        cstr += '\t\t/*.DspSecurityDelayTimeOnBoot =*/  0,/* Value is not configurable */\n';
+        cstr += '\t\t/*.DspSecurityNumAttDelay =*/  0,     /* Value is not configurable */\n';
+        cstr += '\t\t/*.DspSecurityDelayTime =*/  0,     /* Value is not configurable */\n';
+        cstr += '\t\t/*.DspSecurityNumAttLock =*/  0,     /* Value is not configurable */\n';
+        cstr += '\t\t/*.DspSecurityADRSize =*/  0, // TODO:\n';
+        cstr += '\t\t/*.DspSecuritySeedSize =*/  %s,\n'%(GAGet(sec,'SeedSize'));
+        cstr += '\t\t/*.DspSecurityKeySize =*/  %s,\n'%(GAGet(sec,'KeySize'));
+        cstr += '\t\t/*.GetSeed =*/  %s,\n'%(GAGet(sec,'GetSeedCallback'));
+        cstr += '\t\t/*.CompareKey =*/  %s,\n'%(GAGet(sec,'CompareKeyCallback'));
+        cstr += '\t\t/*.Arc_EOL =*/  FALSE\n';
         cstr += '\t},\n';
     cstr += '\t{ \n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,0,0,0,0,0,0,0,0,0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n';
     cstr += '};\n\n'
     fp.write(cstr);
     fp.write("""static const Dcm_DspSecurityType DspSecurity = {
-    .DspSecurityRow = DspSecurityList
+    /*.DspSecurityRow =*/ DspSecurityList
 };\n\n""");
     #-------------------------- Session -------------
     cstr = 'static const Dcm_DspSessionRowType DspSessionList[] = {\n';
     for ses in GLGet('SessionList'):
         cstr +='\t{ //%s\n'%(GAGet(ses,'Name'));
-        cstr +='\t\t.DspSessionLevel = %s,\n'%(GAGet(ses,'Identifier'));
-        cstr +='\t\t.DspSessionP2ServerMax = %s,\n'%(GAGet(ses,'P2ServerMaxTimeMs'));
-        cstr +='\t\t.DspSessionP2StarServerMax =  %s,\n'%(GAGet(ses,'P2StartServerMaxTimeMs'));
-        cstr +='\t\t.Arc_EOL =  %s\n'%('FALSE');
+        cstr +='\t\t/*.DspSessionLevel =*/ %s,\n'%(GAGet(ses,'Identifier'));
+        cstr +='\t\t/*.DspSessionP2ServerMax =*/ %s,\n'%(GAGet(ses,'P2ServerMaxTimeMs'));
+        cstr +='\t\t/*.DspSessionP2StarServerMax =*/  %s,\n'%(GAGet(ses,'P2StartServerMaxTimeMs'));
+        cstr +='\t\t/*.Arc_EOL =*/  %s\n'%('FALSE');
         cstr +='\t},\n';
     cstr +='\t{ \n'
-    cstr +='\t\t.Arc_EOL = %s\n'%('TRUE');
+    cstr +='\t\t0,0,0,/*.Arc_EOL =*/ %s\n'%('TRUE');
     cstr +='\t},\n';
     cstr += '};\n\n';
     fp.write(cstr);
     fp.write("""static const Dcm_DspSessionType DspSession = {
-    .DspSessionRow = DspSessionList,
+    /*.DspSessionRow =*/ DspSessionList,
 };\n\n""")
     #----------------- Service Table ---------------
     for sertbl in GLGet('ServiceTableList'):
@@ -244,9 +244,9 @@ def GenC():
     if(len(GLGet('DIDControlRecordList'))>0):
         for rec in GLGet('DIDControlRecordList'):
             fp.write('static const Dcm_DspDidControlRecordSizesType %s_SizeInfo = {\n'%(GAGet(rec,'Name')));
-            fp.write('\t.DspDidControlEnableMaskRecordSize =  %s,\n'%(GAGet(rec,'EnableMaskSize')))
-            fp.write('\t.DspDidControlOptionRecordSize = %s,\n'%(GAGet(rec,'OptionSize')))
-            fp.write('\t.DspDidControlStatusRecordSize = %s,\n'%(GAGet(rec,'StatusSize')))
+            fp.write('\t/*.DspDidControlEnableMaskRecordSize =*/  %s,\n'%(GAGet(rec,'EnableMaskSize')))
+            fp.write('\t/*.DspDidControlOptionRecordSize =*/ %s,\n'%(GAGet(rec,'OptionSize')))
+            fp.write('\t/*.DspDidControlStatusRecordSize =*/ %s,\n'%(GAGet(rec,'StatusSize')))
             fp.write('};\n')
     #----------------- DID INFOs ----------------
     for didInfo in GLGet('DIDInfoList'):
@@ -262,8 +262,8 @@ def GenC():
                 GenSecurityRef(fp,GLGet(ReadAccess,'SecurityList'))
                 str2 = GetSecurityRefName(GLGet(ReadAccess,'SecurityList'))
             fp.write("""static const Dcm_DspDidReadType %s_didRead = {
-    .DspDidReadSessionRef =  %s,
-    .DspDidReadSecurityLevelRef =  %s
+    /*.DspDidReadSessionRef =*/  %s,
+    /*.DspDidReadSecurityLevelRef =*/  %s
 };\n\n"""%(GAGet(didInfo,'Name'), str1, str2));
         #----------- write access ------
         if(GLGet(didInfo,'WriteAccess') != []):
@@ -277,8 +277,8 @@ def GenC():
                 GenSecurityRef(fp,GLGet(WriteAccess,'SecurityList'))
                 str2 = GetSecurityRefName(GLGet(WriteAccess,'SecurityList'))
             fp.write("""static const Dcm_DspDidWriteType %s_didWrite = {
-    .DspDidWriteSessionRef =  %s,
-    .DspDidWriteSecurityLevelRef =  %s
+    /*.DspDidWriteSessionRef =*/  %s,
+    /*.DspDidWriteSecurityLevelRef =*/  %s
 };\n\n"""%(GAGet(didInfo,'Name'), str1, str2));
         #----------- Control access -----------------
         if(GLGet(didInfo,'ControlAccess') != []):
@@ -312,35 +312,36 @@ def GenC():
             else:
                 str6 = 'NULL'
             fp.write("""static const Dcm_DspDidControlType %s_didControl = {
-    .DspDidControlSessionRef =  %s,
-    .DspDidControlSecurityLevelRef =  %s,
-    .DspDidFreezeCurrentState =  %s,
-    .DspDidResetToDefault =  %s,
-    .DspDidReturnControlToEcu =  %s,
-    .DspDidShortTermAdjustment =  %s
+    /*.DspDidControlSessionRef =*/  %s,
+    /*.DspDidControlSecurityLevelRef =*/  %s,
+    /*.DspDidFreezeCurrentState =*/  %s,
+    /*.DspDidResetToDefault =*/  %s,
+    /*.DspDidReturnControlToEcu =*/  %s,
+    /*.DspDidShortTermAdjustment =*/  %s
 };\n\n"""%(GAGet(didInfo,'Name'), str1, str2, str3, str4, str5, str6));
-    cstr = 'static const Dcm_DspDidInfoType DspDidInfoList[] = {\n';
+    cstr = '#if %s\n'%(len(GLGet('DIDInfoList')))
+    cstr += 'static const Dcm_DspDidInfoType DspDidInfoList[] = {\n';
     for didInfo in GLGet('DIDInfoList'):
         cstr += '\t{ // %s\n'%(GAGet(didInfo,'Name'));
-        cstr += '\t\t.DspDidDynamicllyDefined =  %s,\n'%(GAGet(didInfo,'DynamicDefined'));
-        cstr += '\t\t.DspDidFixedLength =  %s,\n'%(GAGet(didInfo,'FixedLength'));
-        cstr += '\t\t.DspDidScalingInfoSize =  %s,\n'%(GAGet(didInfo,'ScalingInfoSize'));
-        cstr += '\t\t.DspDidAccess = {\n';
+        cstr += '\t\t/*.DspDidDynamicllyDefined =*/  %s,\n'%(GAGet(didInfo,'DynamicDefined'));
+        cstr += '\t\t/*.DspDidFixedLength =*/  %s,\n'%(GAGet(didInfo,'FixedLength'));
+        cstr += '\t\t/*.DspDidScalingInfoSize =*/  %s,\n'%(GAGet(didInfo,'ScalingInfoSize'));
+        cstr += '\t\t/*.DspDidAccess =*/ {\n';
         if(GLGet(didInfo,'ReadAccess') != []):
-            cstr += '\t\t\t.DspDidRead = &%s_didRead,\n'%(GAGet(didInfo,'Name'));
+            cstr += '\t\t\t/*.DspDidRead =*/ &%s_didRead,\n'%(GAGet(didInfo,'Name'));
         else:
-            cstr += '\t\t\t.DspDidRead = NULL,\n';
+            cstr += '\t\t\t/*.DspDidRead =*/ NULL,\n';
         if(GLGet(didInfo,'WriteAccess') != []):
-            cstr += '\t\t\t.DspDidWrite = &%s_didWrite,\n'%(GAGet(didInfo,'Name'));
+            cstr += '\t\t\t/*.DspDidWrite =*/ &%s_didWrite,\n'%(GAGet(didInfo,'Name'));
         else:
-            cstr += '\t\t\t.DspDidWrite = NULL,\n';
+            cstr += '\t\t\t/*.DspDidWrite =*/ NULL,\n';
         if(GLGet(didInfo,'ControlAccess') != []):
-            cstr += '\t\t\t.DspDidControl = &%s_didControl,\n'%(GAGet(didInfo,'Name'));
+            cstr += '\t\t\t/*.DspDidControl =*/ &%s_didControl,\n'%(GAGet(didInfo,'Name'));
         else:
-            cstr += '\t\t\t.DspDidControl = NULL,\n';
+            cstr += '\t\t\t/*.DspDidControl =*/ NULL,\n';
         cstr += '\t\t}\n';
         cstr += '\t}, \n';
-    cstr += '};\n\n'
+    cstr += '};\n#else\n#define DspDidInfoList NULL\n#endif\n\n'
     fp.write(cstr);
     #------------------ DIDs ----------
     fp.write('extern const Dcm_DspDidType DspDidList[];\n');
@@ -352,27 +353,27 @@ def GenC():
     cstr = 'const Dcm_DspDidType DspDidList[] = { \n';
     for did in GLGet('DIDList'):
         cstr += '\t{ // %s,\n'%(GAGet(did,'Name'));
-        cstr += '\t\t.DspDidUsePort =  FALSE,/* Value is not configurable */\n'
-        cstr += '\t\t.DspDidIdentifier =  %s,\n'%(GAGet(did,'Identifier'))
-        cstr += '\t\t.DspDidInfoRef =  &DspDidInfoList[INDEX_OF_DIDINFO_%s],\n'%(GAGet(did,'DIDInfoRef'));
-        cstr += '\t\t.DspDidRef =  %s_dididRefList,\n'%(GAGet(did,'Name'));
-        cstr += '\t\t.DspDidSize =  %s,\n'%(GAGet(did,'Size').replace('TBD','0xDB/*Dynamic*/'));
-        cstr += '\t\t.DspDidReadDataLengthFnc =  %s,\n'%(GAGet(did,'ReadDataLengthCbk'));
-        cstr += '\t\t.DspDidConditionCheckReadFnc =  %s,\n'%(GAGet(did,'ReadConditionCheckCbk'));
-        cstr += '\t\t.DspDidReadDataFnc = %s,\n'%(GAGet(did,'ReadCbk'));
-        cstr += '\t\t.DspDidConditionCheckWriteFnc =  %s,\n'%(GAGet(did,'WriteConditionCheckCbk'));
-        cstr += '\t\t.DspDidWriteDataFnc =  %s,\n'%(GAGet(did,'WriteCbk'));
-        cstr += '\t\t.DspDidGetScalingInfoFnc =  %s,\n'%(GAGet(did,'GetScalingInfoCbk'));
-        cstr += '\t\t.DspDidFreezeCurrentStateFnc = %s,\n'%(GAGet(did,'FreezeCurrentStateCbk'));
-        cstr += '\t\t.DspDidResetToDefaultFnc =  %s,\n'%(GAGet(did,'ResetToDefaultCbk'));
-        cstr += '\t\t.DspDidReturnControlToEcuFnc =  %s,\n'%(GAGet(did,'ReturnControlToEcu'));
-        cstr += '\t\t.DspDidShortTermAdjustmentFnc =  %s,\n'%(GAGet(did,'ShortTermAdjustment'));
+        cstr += '\t\t/*.DspDidUsePort =*/  FALSE,/* Value is not configurable */\n'
+        cstr += '\t\t/*.DspDidIdentifier =*/  %s,\n'%(GAGet(did,'Identifier'))
+        cstr += '\t\t/*.DspDidInfoRef =*/  &DspDidInfoList[INDEX_OF_DIDINFO_%s],\n'%(GAGet(did,'DIDInfoRef'));
+        cstr += '\t\t/*.DspDidRef =*/  %s_dididRefList,\n'%(GAGet(did,'Name'));
+        cstr += '\t\t/*.DspDidSize =*/  %s,\n'%(GAGet(did,'Size').replace('TBD','0xDB/*Dynamic*/'));
+        cstr += '\t\t/*.DspDidReadDataLengthFnc =*/  %s,\n'%(GAGet(did,'ReadDataLengthCbk'));
+        cstr += '\t\t/*.DspDidConditionCheckReadFnc =*/  %s,\n'%(GAGet(did,'ReadConditionCheckCbk'));
+        cstr += '\t\t/*.DspDidReadDataFnc =*/ %s,\n'%(GAGet(did,'ReadCbk'));
+        cstr += '\t\t/*.DspDidConditionCheckWriteFnc =*/  %s,\n'%(GAGet(did,'WriteConditionCheckCbk'));
+        cstr += '\t\t/*.DspDidWriteDataFnc =*/  %s,\n'%(GAGet(did,'WriteCbk'));
+        cstr += '\t\t/*.DspDidGetScalingInfoFnc =*/  %s,\n'%(GAGet(did,'GetScalingInfoCbk'));
+        cstr += '\t\t/*.DspDidFreezeCurrentStateFnc =*/ %s,\n'%(GAGet(did,'FreezeCurrentStateCbk'));
+        cstr += '\t\t/*.DspDidResetToDefaultFnc =*/  %s,\n'%(GAGet(did,'ResetToDefaultCbk'));
+        cstr += '\t\t/*.DspDidReturnControlToEcuFnc =*/  %s,\n'%(GAGet(did,'ReturnControlToEcu'));
+        cstr += '\t\t/*.DspDidShortTermAdjustmentFnc =*/  %s,\n'%(GAGet(did,'ShortTermAdjustment'));
         #TODO: ?? what does DspDidControlRecordSize means
-        cstr += '\t\t.DspDidControlRecordSize =  NULL,\n';
-        cstr += '\t\t.Arc_EOL =  %s\n'%('FALSE');
+        cstr += '\t\t/*.DspDidControlRecordSize =*/  NULL,\n';
+        cstr += '\t\t/*.Arc_EOL =*/  %s\n'%('FALSE');
         cstr += '\t},\n'
     cstr += '\t{ '
-    cstr += '\t\t.Arc_EOL =  %s\n'%('TRUE');
+    cstr += '\t\t0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,/*.Arc_EOL =*/  %s\n'%('TRUE');
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
@@ -384,59 +385,60 @@ def GenC():
         start = GLGet(rtninfo,'Start')
         if(start != []):
             fp.write("""static const Dcm_DspStartRoutineType %s_start = {
-    .DspStartRoutineCtrlOptRecSize = %s,
-    .DspStartRoutineStsOptRecSize =  %s
+    /*.DspStartRoutineCtrlOptRecSize =*/ %s,
+    /*.DspStartRoutineStsOptRecSize =*/  %s
 };\n"""%(GAGet(rtninfo,'Name'), GAGet(start,'RecordSizeOfRequest'), GAGet(start,'RecordSizeOfResponse')));
         stop = GLGet(rtninfo,'Start')
         if(stop != []):
             fp.write("""static const Dcm_DspRoutineStopType %s_stop = {
-    .DspStopRoutineCtrlOptRecSize = %s,
-    .DspStopRoutineStsOptRecSize = %s,
+    /*.DspStopRoutineCtrlOptRecSize =*/ %s,
+    /*.DspStopRoutineStsOptRecSize =*/ %s,
 };\n"""%(GAGet(rtninfo,'Name'), GAGet(stop,'RecordSizeOfRequest'), GAGet(stop,'RecordSizeOfResponse')));
         rsl = GLGet(rtninfo,'Result')
         if(rsl != []):
             fp.write("""static const Dcm_DspRoutineRequestResType %s_result = {
-    .DspReqResRtnCtrlOptRecSize = %s
+    /*.DspReqResRtnCtrlOptRecSize =*/ %s
 };\n"""%(GAGet(rtninfo,'Name'), GAGet(rsl,'RecordSizeOfResponse')))
         # sss 
         GenSessionRef(fp,GLGet(rtninfo,'SessionList'))
         GenSecurityRef(fp,GLGet(rtninfo,'SecurityList'))
-        
-    cstr = 'static const Dcm_DspRoutineInfoType DspRoutineInfoList[] = {\n'
+
+    cstr = '#if %s\n'%(len(GLGet('RoutineInfoList'))) 
+    cstr += 'static const Dcm_DspRoutineInfoType DspRoutineInfoList[] = {\n'
     for rtninfo in GLGet('RoutineInfoList'):
         str1= GetSessionRefName(GLGet(rtninfo,'SessionList'))
         str2= GetSecurityRefName(GLGet(rtninfo,'SecurityList'))
         
         cstr += '\t{//%s\n'%(GAGet(rtninfo,'Name'));
-        cstr += '\t\t.DspRoutineAuthorization={\n'
-        cstr += '\t\t\t.DspRoutineSessionRef =  %s,\n'%(str1)
-        cstr += '\t\t\t.DspRoutineSecurityLevelRef = %s,\n'%(str2)
+        cstr += '\t\t/*.DspRoutineAuthorization=*/{\n'
+        cstr += '\t\t\t/*.DspRoutineSessionRef =*/  %s,\n'%(str1)
+        cstr += '\t\t\t/*.DspRoutineSecurityLevelRef =*/ %s,\n'%(str2)
         cstr += '\t\t},\n'
-        cstr += '\t\t.DspStartRoutine = &%s_start,\n'%(GAGet(rtninfo,'Name'));
+        cstr += '\t\t/*.DspStartRoutine =*/ &%s_start,\n'%(GAGet(rtninfo,'Name'));
         if(GLGet(rtninfo,'Stop') != []):
-            cstr += '\t\t.DspRoutineStop = &%s_stop,\n'%(GAGet(rtninfo,'Name'));
+            cstr += '\t\t/*.DspRoutineStop =*/ &%s_stop,\n'%(GAGet(rtninfo,'Name'));
         else:
-            cstr += '\t\t.DspRoutineStop =  NULL,\n'
+            cstr += '\t\t/*.DspRoutineStop =*/  NULL,\n'
         if(GLGet(rtninfo,'Result') != []):
-            cstr += '\t\t.DspRoutineRequestRes = &%s_result,\n'%(GAGet(rtninfo,'Name'));
+            cstr += '\t\t/*.DspRoutineRequestRes =*/ &%s_result,\n'%(GAGet(rtninfo,'Name'));
         else:
-            cstr += '\t\t.DspRoutineRequestRes =  NULL\n'
+            cstr += '\t\t/*.DspRoutineRequestRes =*/  NULL\n'
         cstr += '\t},\n'
-    cstr += '};\n\n'
+    cstr += '};\n#else\n#define DspRoutineInfoList NULL\n#endif\n\n'
     fp.write(cstr);
     cstr = 'static const Dcm_DspRoutineType  DspRoutineList[] = {\n'
     for rtn in GLGet('RoutineList'):
         cstr += '\t{//%s\n'%(GAGet(rtn,'Name'));
-        cstr += '\t\t.DspRoutineUsePort = %s,\n'%('FALSE')
-        cstr += '\t\t.DspRoutineIdentifier = %s,\n'%(GAGet(rtn,'Identifier'))
-        cstr += '\t\t.DspRoutineInfoRef = &DspRoutineInfoList[INDEX_OF_RCINFO_%s],\n'%(GAGet(rtn,'RoutineInfoRef'))
-        cstr += '\t\t.DspStartRoutineFnc = %s,\n'%(GAGet(rtn,'StartRoutineCbk'))
-        cstr += '\t\t.DspStopRoutineFnc =  %s,\n'%(GAGet(rtn,'StopRoutineCbk'))
-        cstr += '\t\t.DspRequestResultRoutineFnc =  %s,\n'%(GAGet(rtn,'RoutineResultCbk'))
-        cstr += '\t\t.Arc_EOL = FALSE\n'
+        cstr += '\t\t/*.DspRoutineUsePort =*/ %s,\n'%('FALSE')
+        cstr += '\t\t/*.DspRoutineIdentifier =*/ %s,\n'%(GAGet(rtn,'Identifier'))
+        cstr += '\t\t/*.DspRoutineInfoRef =*/ &DspRoutineInfoList[INDEX_OF_RCINFO_%s],\n'%(GAGet(rtn,'RoutineInfoRef'))
+        cstr += '\t\t/*.DspStartRoutineFnc =*/ %s,\n'%(GAGet(rtn,'StartRoutineCbk'))
+        cstr += '\t\t/*.DspStopRoutineFnc =*/  %s,\n'%(GAGet(rtn,'StopRoutineCbk'))
+        cstr += '\t\t/*.DspRequestResultRoutineFnc =*/  %s,\n'%(GAGet(rtn,'RoutineResultCbk'))
+        cstr += '\t\t/*.Arc_EOL =*/ FALSE\n'
         cstr += '\t},\n'
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,0,0,0,0,0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
@@ -453,62 +455,62 @@ def GenC():
             fp.write('static Dcm_DspMemoryRangeInfo pReadMemoryInfo_%s[] = \n{\n'%(GAGet(memory,'Name')))
             for mm in GLGet(memory,'MemoryReadInfoList'):
                 fp.write('\t{ /* %s */\n'%(GAGet(mm,'Name')))
-                fp.write('\t\t.MemoryAddressHigh = %s,\n'%(GAGet(mm,'AddressHigh')))
-                fp.write('\t\t.MemoryAddressLow  = %s,\n'%(GAGet(mm,'AddressLow')))
-                fp.write('\t\t.pSecurityLevel  = %s,\n'%(GetSecurityRefName(GLGet(mm,'SecurityList'))))
-                fp.write('\t\t.Arc_EOL = FALSE\n')
+                fp.write('\t\t/*.MemoryAddressHigh =*/ %s,\n'%(GAGet(mm,'AddressHigh')))
+                fp.write('\t\t/*.MemoryAddressLow  =*/ %s,\n'%(GAGet(mm,'AddressLow')))
+                fp.write('\t\t/*.pSecurityLevel  =*/ %s,\n'%(GetSecurityRefName(GLGet(mm,'SecurityList'))))
+                fp.write('\t\t/*.Arc_EOL =*/ FALSE\n')
                 fp.write('\t},\n')
             fp.write('\t{\n')
-            fp.write('\t\t.Arc_EOL = TRUE\n')
+            fp.write('\t\t0,0,0,/*.Arc_EOL =*/ TRUE\n')
             fp.write('\t},\n')
             fp.write('};\n')
             fp.write('static Dcm_DspMemoryRangeInfo pWriteMemoryInfo_%s[] = \n{\n'%(GAGet(memory,'Name')))
             for mm in GLGet(memory,'MemoryReadInfoList'):
                 fp.write('\t{ /* %s */\n'%(GAGet(mm,'Name')))
-                fp.write('\t\t.MemoryAddressHigh = %s,\n'%(GAGet(mm,'AddressHigh')))
-                fp.write('\t\t.MemoryAddressLow  = %s,\n'%(GAGet(mm,'AddressLow')))
-                fp.write('\t\t.pSecurityLevel  = %s,\n'%(GetSecurityRefName(GLGet(mm,'SecurityList'))))
-                fp.write('\t\t.Arc_EOL = FALSE\n')
+                fp.write('\t\t/*.MemoryAddressHigh =*/ %s,\n'%(GAGet(mm,'AddressHigh')))
+                fp.write('\t\t/*.MemoryAddressLow  =*/ %s,\n'%(GAGet(mm,'AddressLow')))
+                fp.write('\t\t/*.pSecurityLevel  =*/ %s,\n'%(GetSecurityRefName(GLGet(mm,'SecurityList'))))
+                fp.write('\t\t/*.Arc_EOL =*/ FALSE\n')
                 fp.write('\t},\n')
             fp.write('\t{\n')
-            fp.write('\t\t.Arc_EOL = TRUE\n')
+            fp.write('\t\t0,0,0,/*.Arc_EOL =*/ TRUE\n')
             fp.write('\t},\n')
             fp.write('};\n')  
         fp.write('static const Dcm_DspMemoryIdInfo DspMemoryIdInfo[] = \n{\n')
         for memory in memoryList:         
             fp.write('\t{ /* %s */\n'%(GAGet(memory,'Name')))
-            fp.write('\t\t.MemoryIdValue = %s,\n'%(GAGet(memory,'Identifier')))
-            fp.write('\t\t.pReadMemoryInfo = pReadMemoryInfo_%s,\n'%(GAGet(memory,'Name')))
-            fp.write('\t\t.pWriteMemoryInfo = pWriteMemoryInfo_%s,\n'%(GAGet(memory,'Name')))
-            fp.write('\t\t.Arc_EOL = FALSE\n')
+            fp.write('\t\t/*.MemoryIdValue =*/ %s,\n'%(GAGet(memory,'Identifier')))
+            fp.write('\t\t/*.pReadMemoryInfo =*/ pReadMemoryInfo_%s,\n'%(GAGet(memory,'Name')))
+            fp.write('\t\t/*.pWriteMemoryInfo =*/ pWriteMemoryInfo_%s,\n'%(GAGet(memory,'Name')))
+            fp.write('\t\t/*.Arc_EOL =*/ FALSE\n')
             fp.write('\t},\n')
         fp.write('\t{\n')
-        fp.write('\t\t.Arc_EOL = TRUE,\n')
+        fp.write('\t\t0,0,0,/*.Arc_EOL =*/ TRUE,\n')
         fp.write('\t},\n')
         fp.write('};\n')   
         fp.write('static Dcm_DspMemoryType DspMemory = \n{\n')
-        fp.write('\t\t.DcmDspUseMemoryId = TRUE, /* parai: always use ID */\n')
-        fp.write('\t\t.DspMemoryIdInfo = DspMemoryIdInfo\n')
+        fp.write('\t\t/*.DcmDspUseMemoryId =*/ TRUE, /* parai: always use ID */\n')
+        fp.write('\t\t/*.DspMemoryIdInfo =*/ DspMemoryIdInfo\n')
         fp.write('};\n\n')
         dspMemory = '&DspMemory'
     else:
         dspMemory = 'NULL'
     #---------------------- DSP
     fp.write("""static const Dcm_DspType Dsp = {
-    .DspMaxDidToRead =  0xDB, // TODO
-    .DspDid =  DspDidList,
-    .DspDidInfo = DspDidInfoList,
-    .DspEcuReset = NULL,
-    .DspPid =  NULL,
-    .DspReadDTC =  NULL,
-    .DspRequestControl =  NULL,
-    .DspRoutine = DspRoutineList,
-    .DspRoutineInfo = DspRoutineInfoList,
-    .DspSecurity =  &DspSecurity,
-    .DspSession =  &DspSession,
-    .DspTestResultByObdmid =  NULL,
-    .DspVehInfo = NULL,
-    .DspMemory = %s
+    /*.DspMaxDidToRead =*/  0xDB, // TODO
+    /*.DspDid =*/  DspDidList,
+    /*.DspDidInfo =*/ DspDidInfoList,
+    /*.DspEcuReset =*/ NULL,
+    /*.DspPid =*/  NULL,
+    /*.DspReadDTC =*/  NULL,
+    /*.DspRequestControl =*/  NULL,
+    /*.DspRoutine =*/ DspRoutineList,
+    /*.DspRoutineInfo =*/ DspRoutineInfoList,
+    /*.DspSecurity =*/  &DspSecurity,
+    /*.DspSession =*/  &DspSession,
+    /*.DspTestResultByObdmid =*/  NULL,
+    /*.DspVehInfo =*/ NULL,
+    /*.DspMemory =*/ %s
 };\n\n"""%(dspMemory));
     # ------------------------------- DSD
     fp.write("""/************************************************************************
@@ -522,14 +524,15 @@ def GenC():
         cstr = 'static const Dcm_DsdServiceType %s_serviceList[] = {\n'%(GAGet(sertbl,'Name'));
         for ser in GLGet(sertbl,'ServiceList'):
             cstr += '\t{ \n'
-            cstr += '\t\t.DsdSidTabServiceId = SID_%s,\n'%(GAGet(ser,'Name'));
-            cstr += '\t\t.DsdSidTabSubfuncAvail = %s,\n'%(GAGet(ser,'SubFunctionSupported').upper());
-            cstr += '\t\t.DsdSidTabSecurityLevelRef = %s,\n'%(GetSecurityRefName(GLGet(ser,'SecurityList')));
-            cstr += '\t\t.DsdSidTabSessionLevelRef = %s,\n'%(GetSessionRefName(GLGet(ser,'SessionList')));
-            cstr += '\t\t.Arc_EOL = FALSE\n'
+            cstr += '\t\t/*.DsdSidTabServiceId =*/ SID_%s,\n'%(GAGet(ser,'Name'));
+            cstr += '\t\t/*.DsdSidTabSubfuncAvail =*/ %s,\n'%(GAGet(ser,'SubFunctionSupported').upper());
+            cstr += '\t\t/*.DsdSidTabSecurityLevelRef =*/ %s,\n'%(GetSecurityRefName(GLGet(ser,'SecurityList')));
+            cstr += '\t\t/*.DsdSidTabSessionLevelRef =*/ %s,\n'%(GetSessionRefName(GLGet(ser,'SessionList')));
+            cstr += '\t\t0,0,\n'
+            cstr += '\t\t/*.Arc_EOL =*/ FALSE\n'
             cstr += '\t},\n';
         cstr += '\t{ \n'
-        cstr += '\t\t.Arc_EOL = TRUE\n'
+        cstr += '\t\t0,0,0,0,0,0,/*.Arc_EOL =*/ TRUE\n'
         cstr += '\t}\n';
         cstr += '};\n\n'
         fp.write(cstr);
@@ -537,18 +540,18 @@ def GenC():
     id = 0;
     for sertbl in GLGet('ServiceTableList'):
         cstr += '\t{ // %s\n'%(GAGet(sertbl,'Name'));
-        cstr += '\t\t.DsdSidTabId = %s,\n'%(id);
-        cstr += '\t\t.DsdService = %s_serviceList,\n'%(GAGet(sertbl,'Name'));
-        cstr += '\t\t.Arc_EOL = FALSE\n'
+        cstr += '\t\t/*.DsdSidTabId =*/ %s,\n'%(id);
+        cstr += '\t\t/*.DsdService =*/ %s_serviceList,\n'%(GAGet(sertbl,'Name'));
+        cstr += '\t\t/*.Arc_EOL =*/ FALSE\n'
         cstr += '\t},\n'
         id += 1;
     cstr += '\t{ \n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
     fp.write("""static const Dcm_DsdType Dsd = {
-    .DsdServiceTable = DsdServiceTable
+    /*.DsdServiceTable =*/ DsdServiceTable
 };\n\n""");
     #----------------------- DSL
     fp.write("""/************************************************************************
@@ -561,16 +564,16 @@ def GenC():
         fp.write("""static uint8 %s[%s];
 Dcm_DslBufferRuntimeType rxBufferParams_%s =
 {
-    .status =  NOT_IN_USE
+    /*.status =*/  NOT_IN_USE
 };\n"""%(GAGet(buf,'Name'), GAGet(buf,'Size'), GAGet(buf,'Name')));
         cstr += '\t{\n'
-        cstr += '\t\t.DslBufferID =  %s,// TODO\n'%(id);
-        cstr += '\t\t.DslBufferSize = %s,/* ?Value is not configurable */\n'%(GAGet(buf,'Size'));
-        cstr += '\t\t.pduInfo={\n';
-        cstr += '\t\t\t.SduDataPtr = %s,\n'%(GAGet(buf,'Name'));
-        cstr += '\t\t\t.SduLength =  %s,\n'%(GAGet(buf,'Size'));
+        cstr += '\t\t/*.DslBufferID =*/  %s,// TODO\n'%(id);
+        cstr += '\t\t/*.DslBufferSize =*/ %s,/* ?Value is not configurable */\n'%(GAGet(buf,'Size'));
+        cstr += '\t\t/*.pduInfo=*/{\n';
+        cstr += '\t\t\t/*.SduDataPtr =*/ %s,\n'%(GAGet(buf,'Name'));
+        cstr += '\t\t\t/*.SduLength =*/  %s,\n'%(GAGet(buf,'Size'));
         cstr += '\t\t},\n'
-        cstr += '\t\t.externalBufferRuntimeData = &rxBufferParams_%s\n'%(GAGet(buf,'Name'));
+        cstr += '\t\t/*.externalBufferRuntimeData =*/ &rxBufferParams_%s\n'%(GAGet(buf,'Name'));
         cstr += '\t},\n';
         id += 1;
     cstr += '};\n\n'
@@ -579,12 +582,12 @@ Dcm_DslBufferRuntimeType rxBufferParams_%s =
     cstr = 'static const Dcm_DslCallbackDCMRequestServiceType DCMRequestServiceList[] = {\n'
     for reqser in GLGet('RequestServiceList'):
         cstr += '\t{ // %s\n'%(GAGet(reqser,'Name'));
-        cstr += '\t\t.StartProtocol = %s,\n'%(GAGet(reqser,'StartProtocolCbk'));
-        cstr += '\t\t.StopProtocol = %s,\n'%(GAGet(reqser,'StopProtocolCbk'));
-        cstr += '\t\t.Arc_EOL = FALSE\n'
+        cstr += '\t\t/*.StartProtocol =*/ %s,\n'%(GAGet(reqser,'StartProtocolCbk'));
+        cstr += '\t\t/*.StopProtocol =*/ %s,\n'%(GAGet(reqser,'StopProtocolCbk'));
+        cstr += '\t\t/*.Arc_EOL =*/ FALSE\n'
         cstr += '\t},\n'
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n'
     cstr += '};\n\n';
     fp.write(cstr);
@@ -592,11 +595,11 @@ Dcm_DslBufferRuntimeType rxBufferParams_%s =
     for reqser in  GLGet('RequestServiceList'):
         if(GAGet(reqser,'ProtocolIndicationCbk') != 'NULL'):
             cstr += '\t{ // %s\n'%(GAGet(reqser,'Name'));
-            cstr += '\t\t.Indication =  %s,\n'%(GAGet(reqser,'ProtocolIndicationCbk'));
-            cstr += '\t\t.Arc_EOL =  FALSE\n'
+            cstr += '\t\t/*.Indication =*/  %s,\n'%(GAGet(reqser,'ProtocolIndicationCbk'));
+            cstr += '\t\t/*.Arc_EOL =*/  FALSE\n'
             cstr += '\t},\n'
     cstr += '\t{ \n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n'
     cstr += '};\n\n';
     fp.write(cstr);
@@ -610,16 +613,16 @@ Dcm_DslBufferRuntimeType rxBufferParams_%s =
         for con in GLGet(pro,'ConnectionList'):
             for rx in GLGet(con,'RxChannelList'):
                 cstr += '\t{// %s->%s->%s\n'%(GAGet(pro,'Name'), GAGet(con,'Name'), GAGet(rx,'Name'));
-                cstr += '\t\t.DslMainConnectionParent =  &DslMainConnectionList[%s],\n'%(cid);
-                cstr += '\t\t.DslProtocolAddrType = DCM_PROTOCOL_%s_ADDR_TYPE,\n'%(GAGet(rx,'AddressingType'));
-                cstr += '\t\t.DcmDslProtocolRxPduId = PDUR_ID_%s,\n'%(GAGet(rx,'PduRef'));
-                cstr += '\t\t.DcmDslProtocolRxTesterSourceAddr_v4 =  0,       /* Value is not configurable */\n'
-                cstr += '\t\t.DcmDslProtocolRxChannelId_v4 =  0,                /* Value is not configurable */\n'
-                cstr += '\t\t.Arc_EOL =  FALSE\n'
+                cstr += '\t\t/*.DslMainConnectionParent =*/  &DslMainConnectionList[%s],\n'%(cid);
+                cstr += '\t\t/*.DslProtocolAddrType =*/ DCM_PROTOCOL_%s_ADDR_TYPE,\n'%(GAGet(rx,'AddressingType'));
+                cstr += '\t\t/*.DcmDslProtocolRxPduId =*/ PDUR_ID_%s,\n'%(GAGet(rx,'PduRef'));
+                cstr += '\t\t/*.DcmDslProtocolRxTesterSourceAddr_v4 =*/  0,       /* Value is not configurable */\n'
+                cstr += '\t\t/*.DcmDslProtocolRxChannelId_v4 =*/  0,                /* Value is not configurable */\n'
+                cstr += '\t\t/*.Arc_EOL =*/  FALSE\n'
                 cstr += '\t},\n'
         cid += 1;
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,0,0,0,0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
@@ -631,14 +634,14 @@ Dcm_DslBufferRuntimeType rxBufferParams_%s =
             tx = GLGet(con,'TxChannel')
             if(tx != []):
                 cstr += '\t{// %s->%s->%s\n'%(GAGet(pro,'Name'), GAGet(con,'Name'), GAGet(tx,'Name'));
-                cstr += '\t\t.DslMainConnectionParent =  &DslMainConnectionList[%s],\n'%(cid);
-                cstr += '\t\t.DcmDslProtocolTxPduId =  PDUR_ID_%s,\n'%(GAGet(tx,'PduRef'));
-                cstr += '\t\t.DcmDslProtocolDcmTxPduId =  DCM_ID_%s,\n'%(GAGet(tx,'PduRef'));
-                cstr += '\t\t.Arc_EOL =  FALSE\n'
+                cstr += '\t\t/*.DslMainConnectionParent =*/  &DslMainConnectionList[%s],\n'%(cid);
+                cstr += '\t\t/*.DcmDslProtocolTxPduId =*/  PDUR_ID_%s,\n'%(GAGet(tx,'PduRef'));
+                cstr += '\t\t/*.DcmDslProtocolDcmTxPduId =*/  DCM_ID_%s,\n'%(GAGet(tx,'PduRef'));
+                cstr += '\t\t/*.Arc_EOL =*/  FALSE\n'
                 cstr += '\t},\n'
         cid += len(GLGet(con,'RxChannelList'));
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,0,0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
@@ -649,11 +652,11 @@ Dcm_DslBufferRuntimeType rxBufferParams_%s =
     for pro in GLGet('ProtocolList'):
         for con in GLGet(pro,'ConnectionList'):
             cstr += '\t{//%s->%s\n'%(GAGet(pro,'Name'), GAGet(con,'Name'));
-            cstr += '\t\t.DslConnectionParent =  &DslConnectionList[%s],\n'%(cid);
-            cstr += '\t\t.DslPeriodicTransmissionConRef =  NULL,        /* Value is not configurable */\n'
-            cstr += '\t\t.DslROEConnectionRef =  NULL,                /* Value is not configurable */\n'
-            cstr += '\t\t.DslProtocolRx =  NULL,                        /* Value is not configurable */\n'
-            cstr += '\t\t.DslProtocolTx =  &DcmDslProtocolTxList[%s],\n'%(tid);
+            cstr += '\t\t/*.DslConnectionParent =*/  &DslConnectionList[%s],\n'%(cid);
+            cstr += '\t\t/*.DslPeriodicTransmissionConRef =*/  NULL,        /* Value is not configurable */\n'
+            cstr += '\t\t/*.DslROEConnectionRef =*/  NULL,                /* Value is not configurable */\n'
+            cstr += '\t\t/*.DslProtocolRx =*/  NULL,                        /* Value is not configurable */\n'
+            cstr += '\t\t/*.DslProtocolTx =*/  &DcmDslProtocolTxList[%s],\n'%(tid);
             tid += 1 
             cstr += '\t},\n'
             cid += 1;
@@ -666,16 +669,16 @@ Dcm_DslBufferRuntimeType rxBufferParams_%s =
     for pro in GLGet('ProtocolList'):
         for con in GLGet(pro,'ConnectionList'):
             cstr += '\t{//%s->%s\n'%(GAGet(pro,'Name'), GAGet(con,'Name'));
-            cstr += '\t\t.DslProtocolRow = &DslProtocolRowList[%s],\n'%(pid);
-            cstr += '\t\t.DslMainConnection = &DslMainConnectionList[%s],\n'%(cid);
-            cstr += '\t\t.DslPeriodicTransmission = NULL,    /* Value is not configurable */\n'
-            cstr += '\t\t.DslResponseOnEvent = NULL,    /* Value is not configurable */\n'
-            cstr += '\t\t.Arc_EOL =  %s\n'%('FALSE');
+            cstr += '\t\t/*.DslProtocolRow =*/ &DslProtocolRowList[%s],\n'%(pid);
+            cstr += '\t\t/*.DslMainConnection =*/ &DslMainConnectionList[%s],\n'%(cid);
+            cstr += '\t\t/*.DslPeriodicTransmission =*/ NULL,    /* Value is not configurable */\n'
+            cstr += '\t\t/*.DslResponseOnEvent =*/ NULL,    /* Value is not configurable */\n'
+            cstr += '\t\t/*.Arc_EOL =*/  %s\n'%('FALSE');
             cstr += '\t},\n'
             cid += 1;
         pid += 1;  
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL = %s\n'%('TRUE');
+    cstr += '\t\t0,0,0,0,/*.Arc_EOL =*/ %s\n'%('TRUE');
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
@@ -687,82 +690,82 @@ Dcm_DslBufferRuntimeType rxBufferParams_%s =
     id = 0;
     for pro in GLGet('ProtocolList'):
         cstr += '\t{//%s\n'%(GAGet(pro,'Name'))
-        cstr += '\t\t.DslProtocolID = DCM_%s,\n'%((GAGet(pro,'ProtocolID')))
-        cstr += '\t\t.DslProtocolIsParallelExecutab = FALSE, // not supported\n'
-        cstr += '\t\t.DslProtocolPreemptTimeout = 0,    // not supported\n'
-        cstr += '\t\t.DslProtocolPriority = 0,    // not supported\n'
-        cstr += '\t\t.DslProtocolTransType = DCM_PROTOCOL_TRANS_%s,\n'%((GAGet(pro,'TransmissionType')))
-        cstr += '\t\t.DslProtocolRxBufferID = &DcmDslBufferList[INDEX_OF_BUF_%s],\n'%(GAGet(pro,'RxBufferRef'))
-        cstr += '\t\t.DslProtocolTxBufferID = &DcmDslBufferList[INDEX_OF_BUF_%s],\n'%(GAGet(pro,'TxBufferRef'))
-        cstr += '\t\t.DslProtocolSIDTable = &DsdServiceTable[INDEX_OF_ST_%s],\n'%(GAGet(pro,'ServiceTableRef'))
-        cstr += '\t\t.DslProtocolTimeLimit = &ProtocolTimingList[INDEX_OF_TL_%s],\n'%(GAGet(pro,'TimingLimitRef'))
-        cstr += '\t\t.DslConnection =  %s,\n'%('DslConnectionList')
-        cstr += '\t\t.DslRunTimeProtocolParameters = &dcmDslRuntimeVariables[%s],\n'%(id)
-        cstr += '\t\t.Arc_EOL = %s\n'%('FALSE')
+        cstr += '\t\t/*.DslProtocolID =*/ DCM_%s,\n'%((GAGet(pro,'ProtocolID')))
+        cstr += '\t\t/*.DslProtocolIsParallelExecutab =*/ FALSE, // not supported\n'
+        cstr += '\t\t/*.DslProtocolPreemptTimeout =*/ 0,    // not supported\n'
+        cstr += '\t\t/*.DslProtocolPriority =*/ 0,    // not supported\n'
+        cstr += '\t\t/*.DslProtocolTransType =*/ DCM_PROTOCOL_TRANS_%s,\n'%((GAGet(pro,'TransmissionType')))
+        cstr += '\t\t/*.DslProtocolRxBufferID =*/ &DcmDslBufferList[INDEX_OF_BUF_%s],\n'%(GAGet(pro,'RxBufferRef'))
+        cstr += '\t\t/*.DslProtocolTxBufferID =*/ &DcmDslBufferList[INDEX_OF_BUF_%s],\n'%(GAGet(pro,'TxBufferRef'))
+        cstr += '\t\t/*.DslProtocolSIDTable =*/ &DsdServiceTable[INDEX_OF_ST_%s],\n'%(GAGet(pro,'ServiceTableRef'))
+        cstr += '\t\t/*.DslProtocolTimeLimit =*/ &ProtocolTimingList[INDEX_OF_TL_%s],\n'%(GAGet(pro,'TimingLimitRef'))
+        cstr += '\t\t/*.DslConnection =*/  %s,\n'%('DslConnectionList')
+        cstr += '\t\t/*.DslRunTimeProtocolParameters =*/ &dcmDslRuntimeVariables[%s],\n'%(id)
+        cstr += '\t\t/*.Arc_EOL =*/ %s\n'%('FALSE')
         cstr += '\t},\n'
         id += 1;
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL = %s\n'%('TRUE')
+    cstr += '\t\t0,0,0,0,0,0,0,0,0,0,0,/*.Arc_EOL =*/ %s\n'%('TRUE')
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
     fp.write("""static const Dcm_DslProtocolType DslProtocol = {
-    .DslProtocolRxGlobalList = DcmDslProtocolRxList,
-    .DslProtocolTxGlobalList = DcmDslProtocolTxList,
-    .DslProtocolRowList = DslProtocolRowList
+    /*.DslProtocolRxGlobalList =*/ DcmDslProtocolRxList,
+    /*.DslProtocolTxGlobalList =*/ DcmDslProtocolTxList,
+    /*.DslProtocolRowList =*/ DslProtocolRowList
 };\n\n""")
     cstr = 'const Dcm_DslProtocolTimingRowType ProtocolTimingList[] = {\n'
     for tim in GLGet('TimingList'):
         cstr += '\t{//%s\n'%(GAGet(tim,'Name'));
-        cstr += '\t\t.TimStrP2ServerMax = %s,\n'%(GAGet(tim,'P2ServerMaxTimeMs'))
-        cstr += '\t\t.TimStrP2ServerMin = %s,\n'%(GAGet(tim,'P2ServerMinTimeMs'))
-        cstr += '\t\t.TimStrP2StarServerMax = 0,        /* Value is not configurable */\n'
-        cstr += '\t\t.TimStrP2StarServerMin = 0,        /* Value is not configurable */\n'
-        cstr += '\t\t.TimStrS3Server = %s,\n'%(GAGet(tim,'S3ServerTimeMs'))
-        cstr += '\t\t.Arc_EOL = FALSE\n'
+        cstr += '\t\t/*.TimStrP2ServerMax =*/ %s,\n'%(GAGet(tim,'P2ServerMaxTimeMs'))
+        cstr += '\t\t/*.TimStrP2ServerMin =*/ %s,\n'%(GAGet(tim,'P2ServerMinTimeMs'))
+        cstr += '\t\t/*.TimStrP2StarServerMax =*/ 0,        /* Value is not configurable */\n'
+        cstr += '\t\t/*.TimStrP2StarServerMin =*/ 0,        /* Value is not configurable */\n'
+        cstr += '\t\t/*.TimStrS3Server =*/ %s,\n'%(GAGet(tim,'S3ServerTimeMs'))
+        cstr += '\t\t/*.Arc_EOL =*/ FALSE\n'
         cstr +='\t},\n'
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL =  TRUE\n'
+    cstr += '\t\t0,0,0,0,0,/*.Arc_EOL =*/  TRUE\n'
     cstr +='\t},\n'
     cstr += '};\n\n'
     fp.write(cstr);
     fp.write("""static const Dcm_DslProtocolTimingType ProtocolTiming = {
-    .DslProtocolTimingRow = ProtocolTimingList
+    /*.DslProtocolTimingRow =*/ ProtocolTimingList
 };\n\n""")
     #--------------
     cstr = 'static const Dcm_DslSessionControlType SessionControlList[] = {\n'
     for ses in GLGet('SessionControlList'):
         cstr += '\t{//%s\n'%(GAGet(ses,'Name'))
-        cstr += '\t\t.GetSesChgPermission = %s,\n'%(GAGet(ses,'GetSessionChangePermissionCbk'))
-        cstr += '\t\t.ChangeIndication = NULL,\n'
-        cstr += '\t\t.ConfirmationRespPend = NULL,\n'
-        cstr += '\t\t.Arc_EOL = FALSE\n'
+        cstr += '\t\t/*.GetSesChgPermission =*/ %s,\n'%(GAGet(ses,'GetSessionChangePermissionCbk'))
+        cstr += '\t\t/*.ChangeIndication =*/ NULL,\n'
+        cstr += '\t\t/*.ConfirmationRespPend =*/ NULL,\n'
+        cstr += '\t\t/*.Arc_EOL =*/ FALSE\n'
         cstr += '\t},\n'
     cstr += '\t{\n'
-    cstr += '\t\t.Arc_EOL = TRUE\n'
+    cstr += '\t\t0,0,0,/*.Arc_EOL =*/ TRUE\n'
     cstr += '\t}\n'
     cstr += '};\n\n'
     fp.write(cstr);
     fp.write("""static const Dcm_DslDiagRespType DiagResp = {
-    .DslDiagRespForceRespPendEn = TRUE,
-    .DslDiagRespMaxNumRespPend =  100  /* if P2Server=100ms, so 10s totally */
+    /*.DslDiagRespForceRespPendEn =*/ TRUE,
+    /*.DslDiagRespMaxNumRespPend =*/  100  /* if P2Server=100ms, so 10s totally */
 };\n""")
 
     fp.write("""
 static const Dcm_DslType Dsl = {
-    .DslBuffer =  DcmDslBufferList,
-    .DslCallbackDCMRequestService = DCMRequestServiceList,
-    .DslDiagResp = &DiagResp,
-    .DslProtocol =  &DslProtocol,
-    .DslProtocolTiming = &ProtocolTiming,
-    .DslServiceRequestIndication = DCMServiceRequestIndicationList,
-    .DslSessionControl = SessionControlList
+    /*.DslBuffer =*/  DcmDslBufferList,
+    /*.DslCallbackDCMRequestService =*/ DCMRequestServiceList,
+    /*.DslDiagResp =*/ &DiagResp,
+    /*.DslProtocol =*/  &DslProtocol,
+    /*.DslProtocolTiming =*/ &ProtocolTiming,
+    /*.DslServiceRequestIndication =*/ DCMServiceRequestIndicationList,
+    /*.DslSessionControl =*/ SessionControlList
 };
 
 const Dcm_ConfigType DCM_Config = {
-    .Dsp = &Dsp,
-    .Dsd = &Dsd,
-    .Dsl = &Dsl
+    /*.Dsp =*/ &Dsp,
+    /*.Dsd =*/ &Dsd,
+    /*.Dsl =*/ &Dsl
 };
 """);
     fp.write('#endif /* USE_DCM */\n')

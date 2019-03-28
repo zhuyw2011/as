@@ -60,9 +60,9 @@ typedef struct {
 } DcmDsl_RunTimeDataType;
 
 static DcmDsl_RunTimeDataType DcmDslRunTimeData = {
-		.initRun = FALSE,
-		.activeProtocol = NULL,
-		.preemptingProtocol = NULL
+		/*.initRun =*/ FALSE,
+		/*.activeProtocol =*/ NULL,
+		/*.preemptingProtocol =*/ NULL
 //		.protocolList = {}
 };
 
@@ -614,8 +614,8 @@ void DslMain(void) {
 							releaseExternalRxTxBuffers(protocolRow, runtime);
 						}
 					} else {
-						ASLOG( DCM, ("***** WARNING, THIS IS UNEXPECTED !!! ********.\n" ));
 						const PduIdType txPduId = protocolRowEntry->DslConnection->DslMainConnection->DslProtocolTx->DcmDslProtocolTxPduId;
+						ASLOG( DCM, ("***** WARNING, THIS IS UNEXPECTED !!! ********.\n" ));
 						ASLOG( DCM, ("runtime->externalTxBufferStatus enter state DSD_PENDING_RESPONSE_SIGNALED.\n", txPduId));
 						runtime->externalTxBufferStatus = DCM_TRANSMIT_SIGNALED;
 						ASLOG( DCM, ("Calling PduR_DcmTransmit with txPduId = %d from DslMain\n", txPduId));
