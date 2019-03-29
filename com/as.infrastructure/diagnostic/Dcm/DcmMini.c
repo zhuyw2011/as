@@ -204,7 +204,7 @@ static const Dcm_CallbackCompareKeyFncType compareKeyList[] = { BL_CompareExtend
 static const Dcm_CallbackGetSeedFncType getSeedList[] = { Diag_GetSeedEXTDS, NULL /* NO PRGS session for APP */ };
 static const Dcm_CallbackCompareKeyFncType compareKeyList[] = { Diag_CompareKeyEXTDS, NULL };
 #endif
-static const uint32 dcmInstanceDefaultParameter[] = DCM_INSTANCE_DEFAULT_PARAMETER;
+static const Dcm_ParameterType dcmInstanceDefaultParameter[] = DCM_INSTANCE_DEFAULT_PARAMETER;
 
 /* ============================ [ LOCALS    ] ====================================================== */
 #if !defined(__HIWARE__)
@@ -566,7 +566,7 @@ static void HandleRequestDownloadOrUpload(PduIdType Instance, Dcm_UDTStateType s
 
 					ASLOG(DCM, ("request %s addr(%X) size(%X), memory=%X\n", 
 							(DCM_UDT_DOWNLOAD_STATE==state)?"download":"upload",
-							memoryAddress, memorySize, memoryIdentifier));
+							(uint32)memoryAddress,  (uint32)memorySize,  (uint32)memoryIdentifier));
 					/* create positive response code */
 					DCM_TXSDU_DATA[1] = 0x20;  /* lengthFormatIdentifier = 2 Bytes */
 
@@ -844,7 +844,7 @@ static void HandleRequest(PduIdType Instance)
 	boolean bPassCheck = TRUE;
 	DCM_RTE.currentSID = DCM_RXSDU_DATA[0];
 
-	ASLOG(DCM, ("Service %02X,  L=%d\n",  DCM_RTE.currentSID, DCM_RTE.rxPduLength));
+	ASLOG(DCM, ("Service %02X,  L=%d\n", (uint32)DCM_RTE.currentSID, (uint32)DCM_RTE.rxPduLength));
 
 	DCM_RTE.counter ++;
 	DCM_RTE.txPduLength = 0;
@@ -1052,7 +1052,7 @@ BufReq_ReturnType Dcm_ProvideTxBuffer(PduIdType Instance, PduInfoType **pduInfoP
 	{
 		ret = BUFREQ_E_NOT_OK;
 	}
-	else if((length > DCM_TXSDU_SIZE) || (0 == length))
+	else if(length > DCM_TXSDU_SIZE)
 	{
 		ret = BUFREQ_E_OVFL;
 	}

@@ -1118,9 +1118,11 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId, /** @req CANTP078 */ /** @req CA
 		return;
 	}
 	ASLOG(CANTP, ("CanTp_RxIndication: PduId=%d,  LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n", 
-			CanTpRxPduId,CanTpRxPduPtr->SduLength,CanTpRxPduPtr->SduDataPtr[0],CanTpRxPduPtr->SduDataPtr[1],
-			CanTpRxPduPtr->SduDataPtr[2],CanTpRxPduPtr->SduDataPtr[3],CanTpRxPduPtr->SduDataPtr[4],
-CanTpRxPduPtr->SduDataPtr[5],CanTpRxPduPtr->SduDataPtr[6],CanTpRxPduPtr->SduDataPtr[7]));
+			(uint32)CanTpRxPduId,(uint32)CanTpRxPduPtr->SduLength,
+			(uint32)CanTpRxPduPtr->SduDataPtr[0],(uint32)CanTpRxPduPtr->SduDataPtr[1],
+			(uint32)CanTpRxPduPtr->SduDataPtr[2],(uint32)CanTpRxPduPtr->SduDataPtr[3],
+			(uint32)CanTpRxPduPtr->SduDataPtr[4],(uint32)CanTpRxPduPtr->SduDataPtr[5],
+			(uint32)CanTpRxPduPtr->SduDataPtr[6],(uint32)CanTpRxPduPtr->SduDataPtr[7]));
 
 	VALIDATE_NO_RV( CanTpRunTimeData.internalState == CANTP_ON,
 			SERVICE_ID_CANTP_RX_INDICATION, CANTP_E_UNINIT ); /** @req CANTP031 */

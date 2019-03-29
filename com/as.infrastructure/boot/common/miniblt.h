@@ -139,7 +139,7 @@ typedef Std_ReturnType (*Dcm_CallbackGetSeedFncType)(uint8 *securityAccessDataRe
 typedef Std_ReturnType (*Dcm_CallbackCompareKeyFncType)(uint8 *key);
 typedef Std_ReturnType (*Dcm_CallbackGetSesChgPermissionFncType)(Dcm_SesCtrlType sesCtrlTypeActive, Dcm_SesCtrlType sesCtrlTypeNew);
 
-#if defined(__LINUX__) || defined(__WINDOWS__)
+#if defined(__LINUX__) || defined(__WINDOWS__) || defined(__AARCH64__)
 typedef uint64 Dcm_ParameterType;
 #else
 typedef uint32 Dcm_ParameterType;

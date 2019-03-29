@@ -287,9 +287,9 @@ static void scheduleRxIndication(uint16 Hrh, Can_IdType CanId, uint8 CanDlc,
 
 	ASLOG(CANIF,
 			("Rx Hrh=%X, CanId=%X, CanDlc=%X [%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
-			Hrh, CanId, CanDlc, CanSduPtr[0], CanSduPtr[1], CanSduPtr[2],
-			CanSduPtr[3], CanSduPtr[4], CanSduPtr[5], CanSduPtr[6],
-			CanSduPtr[7]));
+			(uint32)Hrh, (uint32)CanId, (uint32)CanDlc,
+			(uint32)CanSduPtr[0], (uint32)CanSduPtr[1], (uint32)CanSduPtr[2], (uint32)CanSduPtr[3],
+			(uint32)CanSduPtr[4], (uint32)CanSduPtr[5], (uint32)CanSduPtr[6], (uint32)CanSduPtr[7]));
 	if (channel == -1)  // Invalid HRH
 	{
 		return;
@@ -409,9 +409,9 @@ static void scheduleRxIndication(uint16 Hrh, Can_IdType CanId, uint8 CanDlc,
 // Did not find the PDU, something is wrong
 	ASLOG(CANIFE,
 			("Rx Hrh=%X, CanId=%X, CanDlc=%X [%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X]\n",
-			Hrh, CanId, CanDlc, CanSduPtr[0], CanSduPtr[1], CanSduPtr[2],
-			CanSduPtr[3], CanSduPtr[4], CanSduPtr[5], CanSduPtr[6],
-			CanSduPtr[7]));
+			(uint32)Hrh, (uint32)CanId, (uint32)CanDlc,
+			(uint32)CanSduPtr[0], (uint32)CanSduPtr[1], (uint32)CanSduPtr[2], (uint32)CanSduPtr[3],
+			(uint32)CanSduPtr[4], (uint32)CanSduPtr[5], (uint32)CanSduPtr[6], (uint32)CanSduPtr[7]));
 	VALIDATE_NO_RV(FALSE, CANIF_RXINDICATION_ID, CANIF_E_PARAM_LPDU);
 }
 #if (CANIF_TASK_FIFO_MODE==STD_ON)

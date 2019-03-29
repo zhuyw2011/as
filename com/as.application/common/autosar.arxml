@@ -52,8 +52,10 @@ CPU_CORE_NUMBER="1"
 #ifdef USE_DCM
 <Pdu Comment="*" Name="TxDiagP2P" Size="64" />
 <Pdu Comment="*" Name="RxDiagP2P" Size="64" />
+#ifndef USE_DCM_MINI
 <Pdu Comment="*" Name="TxDiagP2A" Size="64" />
 <Pdu Comment="*" Name="RxDiagP2A" Size="64" />
+#endif
 #endif
 #ifdef USE_COM
 <Pdu Comment="*" Name="TxMsgTime" Size="64" />
@@ -119,7 +121,9 @@ CPU_CORE_NUMBER="1"
 <TxPduList Max="TBD">
 #ifdef USE_DCM
 <Pdu Comment="*" DataLengthCode="8" EcuCPduRef="TxDiagP2P" HthRef="LS_Hth" Identifier="0x732" Name="P2P" TransmitNotifier="CanTp" UserNotification="CanIf_User" />
+#ifndef USE_DCM_MINI
 <Pdu Comment="*" DataLengthCode="8" EcuCPduRef="TxDiagP2A" HthRef="LS_Hth" Identifier="0x744" Name="P2A" TransmitNotifier="CanTp" UserNotification="CanIf_User" />
+#endif
 #endif
 #ifdef USE_CANNM
 <Pdu Comment="*" DataLengthCode="8" EcuCPduRef="LS_NM_TX" HthRef="LS_Hth" Identifier="0x502" Name="LS_NM" TransmitNotifier="CanNm" UserNotification="CanIf_User" />
@@ -154,7 +158,9 @@ CPU_CORE_NUMBER="1"
 <RxPduList Max="TBD">
 #ifdef USE_DCM
 <Pdu Comment="*" DataLengthCode="8" EcuCPduRef="RxDiagP2P" FilterMask="0x7FF" HrhRef="LS_Hrh" Identifier="0x731" Name="P2P" ReceivedNotifier="CanTp" UserNotification="CanIf_UserRxIndication" />
+#ifndef USE_DCM_MINI
 <Pdu Comment="*" DataLengthCode="8" EcuCPduRef="RxDiagP2A" FilterMask="0x7FF" HrhRef="LS_Hrh" Identifier="0x743" Name="P2A" ReceivedNotifier="CanTp" UserNotification="CanIf_UserRxIndication" />
+#endif
 #endif
 #ifdef USE_COM
 <Pdu Comment="*" DataLengthCode="8" EcuCPduRef="RxMsgAbsInfo" FilterMask="0x7FF" HrhRef="LS_Hrh" Identifier="0x102" Name="AbsInfo" ReceivedNotifier="PduR" UserNotification="CanIf_UserRxIndication" />
@@ -187,11 +193,15 @@ CPU_CORE_NUMBER="1"
 <General Comment="*" DevelopmentErrorDetection="ON" VersionInfoApi="OFF" />
 <RxSduList Max="TBD">
 <Sdu BS="8" Comment="*" CommunicationType="PHYSICAL" MaxBusyTransmission="10" Name="SduP2P" Nar="100" Nbr="100" Ncr="100" Padding="ON" RxPduRef="RxDiagP2P" STmin="1" TxFcPduRef="TxDiagP2P" ll_dl="64" />
+#ifndef USE_DCM_MINI
 <Sdu BS="8" Comment="*" CommunicationType="PHYSICAL" MaxBusyTransmission="10" Name="SduP2A" Nar="100" Nbr="100" Ncr="100" Padding="ON" RxPduRef="RxDiagP2A" STmin="1" TxFcPduRef="TxDiagP2A" ll_dl="64" />
+#endif
 </RxSduList>
 <TxSduList Max="TBD">
 <Sdu Comment="*" CommunicationType="PHYSICAL" Name="SduP2P" Nas="100" Nbs="100" Ncs="100" Padding="ON" RxFcPduRef="RxDiagP2P" TxPduRef="TxDiagP2P" ll_dl="64" />
+#ifndef USE_DCM_MINI
 <Sdu Comment="*" CommunicationType="PHYSICAL" Name="SduP2A" Nas="100" Nbs="100" Ncs="100" Padding="ON" RxFcPduRef="RxDiagP2A" TxPduRef="TxDiagP2A" ll_dl="64" />
+#endif
 </TxSduList>
 </CanTp>
 <PduR>
@@ -208,6 +218,7 @@ CPU_CORE_NUMBER="1"
 <Destination Comment="*" Module="Dcm" Name="DcmP2P" PduRef="RxDiagP2P" />
 </DestinationList>
 </Source>
+#ifndef USE_DCM_MINI
 <Source Comment="*" Module="Dcm" Name="DcmP2A" PduRef="TxDiagP2A">
 <DestinationList Max="TBD">
 <Destination Comment="*" Module="CanTp" Name="CanTpP2A" PduRef="TxDiagP2A" />
@@ -218,6 +229,7 @@ CPU_CORE_NUMBER="1"
 <Destination Comment="*" Module="Dcm" Name="DcmP2A" PduRef="RxDiagP2A" />
 </DestinationList>
 </Source>
+#endif
 #endif
 #ifdef USE_COM
 <Source Comment="*" Module="Com" Name="ComMsgTime" PduRef="TxMsgTime">
