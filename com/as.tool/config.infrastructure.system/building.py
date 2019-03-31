@@ -113,14 +113,28 @@ def PrepareEnv(release):
     asenv['RELEASE'] = release
     asenv['PACKAGES'] = []
     board_list = []
+    any_list = []
     for dir in os.listdir('%s/com/as.application'%(ASROOT)):
         if(dir[:6]=='board.' and 
            os.path.exists('%s/com/as.application/%s/SConscript'%(ASROOT,dir))):
             board_list.append(dir[6:])
 
+    for dir in os.listdir('%s/com/as.application/board.any'%(ASROOT)):
+        if(os.path.exists('%s/com/as.application/board.any/%s/SConscript'%(ASROOT,dir))):
+            any_list.append(dir)
+
     def help():
-        print('Usage:scons board [studio]\n\tboard:%s'%(board_list))
+        if(IsPlatformWindows()):
+            set = 'set'
+        else:
+            set = 'export'
+        print('Usage:scons [studio/run]\n\tboard list: %s\n\tany   list: %s'%(board_list,any_list))
         print('  studio: optional for launch studio GUI tool')
+        print('  run: optional for run the application on the target board')
+        print('  use command "%s BOARD=board_name" to choose a board from the board list'%(set))
+        print('  use command "%s ANY=any_board_name" to choose a board from the any list if BOARD is any'%(set))
+        print('    for example, not a any board:\n\tset BOARD=posix')
+        print('    for example, a any board:\n\tset BOARD=any\n\tset ANY=mc9s12xep100')
 
     if('help' in COMMAND_LINE_TARGETS):
         help()
@@ -136,8 +150,6 @@ def PrepareEnv(release):
 
     if(BOARD is None):
         print('Error: no BOARD specified!')
-        if(IsPlatformWindows()):
-            print('use DOS "set" command to set BOARD\n\tfor example: set BOARD=posix')
         help()
         exit(-1)
 
