@@ -133,8 +133,8 @@ def PrepareEnv(release):
         print('  run: optional for run the application on the target board')
         print('  use command "%s BOARD=board_name" to choose a board from the board list'%(set))
         print('  use command "%s ANY=any_board_name" to choose a board from the any list if BOARD is any'%(set))
-        print('    for example, not a any board:\n\tset BOARD=posix')
-        print('    for example, a any board:\n\tset BOARD=any\n\tset ANY=mc9s12xep100')
+        print('    for example, not an any board:\n\tset BOARD=posix')
+        print('    for example, an any board:\n\tset BOARD=any\n\tset ANY=mc9s12xep100')
 
     if('help' in COMMAND_LINE_TARGETS):
         help()
@@ -150,6 +150,11 @@ def PrepareEnv(release):
 
     if(BOARD is None):
         print('Error: no BOARD specified!')
+        help()
+        exit(-1)
+
+    if((BOARD == 'any') and (os.getenv('ANY') not in any_list)):
+        print('Error: invalid ANY specified!')
         help()
         exit(-1)
 
