@@ -708,14 +708,20 @@ void statOsTask(void)
 #endif				 
 					(uint32_t)pTaskVar->actCnt);
 #ifdef USE_PTHREAD_PARENT
-			asAssert(tid->parent);
-			if((tid->parent-TaskVarArray) < TASK_NUM)
+			if(NULL != tid->parent)
 			{
-				SHELL_printf(" %s", tid->parent->pConst->name);
+				if((tid->parent-TaskVarArray) < TASK_NUM)
+				{
+					SHELL_printf(" %s", tid->parent->pConst->name);
+				}
+				else
+				{
+					SHELL_printf(" pthread%d", (uint32)(tid->parent -TaskVarArray));
+				}
 			}
 			else
 			{
-				SHELL_printf(" pthread%d", (uint32)(tid->parent -TaskVarArray));
+				SHELL_printf(" none");
 			}
 #endif
 #ifdef USE_SMP

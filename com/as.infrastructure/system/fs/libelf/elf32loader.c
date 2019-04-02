@@ -68,14 +68,14 @@ static boolean ELF32_GetDYNVirtualAddress(void* elfFile, Elf32_Addr *vstart_addr
 			if (phdr[i].p_vaddr > *vend_addr + 16)
 			{
 				/* There should not be too much padding in the object files. */
-				ASWARNING("too much padding before segment %d\n", i);
+				ASWARNING(("too much padding before segment %d\n", i));
 			}
 
 			*vend_addr = phdr[i].p_vaddr + phdr[i].p_memsz;
 			if (*vend_addr < phdr[i].p_vaddr)
 			{
-				ASLOG(ERROR, "invalid elf: "
-						"segment %d address overflow\n", i);
+				ASLOG(ERROR, ("invalid elf: "
+						"segment %d address overflow\n", i));
 				has_vstart = FALSE;
 				break;
 			}

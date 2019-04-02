@@ -41,5 +41,6 @@ if('SHELL' in MODULES):
 
 if('CPLUSPLUS' in MODULES):
     objs += Glob('cplusplus/*.cpp')
+    asenv.Append(CPPFLAGS=['-fno-exceptions'])
 
 Return('objs')

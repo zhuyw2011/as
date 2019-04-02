@@ -30,6 +30,11 @@ static TimerType timer;
 /* ============================ [ FUNCTIONS ] ====================================================== */
 KSM(Tester,Init)
 {
+	KGS(Tester,Start);
+}
+
+KSM(Tester,Start)
+{
 	KGS(Tester,RoundRobin);
 	StartTimer(&timer);
 #ifdef USE_PTHREAD_TEST
@@ -38,11 +43,6 @@ KSM(Tester,Init)
 #if defined(USE_SHELL) && defined(USE_VFS) && defined(USE_FDT)
 	fdt_test_init();
 #endif
-}
-
-KSM(Tester,Start)
-{
-
 }
 
 KSM(Tester,Stop)

@@ -285,7 +285,7 @@ void Os_RestoreKernelLock(void)
 	{
 		if(0 == RunningVar->lock)
 		{
-			asAssert(RunningVars[cpuid?0:1]->lock==0);
+			asAssert((NULL==RunningVars[cpuid?0:1]) || (0==RunningVars[cpuid?0:1]->lock));
 			Os_PortSpinUnLock();
 		}
 	}
