@@ -43,9 +43,15 @@ static void* do_load_elf(void* elfFile)
 	{
 		elf = ELF32_Load(elfFile);
 	}
+	#ifdef USE_ELF64
+	else if (ISELF64(elfFile))
+	{
+		elf = ELF64_Load(elfFile);
+	}
+	#endif
 	else
 	{
-		/*ELF64 not supported now */
+		/* Invalid Type */
 	}
 
 	return elf;
@@ -86,11 +92,23 @@ void* ELF_Open(const char* filename)
 void* ELF_LookupSymbol(void *handle, const char *symbol)
 {
 	void* addr = NULL;
-	ELF32_ObjectType* elfObj = handle;
+	ELF_ObjectType* elfObj = handle;
 
-	if(ELF32_MAGIC == elfObj->magic)
+	uint32_t i;
+
+	for(i=0; i<elfObj->nsym; i++)
 	{
-		addr = ELF32_LookupSymbol(elfObj, symbol);
+		if(0 == strcmp(elfObj->symtab[i].name, symbol))
+		{
+			addr = elfObj->symtab[i].addr;
+			break;
+		}
+	}
+
+	/* assume main as the entry */
+	if((NULL == addr) && (0 == strcmp("main", symbol)))
+	{
+		addr = elfObj->entry;
 	}
 
 	return addr;
@@ -98,12 +116,7 @@ void* ELF_LookupSymbol(void *handle, const char *symbol)
 
 int   ELF_Close(void *handle)
 {
-	ELF32_ObjectType* elfObj = handle;
-
-	if(ELF32_MAGIC == elfObj->magic)
-	{
-		ELF32_Close(elfObj);
-	}
+	free(handle);
 
 	return 0;
 }

@@ -55,32 +55,37 @@
 #define IS_AX(s)          ((s.sh_flags & SHF_ALLOC) && (s.sh_flags & SHF_EXECINSTR))
 #define IS_AW(s)          ((s.sh_flags & SHF_ALLOC) && (s.sh_flags & SHF_WRITE))
 
+#if defined(__AARCH64__)
+#ifndef USE_ELF64
+#define USE_ELF64 1
+#endif
+#endif
 /* ============================ [ TYPES     ] ====================================================== */
 typedef struct
 {
 	void       *addr;
 	char* name;
-}ELF32_SymtabType;
+}ELF_SymtabType;
 
 typedef struct
 {
 	uint32_t magic;
-	uint32_t vstart_addr;
 	uint32_t size;
 	uint32_t nsym;
+	void* vstart_addr;
 	void* space;
 	int (*entry)(int argc, char* argv[]);
-	ELF32_SymtabType* symtab;
-}ELF32_ObjectType;
+	ELF_SymtabType* symtab;
+}ELF_ObjectType;
 /* ============================ [ DECLARES  ] ====================================================== */
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ LOCALS    ] ====================================================== */
 /* ============================ [ FUNCTIONS ] ====================================================== */
 void* ELF32_Load(void* elfFile);
-int ELF32_Relocate(ELF32_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val);
-void* ELF32_LookupSymbol(ELF32_ObjectType *elfObj, const char *symbol);
-void ELF32_Close(ELF32_ObjectType *elfObj);
+int ELF32_Relocate(ELF_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val);
 
+void* ELF64_Load(void* elfFile);
+int ELF64_Relocate(ELF_ObjectType *elfObj, Elf64_Rel *rel, Elf64_Addr sym_val);
 void* ELF_FindSymbol(const char* name);
 
 #endif /* _ELFINTERNAL_H_ */

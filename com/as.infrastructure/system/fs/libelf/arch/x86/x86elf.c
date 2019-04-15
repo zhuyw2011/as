@@ -21,7 +21,7 @@
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ LOCALS    ] ====================================================== */
 /* ============================ [ FUNCTIONS ] ====================================================== */
-int ELF32_Relocate(ELF32_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val)
+int ELF32_Relocate(ELF_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val)
 {
 	Elf32_Addr *where, tmp;
 	Elf32_Sword addend, offset;

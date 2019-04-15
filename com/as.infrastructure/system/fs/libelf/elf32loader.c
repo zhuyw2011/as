@@ -92,7 +92,7 @@ static boolean ELF32_GetDYNVirtualAddress(void* elfFile, Elf32_Addr *vstart_addr
 	return has_vstart;
 }
 
-static boolean ELF32_LoadDYNObject(void* elfFile,ELF32_ObjectType* elfObj)
+static boolean ELF32_LoadDYNObject(void* elfFile,ELF_ObjectType* elfObj)
 {
 	boolean r = TRUE;
 	uint32_t i;
@@ -104,12 +104,12 @@ static boolean ELF32_LoadDYNObject(void* elfFile,ELF32_ObjectType* elfObj)
 	{
 		if(PT_LOAD == phdr[i].p_type)
 		{
-			memcpy(elfObj->space + phdr[i].p_vaddr - elfObj->vstart_addr,
+			memcpy(elfObj->space + phdr[i].p_vaddr - (unsigned long)elfObj->vstart_addr,
 					elfFile + phdr[i].p_offset, phdr[i].p_filesz);
 		}
 	}
 
-	elfObj->entry = elfObj->space + fileHdr->e_entry - elfObj->vstart_addr;
+	elfObj->entry = elfObj->space + fileHdr->e_entry - (unsigned long)elfObj->vstart_addr;
 	ASLOG(ELF32, ("entry is %p\n", elfObj->entry));
 	/* handle relocation section */
 	for (i = 0; i < fileHdr->e_shnum; i ++)
@@ -143,7 +143,7 @@ static boolean ELF32_LoadDYNObject(void* elfFile,ELF32_ObjectType* elfObj)
 					ELF32_Relocate(elfObj, rel,
 								(Elf32_Addr)(elfObj->space
 										+ sym->st_value
-										- elfObj->vstart_addr));
+										- (unsigned long)elfObj->vstart_addr));
 				}
 				else
 				{
@@ -202,7 +202,7 @@ static uint32_t ELF32_GetSymbolTableSize(void* elfFile, const char* byname, uint
 				count ++;
 		}
 
-		sz = count * sizeof(ELF32_SymtabType);
+		sz = count * sizeof(ELF_SymtabType);
 		*symtabCount = count;
 
 		for (j = 0, count = 0; j < shdr[i].sh_size / sizeof(Elf32_Sym); j++)
@@ -226,7 +226,7 @@ static uint32_t ELF32_GetSymbolTableSize(void* elfFile, const char* byname, uint
 	return sz;
 }
 
-static void ELF32_ConstructSymbolTable(void* elfFile, const char* byname, ELF32_ObjectType* elfObj)
+static void ELF32_ConstructSymbolTable(void* elfFile, const char* byname, ELF_ObjectType* elfObj)
 {
 	uint32_t i;
 	Elf32_Ehdr *fileHdr = elfFile;
@@ -252,7 +252,7 @@ static void ELF32_ConstructSymbolTable(void* elfFile, const char* byname, ELF32_
 		symtab = elfFile + shdr[i].sh_offset;
 		strtab = elfFile + shdr[shdr[i].sh_link].sh_offset;
 
-		strpool = elfObj->symtab + elfObj->nsym*sizeof(ELF32_SymtabType);
+		strpool = elfObj->symtab + elfObj->nsym*sizeof(ELF_SymtabType);
 
 		for (j = 0, count = 0; j < shdr[i].sh_size / sizeof(Elf32_Sym); j++)
 		{
@@ -285,9 +285,9 @@ static void ELF32_ConstructSymbolTable(void* elfFile, const char* byname, ELF32_
 	}
 }
 
-static ELF32_ObjectType* ELF32_LoadSharedObject(void* elfFile)
+static ELF_ObjectType* ELF32_LoadSharedObject(void* elfFile)
 {
-	ELF32_ObjectType* elfObj = NULL;
+	ELF_ObjectType* elfObj = NULL;
 	Elf32_Addr vstart_addr, vend_addr;
 	uint32_t elf_size;
 	uint32_t symtab_size;
@@ -299,7 +299,7 @@ static ELF32_ObjectType* ELF32_LoadSharedObject(void* elfFile)
 
 		symtab_size = ELF32_GetSymbolTableSize(elfFile, ELF_DYNSYM, &nsym);
 
-		elfObj = malloc(sizeof(ELF32_ObjectType)+elf_size+symtab_size);
+		elfObj = malloc(sizeof(ELF_ObjectType)+elf_size+symtab_size);
 		if(NULL != elfObj)
 		{
 			elfObj->magic = ELF32_MAGIC;
@@ -307,7 +307,7 @@ static ELF32_ObjectType* ELF32_LoadSharedObject(void* elfFile)
 			elfObj->symtab = ((void*)&elfObj[1]) + elf_size;
 			elfObj->nsym   = nsym;
 			elfObj->size  = elf_size;
-			elfObj->vstart_addr = vstart_addr;
+			elfObj->vstart_addr = (void*)vstart_addr;
 			memset(elfObj->space, 0, elf_size);
 			if(FALSE == ELF32_LoadDYNObject(elfFile, elfObj))
 			{
@@ -365,7 +365,7 @@ static boolean ELF32_GetRELVirtualAddress(void* elfFile, Elf32_Addr *vstart_addr
 	return ((*vend_addr)>0);
 }
 
-static boolean ELF32_RelocateRELObject(void* elfFile,ELF32_ObjectType* elfObj,
+static boolean ELF32_RelocateRELObject(void* elfFile,ELF_ObjectType* elfObj,
 		Elf32_Addr vstart_addr,
 		void* rodata_addr, void* bss_addr, void* data_addr)
 {
@@ -465,7 +465,7 @@ static boolean ELF32_RelocateRELObject(void* elfFile,ELF32_ObjectType* elfObj,
 	return r;
 }
 
-static boolean ELF32_LoadRELObject(void* elfFile,ELF32_ObjectType* elfObj)
+static boolean ELF32_LoadRELObject(void* elfFile,ELF_ObjectType* elfObj)
 {
 	boolean r = TRUE;
 	uint32_t i;
@@ -529,9 +529,9 @@ static boolean ELF32_LoadRELObject(void* elfFile,ELF32_ObjectType* elfObj)
 
 	return r;
 }
-static ELF32_ObjectType* ELF32_LoadRelocatedObject(void* elfFile)
+static ELF_ObjectType* ELF32_LoadRelocatedObject(void* elfFile)
 {
-	ELF32_ObjectType* elfObj = NULL;
+	ELF_ObjectType* elfObj = NULL;
 	Elf32_Addr vstart_addr, vend_addr;
 	uint32_t elf_size;
 	uint32_t symtab_size;
@@ -544,7 +544,7 @@ static ELF32_ObjectType* ELF32_LoadRelocatedObject(void* elfFile)
 
 		symtab_size = ELF32_GetSymbolTableSize(elfFile, ELF_SYMTAB, &nsym);
 
-		elfObj = malloc(sizeof(ELF32_ObjectType)+elf_size+symtab_size);
+		elfObj = malloc(sizeof(ELF_ObjectType)+elf_size+symtab_size);
 		if(NULL != elfObj)
 		{
 			elfObj->magic = ELF32_MAGIC;
@@ -574,7 +574,7 @@ static boolean ELF32_GetEXECVirtualAddress(void* elfFile, Elf32_Addr *vstart_add
 	return ELF32_GetDYNVirtualAddress(elfFile, vstart_addr, vend_addr);
 }
 
-static boolean ELF32_LoadEXECObject(void* elfFile,ELF32_ObjectType* elfObj)
+static boolean ELF32_LoadEXECObject(void* elfFile,ELF_ObjectType* elfObj)
 {
 	boolean r = TRUE;
 	uint32_t i;
@@ -585,26 +585,26 @@ static boolean ELF32_LoadEXECObject(void* elfFile,ELF32_ObjectType* elfObj)
 	{
 		if(PT_LOAD == phdr[i].p_type)
 		{
-			memcpy(elfObj->space + phdr[i].p_vaddr - elfObj->vstart_addr,
+			memcpy(elfObj->space + phdr[i].p_vaddr - (unsigned long)elfObj->vstart_addr,
 					elfFile + phdr[i].p_offset, phdr[i].p_filesz);
 		}
 	}
 
-	elfObj->entry = elfObj->space + fileHdr->e_entry - elfObj->vstart_addr;
+	elfObj->entry = elfObj->space + fileHdr->e_entry - (unsigned long)elfObj->vstart_addr;
 	ASLOG(ELF32, ("entry is %p\n", elfObj->entry));
 
 	return TRUE;
 }
-static ELF32_ObjectType* ELF32_LoadExecObject(void* elfFile)
+static ELF_ObjectType* ELF32_LoadExecObject(void* elfFile)
 {
-	ELF32_ObjectType* elfObj = NULL;
+	ELF_ObjectType* elfObj = NULL;
 	Elf32_Addr vstart_addr, vend_addr;
 	uint32_t elf_size;
 	if(ELF32_GetEXECVirtualAddress(elfFile, &vstart_addr, &vend_addr))
 	{
 		elf_size = vend_addr - vstart_addr;
 
-		elfObj = malloc(sizeof(ELF32_ObjectType)+elf_size);
+		elfObj = malloc(sizeof(ELF_ObjectType)+elf_size);
 		if(NULL != elfObj)
 		{
 			elfObj->magic = ELF32_MAGIC;
@@ -612,7 +612,7 @@ static ELF32_ObjectType* ELF32_LoadExecObject(void* elfFile)
 			elfObj->symtab = NULL;
 			elfObj->nsym   = 0;
 			elfObj->size  = elf_size;
-			elfObj->vstart_addr = vstart_addr;
+			elfObj->vstart_addr = (void*)vstart_addr;
 			memset(elfObj->space, 0, elf_size);
 			if(FALSE == ELF32_LoadEXECObject(elfFile, elfObj))
 			{
@@ -643,32 +643,4 @@ void* ELF32_Load(void* elfFile)
 		break;
 	}
 	return elf;
-}
-
-void* ELF32_LookupSymbol(ELF32_ObjectType *elfObj, const char *symbol)
-{
-	void* addr = NULL;
-	uint32_t i;
-
-	for(i=0; i<elfObj->nsym; i++)
-	{
-		if(0 == strcmp(elfObj->symtab[i].name, symbol))
-		{
-			addr = elfObj->symtab[i].addr;
-			break;
-		}
-	}
-
-	/* assume main as the entry */
-	if((NULL == addr) && (0 == strcmp("main", symbol)))
-	{
-		addr = elfObj->entry;
-	}
-
-	return addr;
-}
-
-void ELF32_Close(ELF32_ObjectType *elfObj)
-{
-	free(elfObj);
 }

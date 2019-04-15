@@ -21,7 +21,7 @@
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ LOCALS    ] ====================================================== */
 /* ============================ [ FUNCTIONS ] ====================================================== */
-int ELF32_Relocate(ELF32_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val)
+int ELF32_Relocate(ELF_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val)
 {
 	Elf32_Addr *where, tmp;
 	Elf32_Sword addend, offset;
@@ -29,7 +29,7 @@ int ELF32_Relocate(ELF32_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val)
 
 	where = (Elf32_Addr *)(elfObj->space
 						   + rel->r_offset
-						   - elfObj->vstart_addr);
+						   - (unsigned long)elfObj->vstart_addr);
 	asAssert(where < (Elf32_Addr *)(elfObj->space + elfObj->size));
 	switch (ELF32_R_TYPE(rel->r_info))
 	{

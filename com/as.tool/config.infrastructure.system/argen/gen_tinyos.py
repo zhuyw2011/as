@@ -102,7 +102,7 @@ def genForTinyOS_C(gendir,os_list):
     fp.write('#include "Os.h"\n')
     fp.write('/* ============================ [ MACROS    ] ====================================================== */\n')
     fp.write('#ifndef ISR_ATTR\n#define ISR_ATTR\n#endif\n')
-    fp.write('#ifndef ISR_ADDR(isr)\n#define ISR_ADDR(isr) isr\n#endif\n')
+    fp.write('#ifndef ISR_ADDR\n#define ISR_ADDR(isr) isr\n#endif\n')
     fp.write('/* ============================ [ TYPES     ] ====================================================== */\n')
     fp.write('/* ============================ [ DECLARES  ] ====================================================== */\n')
     isr_list = ScanFrom(os_list,'ISR')

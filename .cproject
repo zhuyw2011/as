@@ -69,6 +69,7 @@
 									<listOptionValue builtIn="false" value="USE_RINGBUFFER"/>
 									<listOptionValue builtIn="false" value="STM32F107xC"/>
 									<listOptionValue builtIn="false" value="USE_SMP"/>
+									<listOptionValue builtIn="false" value="USE_ELF64"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin.567764495" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin"/>
 							</tool>
@@ -118,6 +119,7 @@
 									<listOptionValue builtIn="false" value="STM32F107xC"/>
 									<listOptionValue builtIn="false" value="USE_SD"/>
 									<listOptionValue builtIn="false" value="USE_SMP"/>
+									<listOptionValue builtIn="false" value="USE_ELF64"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1824387882" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
 							</tool>
