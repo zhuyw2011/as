@@ -85,7 +85,7 @@ void* ELF32_Load(void* elfFile);
 int ELF32_Relocate(ELF_ObjectType *elfObj, Elf32_Rel *rel, Elf32_Addr sym_val);
 
 void* ELF64_Load(void* elfFile);
-int ELF64_Relocate(ELF_ObjectType *elfObj, Elf64_Rel *rel, Elf64_Addr sym_val);
+int ELF64_Relocate(ELF_ObjectType *elfObj, Elf64_Rela *rel, Elf64_Addr sym_val);
 void* ELF_FindSymbol(const char* name);
 
 #endif /* _ELFINTERNAL_H_ */

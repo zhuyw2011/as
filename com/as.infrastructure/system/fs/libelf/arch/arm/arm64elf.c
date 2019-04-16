@@ -22,7 +22,7 @@
 /* ============================ [ DATAS     ] ====================================================== */
 /* ============================ [ LOCALS    ] ====================================================== */
 /* ============================ [ FUNCTIONS ] ====================================================== */
-int ELF64_Relocate(ELF_ObjectType *elfObj, Elf64_Rel *rel, Elf64_Addr sym_val)
+int ELF64_Relocate(ELF_ObjectType *elfObj, Elf64_Rela *rel, Elf64_Addr sym_val)
 {
 	Elf64_Addr *where, tmp;
 	Elf64_Sword addend, offset;
@@ -32,10 +32,16 @@ int ELF64_Relocate(ELF_ObjectType *elfObj, Elf64_Rel *rel, Elf64_Addr sym_val)
 						   + rel->r_offset
 						   - (unsigned long)elfObj->vstart_addr);
 	asAssert(where < (Elf64_Addr *)(elfObj->space + elfObj->size));
-	switch (ELF32_R_TYPE(rel->r_info))
+	switch (ELF64_R_TYPE(rel->r_info))
 	{
-		case R_ARM_NONE:
-			ASLOG(ARM64ELF, ("R_ARM_NONE\n"));
+		case R_AARCH64_NONE:
+			ASLOG(ARM64ELF, ("R_AARCH64_NONE\n"));
+			break;
+		case R_AARCH64_GLOB_DAT:
+		case R_AARCH64_JUMP_SLOT:
+			*where = (Elf64_Addr)sym_val;
+			ASLOG(ARM64ELF, ("R_AARCH64_JUMP_SLOT: 0x%x -> 0x%x 0x%x\n",
+						  where, *where, sym_val));
 			break;
 		default:
 			ASLOG(ERROR, ("ARM64ELF: invalid relocate TYPE %d\n", ELF64_R_TYPE(rel->r_info)));

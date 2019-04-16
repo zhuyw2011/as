@@ -16,7 +16,7 @@
 #include "elfinternal.h"
 #ifdef USE_ELF64
 /* ============================ [ MACROS    ] ====================================================== */
-#define AS_LOG_ELF64 1
+#define AS_LOG_ELF64 0
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 /* ============================ [ DATAS     ] ====================================================== */
@@ -116,18 +116,18 @@ static boolean ELF64_LoadDYNObject(void* elfFile,ELF_ObjectType* elfObj)
 	{
 		uint32_t j, nr_reloc;
 		Elf64_Sym *symtab;
-		Elf64_Rel *rel;
+		Elf64_Rela *rel;
 		uint8_t *strtab;
 
-		if(SHT_REL == shdr[i].sh_type)
+		if(SHT_RELA == shdr[i].sh_type)
 		{
 			/* get relocate item */
-			rel = (Elf64_Rel *)(elfFile + shdr[i].sh_offset);
+			rel = (Elf64_Rela *)(elfFile + shdr[i].sh_offset);
 			/* locate .rel.plt and .rel.dyn section */
 			symtab = (Elf64_Sym *)(elfFile + shdr[shdr[i].sh_link].sh_offset);
 			strtab = (uint8_t *)(elfFile +
 					shdr[shdr[shdr[i].sh_link].sh_link].sh_offset);
-			nr_reloc = (uint32_t)(shdr[i].sh_size / sizeof(Elf64_Rel));
+			nr_reloc = (uint32_t)(shdr[i].sh_size / sizeof(Elf64_Rela));
 			/* relocate every items */
 			for (j = 0; j < nr_reloc; j ++)
 			{
@@ -161,7 +161,6 @@ static boolean ELF64_LoadDYNObject(void* elfFile,ELF_ObjectType* elfObj)
 					{
 						ELF64_Relocate(elfObj, rel, addr);
 					}
-
 				}
 				rel ++;
 			}
@@ -296,16 +295,16 @@ static ELF_ObjectType* ELF64_LoadSharedObject(void* elfFile)
 
 	if(ELF64_GetDYNVirtualAddress(elfFile, &vstart_addr, &vend_addr))
 	{
-		elf_size = vend_addr - vstart_addr;
+		elf_size = (vend_addr - vstart_addr);
 
 		symtab_size = ELF64_GetSymbolTableSize(elfFile, ELF_DYNSYM, &nsym);
 
-		elfObj = malloc(sizeof(ELF_ObjectType)+elf_size+symtab_size);
+		elfObj = malloc(sizeof(ELF_ObjectType)+elf_size+symtab_size+2*4096);
 		if(NULL != elfObj)
 		{
 			elfObj->magic = ELF64_MAGIC;
-			elfObj->space = &elfObj[1];
-			elfObj->symtab = ((void*)&elfObj[1]) + elf_size;
+			elfObj->space = (void*)((((Elf64_Addr)&elfObj[1])+4095)&(~0xFFF)); /* space must be 4Kb aligned */
+			elfObj->symtab = ((void*)elfObj->space) + elf_size;
 			elfObj->nsym   = nsym;
 			elfObj->size  = elf_size;
 			elfObj->vstart_addr = (void*)vstart_addr;
