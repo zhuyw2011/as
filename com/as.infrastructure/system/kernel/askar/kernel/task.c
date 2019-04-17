@@ -696,11 +696,11 @@ void statOsTask(void)
 		tid = (struct pthread*)pTaskConst;
 		if(tid > (struct pthread*)1)
 		{
-			SHELL_printf("pthread%-9d %-9s %3d  %3d   %3d     0x%08X 0x%08X %2d%%(0x%04X) %p/%p %3d/%-6d ",
+			SHELL_printf("pthread%-9d %-9s %3d  %3d   %3d     0x%08X 0x%08X %2d%%(0x%04X) %08X/%08X %3d/%-6d ",
 					(uint32_t)id, taskStateToString(pTaskVar->state),
 					(uint32_t)pTaskVar->priority, (uint32_t)pTaskConst->initPriority, (uint32_t)pTaskConst->runPriority,
 					(uint32_t)pTaskConst->pStack, (uint32_t)pTaskConst->stackSize, (uint32_t)pused, (uint32_t)used,
-					pTaskVar->list, tid->start,
+					(uint32_t)(long)pTaskVar->list, (uint32_t)(long)tid->start,
 #ifdef MULTIPLY_TASK_ACTIVATION
 					(uint32_t)pTaskVar->activation,
 #else

@@ -9,9 +9,9 @@
  
    filename: backtrace.c
 
-   compiler: gcc 3.4.5 (mingw-win32)
+   compiler: gcc msys2
 
-   build command: gcc -O2 -shared -Wall -o backtrace.dll backtrace.c  -lbfd -lintl -liberty -limagehlp
+   build command: gcc -O2 -shared -Wall -D__ASDEBUG_BACKTRACE__ -o backtrace.dll backtrace.c -lbfd -lintl -liberty -limagehlp -lz -LC:/msys64/mingw64/lib/binutils
 
    how to use: Call LoadLibraryA("backtrace.dll"); at beginning of your program .
 
@@ -20,7 +20,7 @@
 #include <windows.h>
 #include <excpt.h>
 #include <imagehlp.h>
-#include <bfd.h>
+#include <binutils/bfd.h>
 #include <psapi.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -215,21 +215,31 @@ _backtrace(struct output_buffer *ob, struct bfd_set *set, int depth , LPCONTEXT 
 
 	STACKFRAME frame;
 	memset(&frame,0,sizeof(frame));
-
+#ifdef __WIN64__
+	frame.AddrPC.Offset = context->Rip;
+	frame.AddrPC.Mode = AddrModeFlat;
+	frame.AddrStack.Offset = context->Rsp;
+	frame.AddrStack.Mode = AddrModeFlat;
+	frame.AddrFrame.Offset = context->Rbp;
+	frame.AddrFrame.Mode = AddrModeFlat;
+#else
 	frame.AddrPC.Offset = context->Eip;
 	frame.AddrPC.Mode = AddrModeFlat;
 	frame.AddrStack.Offset = context->Esp;
 	frame.AddrStack.Mode = AddrModeFlat;
 	frame.AddrFrame.Offset = context->Ebp;
 	frame.AddrFrame.Mode = AddrModeFlat;
-
+#endif
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread = GetCurrentThread();
 
 	char symbol_buffer[sizeof(IMAGEHLP_SYMBOL) + 255];
 	char module_name_raw[MAX_PATH];
-
-	while(StackWalk(IMAGE_FILE_MACHINE_I386, 
+#ifdef __WIN64__
+	while(StackWalk(IMAGE_FILE_MACHINE_AMD64,
+#else
+	while(StackWalk(IMAGE_FILE_MACHINE_I386,
+#endif
 		process, 
 		thread, 
 		&frame, 

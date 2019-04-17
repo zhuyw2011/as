@@ -11,12 +11,12 @@ void goodBye(void)
 
 void* child(void* arg)
 {
-	int id = (int)arg;
+	int id = (long)arg;
 	int counter = 0;
 
 	while(1)
 	{
-		printf("child%d is running %d\n",counter++);
+		printf("child%d is running %d\n", id, counter++);
 		sleep(1);
 	}
 

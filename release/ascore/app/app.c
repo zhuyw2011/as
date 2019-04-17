@@ -87,6 +87,7 @@ void StartupHook(void)
 	{
 		printf(" cpu is little endian\n");
 	}
+
 #ifdef USE_LCD
 	Lcd_Init();
 #endif
