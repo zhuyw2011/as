@@ -5,6 +5,9 @@ cwd = GetCurrentDir()
 
 Import('asenv')
 MODULES = asenv['MODULES']
+BOARD = asenv['BOARD']
+ASROOT = asenv['ASROOT']
+RELEASE = asenv['RELEASE']
 
 objs = []
 
@@ -21,5 +24,14 @@ if('DEM' in MODULES):
 
 if('DET' in MODULES):
     objs += Glob('Det/*.c')
+
+if((BOARD=='posix') and IsPlatformWindows()):
+    gcc = asenv['CC']
+    binutils = os.path.abspath('%s/../lib/binutils'%(gcc.split(' ')[0][:-3]))
+    target = '%s/release/%s/backtrace.dll'%(ASROOT,RELEASE)
+    cmd = '%s -O2 -shared -Wall -D__ASDEBUG_BACKTRACE__ -o %s' \
+        ' %s/Det/backtrace.c -lbfd -lintl -liberty -limagehlp -lz -L%s'%(
+            gcc, target, cwd, binutils)
+    MKObject(Glob('Det/backtrace.c'), target, cmd, False)
 
 Return('objs')
