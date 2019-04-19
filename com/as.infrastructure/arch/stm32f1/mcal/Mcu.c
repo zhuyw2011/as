@@ -320,6 +320,11 @@ void Stdio_PutChar(char ch)
   {
 	  timeout ++;
   }
+
+#ifdef USE_CLIB_STDIO_CAN
+  extern void Can_putc(char ch);
+  Can_putc(ch);
+#endif
 }
 
 //-------------------------------------------------------------------
