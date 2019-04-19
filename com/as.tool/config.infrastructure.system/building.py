@@ -740,6 +740,8 @@ def ForkEnv(father=None, attr={}):
         father = Env
     child = Environment()
     for key,v in father.items():
+        if(key == 'PACKAGES'):
+            continue
         if(type(v) is list):
             child[key] = list(v)
         elif(type(v) is str):
@@ -1196,8 +1198,6 @@ def Building(target, sobjs, env=None):
     MKDir(cfgdir)
     env.Append(CPPPATH=['%s'%(cfgdir)])
     env.Append(ASFLAGS='-I%s'%(cfgdir))
-    if('gcc' in env['CC']):
-        env.Append(CCFLAGS=['--include', '%s/asmconfig.h'%(cfgdir)])
 
     if('PACKAGES' in env):
         for p in env['PACKAGES']:
@@ -1249,6 +1249,9 @@ def Building(target, sobjs, env=None):
         pd = os.path.abspath(cfgdir)
         RunCommand('cd %s && %s studio.py %s'%(studio,env['python3'],pd))
         exit(0)
+
+    if(('gcc' in env['CC']) and os.path.exists('%s/asmconfig.h'%(cfgdir))):
+        env.Append(CCFLAGS=['--include', '%s/asmconfig.h'%(cfgdir)])
 
     objs += Glob('%s/*.c'%(cfgdir))
 
