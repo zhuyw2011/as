@@ -16,4 +16,7 @@ if('LWIP' in MODULES):
         objs += Glob('common/lwip/*.c')
         asenv.Append(CPPPATH=['%s/common/lwip'%(cwd)])
 
+if('SDCARD' in MODULES):
+    objs += Glob('common/mcal/sdcard.c')
+
 Return('objs')

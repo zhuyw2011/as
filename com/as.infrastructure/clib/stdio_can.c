@@ -105,8 +105,15 @@ void Can_putc(char ch)
 	rb_size_t r;
 
 #ifndef CAN_STDIO_IBUFFER_FULL_IGNORE
+	uint32_t timeout = 0;
 	while((0 == RB_Left(&rb_stdio_can)) && is_can_online())
 	{
+		timeout ++;
+		if(timeout > 0xFF)
+		{
+			wmissing ++;
+			return;
+		}
 		#ifdef USE_ASKAR
 		extern unsigned int CallLevel;
 		if(/*TCL_TASK*/0x01 != CallLevel)

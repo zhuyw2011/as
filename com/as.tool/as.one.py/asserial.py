@@ -471,4 +471,4 @@ class UISerial(QWidget):
         self.serial.runcmd('trace', False)
 
     def on_btnClearHistory_clicked(self):
-        pass         
+        self.tbHistory.clear()

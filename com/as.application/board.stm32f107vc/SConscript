@@ -24,6 +24,10 @@ MODULES += ['CLIB_MISCLIB','CLIB_STRTOK_R']
 MODULES += ['CLIB_STDIO_PRINTF']
 MODULES += ['CLIB_STDIO_CAN']
 
+MODULES += ['FATFS', 'VFS', 'DEV', 'SDCARD','CLIB_ASHEAP']
+
+asenv.Append(CPPDEFINES='configTOTAL_HEAP_SIZE=0x4000')
+
 # post special process for asboot release
 if(asenv['RELEASE']=='asboot'):
     MODULES = ['ECUM','SCHM','MCU','DET',
@@ -94,6 +98,7 @@ if('USB' in MODULES):
 
 asenv.Append(CPPDEFINES=['CHIP_STM32F10X','STM32F10X_CL'])
 asenv.Append(CPPDEFINES=['ENABLE_SHELL_ECHO_BACK'])
+asenv.Append(CPPDEFINES=['OS_STK_SIZE_SCALER=1/2'])
 
 if('run' in COMMAND_LINE_TARGETS):
     SelectCompilerArmNoneEabi()

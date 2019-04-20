@@ -124,6 +124,51 @@ DECLARE_WEAK void Os_IsrInit(void){}
 DECLARE_WEAK Std_ReturnType Rte_Start(void){ return E_OK; }
 #endif
 extern void SchM_RunMemory(void);
+
+#ifdef USE_VFS
+static void asblk_mount(void)
+{
+	int ercd;
+	vfs_init();
+#ifdef USE_LWEXT4
+	extern const device_t device_asblk1;
+	ercd = vfs_mount(&device_asblk1, "ext", "/");
+	if(0 != ercd)
+	{
+		ercd = vfs_mkfs(&device_asblk1, "ext");
+		if(0 == ercd)
+		{
+			ercd = vfs_mount(&device_asblk1, "ext", "/");
+		}
+	}
+	printf("mount asblk1 on / %s\n", ercd?"failed":"okay");
+#endif
+#ifdef USE_FATFS
+	#ifdef USE_LWEXT4
+	#define FATFS_MP "/dos"
+	vfs_mkdir(FATFS_MP, 0777);
+	#else
+	#define FATFS_MP "/"
+	#endif
+	extern const device_t device_asblk0;
+	ercd = vfs_mount(&device_asblk0, "vfat", FATFS_MP);
+	if(0 != ercd)
+	{
+		ercd = vfs_mkfs(&device_asblk0, "vfat");
+		if(0 == ercd)
+		{
+			ercd = vfs_mount(&device_asblk0, "vfat", FATFS_MP);
+		}
+	}
+	printf("mount asblk0 on %s %s\n", FATFS_MP, ercd?"failed":"okay");
+#endif
+#if defined(__WINDOWS__) || defined(__LINUX__)
+	const device_t device_ashost;
+	vfs_mkdir("/share", 0777);
+	vfs_mount(&device_ashost, "host", "/share");
+#endif
+}
+#endif
 /**
  * Initialize EcuM.
  */
@@ -202,8 +247,6 @@ void EcuM_Init(void) {
 	KSM_INIT();
 	StartOS(appMode); /** @req EcuM2141 */
 }
-
-
 /*
  * The order defined here is found in 3.1.5/EcuM2411
  */
@@ -237,51 +280,10 @@ void EcuM_StartupTwo(void)
 #ifdef USE_DEV
 	device_init();
 #endif
+
 #ifdef USE_VFS
-{
-	int ercd;
-	vfs_init();
-#ifdef USE_LWEXT4
-	extern const device_t device_asblk1;
-	ercd = vfs_mount(&device_asblk1, "ext", "/");
-	if(0 != ercd)
-	{
-		ercd = vfs_mkfs(&device_asblk1, "ext");
-		if(0 == ercd)
-		{
-			ercd = vfs_mount(&device_asblk1, "ext", "/");
-		}
-	}
-	printf("mount asblk1 on / %s\n", ercd?"failed":"okay");
+	asblk_mount();
 #endif
-#ifdef USE_FATFS
-	#ifdef USE_LWEXT4
-	#define FATFS_MP "/dos"
-	vfs_mkdir(FATFS_MP, 0777);
-	#else
-	#define FATFS_MP "/"
-	#endif
-	extern const device_t device_asblk0;
-	ercd = vfs_mount(&device_asblk0, "vfat", FATFS_MP);
-	if(0 != ercd)
-	{
-		ercd = vfs_mkfs(&device_asblk0, "vfat");
-		if(0 == ercd)
-		{
-			ercd = vfs_mount(&device_asblk0, "vfat", FATFS_MP);
-		}
-	}
-	printf("mount asblk0 on %s %s\n", FATFS_MP, ercd?"failed":"okay");
-#endif
-#if defined(__WINDOWS__) || defined(__LINUX__)
-	const device_t device_ashost;
-	vfs_mkdir("/share", 0777);
-	vfs_mount(&device_ashost, "host", "/share");
-#endif
-}
-#endif
-
-
 
 	// Initialize drivers that don't need NVRAM data
 	EcuM_AL_DriverInitTwo(EcuM_World.config);
