@@ -43,6 +43,8 @@
 #define VFS_ISDIR(st_mode) S_ISDIR(st_mode)
 #define VFS_ISREG(st_mode) S_ISREG(st_mode)
 /* ============================ [ TYPES     ] ====================================================== */
+struct vfs_filesystem_ops;
+
 typedef struct vfs_mount_s
 {
 	const char* mount_point;
@@ -50,8 +52,6 @@ typedef struct vfs_mount_s
 	const device_t* device;
 	TAILQ_ENTRY(vfs_mount_s) entry;
 } vfs_mount_t;
-
-struct vfs_filesystem_ops fops;
 
 typedef struct
 {

@@ -51,12 +51,12 @@
 
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
-extern void sd_spi_init(void);
-extern int  sd_spi_transmit(const uint8_t* txData, uint8_t* rxData, size_t size);
-extern void sd_chip_selected(int select);
-extern int sd_is_detected(void);
-extern void sd_spi_clk_slow(void);
-extern void sd_spi_fast_fast(void);
+extern void sd_spi_init(int sd);
+extern int  sd_spi_transmit(int sd, const uint8_t* txData, uint8_t* rxData, size_t size);
+extern void sd_chip_selected(int sd, int select);
+extern int  sd_is_detected(int sd);
+extern void sd_spi_clk_slow(int sd);
+extern void sd_spi_fast_fast(int sd);
 /* ============================ [ DATAS     ] ====================================================== */
 static uint8_t sd_type;
 /* ============================ [ LOCALS    ] ====================================================== */
@@ -118,127 +118,128 @@ static void sd_show_csd(const uint8_t* csd)
 #else
 #define sd_show_csd(csd)
 #endif
-static uint8_t sd_spi_xchg(uint8_t txByte)
+static uint8_t sd_spi_xchg(int sd, uint8_t txByte)
 {
 	uint8_t rxByte = 0xFF;
 
-	(void)sd_spi_transmit(&txByte, &rxByte, 1);
+	(void)sd_spi_transmit(sd, &txByte, &rxByte, 1);
 
 	return rxByte;
 }
 
-static int sd_wait_ready (uint32_t wt)
+static int sd_wait_ready (int sd, uint32_t wt)
 {
 	uint8_t d;
 	TimerType timer;
 	StartTimer(&timer);
 	do {
-		d = sd_spi_xchg(0xFF);
+		d = sd_spi_xchg(sd, 0xFF);
 		/* This loop takes a time. Insert rot_rdq() here for multi-task environment. */
 	} while ((d != 0xFF) && (GetTimer(&timer)<(MS2TICKS(wt))));	/* Wait for card goes ready or timeout */
 
 	return (d == 0xFF) ? 0 : ETIMEDOUT;
 }
 
-static int sd_rcvr_datablock (uint8_t *buff, size_t size)
+static int sd_rcvr_datablock (int sd, uint8_t *buff, size_t size)
 {
 	uint8_t token;
 	TimerType timer;
 
 	StartTimer(&timer);
 	do {							/* Wait for DataStart token in timeout of 200ms */
-		token = sd_spi_xchg(0xFF);
+		token = sd_spi_xchg(sd, 0xFF);
 		/* This loop will take a time. Insert rot_rdq() here for multitask envilonment. */
 	} while ((token == 0xFF) && (GetTimer(&timer)<=(MS2TICKS(200))));
 	if(token != 0xFE) return -1;		/* Function fails if invalid DataStart token or timeout */
 
-	sd_spi_transmit(NULL, buff, size);		/* Store trailing data to the buffer */
-	sd_spi_xchg(0xFF); sd_spi_xchg(0xFF);			/* Discard CRC */
+	sd_spi_transmit(sd, NULL, buff, size);		/* Store trailing data to the buffer */
+	sd_spi_xchg(sd, 0xFF); sd_spi_xchg(sd, 0xFF);	/* Discard CRC */
 
 	return 0;						/* Function succeeded */
 }
 
-static int sd_xmit_datablock (const uint8_t *buff, uint8_t token)
+static int sd_xmit_datablock (int sd, const uint8_t *buff, uint8_t token)
 {
 	uint8_t resp;
 
-	if (sd_wait_ready(500)) return -1;		/* Wait for card ready */
+	if (sd_wait_ready(sd, 500)) return -1;		/* Wait for card ready */
 
-	sd_spi_xchg(token);					/* Send token */
+	sd_spi_xchg(sd, token);				/* Send token */
 	if (token != 0xFD) {				/* Send data if token is other than StopTran */
-		sd_spi_transmit(buff, NULL, 512);		/* Data */
-		sd_spi_xchg(0xFF); sd_spi_xchg(0xFF);	/* Dummy CRC */
+		sd_spi_transmit(sd, buff, NULL, 512);			/* Data */
+		sd_spi_xchg(sd, 0xFF); sd_spi_xchg(sd, 0xFF);	/* Dummy CRC */
 
-		resp = sd_spi_xchg(0xFF);				/* Receive data resp */
+		resp = sd_spi_xchg(sd, 0xFF);			/* Receive data resp */
 		if ((resp & 0x1F) != 0x05) return -2;	/* Function fails if the data packet was not accepted */
 	}
 	return 0;
 }
 
-static void sd_deselect (void)
+static void sd_deselect (int sd)
 {
-	sd_chip_selected(1);		/* Set CS# high */
-	sd_spi_xchg(0xFF);	/* Dummy clock (force DO hi-z for multiple slave SPI) */
+	sd_chip_selected(sd, 1);		/* Set CS# high */
+	sd_spi_xchg(sd, 0xFF);	/* Dummy clock (force DO hi-z for multiple slave SPI) */
 }
 
-static int sd_select (void)
+static int sd_select (int sd)
 {
-	sd_spi_xchg(0xFF);	/* Dummy clock (force DO enabled) */
-	sd_chip_selected(0);		/* Set CS# low */
+	sd_spi_xchg(sd, 0xFF);	/* Dummy clock (force DO enabled) */
+	sd_chip_selected(sd, 0);		/* Set CS# low */
 #if 0
-	if (0 == sd_wait_ready(500)) return 0;	/* Wait for card ready */
+	if (0 == sd_wait_ready(sd, 500)) return 0;	/* Wait for card ready */
 
-	sd_deselect();
+	sd_deselect(sd);
 	return -1;	/* Timeout */
 #else
 	return 0;
 #endif
 }
 
-static uint8_t sd_send_command(uint8_t cmd, long arg)
+static uint8_t sd_send_command(int sd, uint8_t cmd, long arg)
 {
 	uint8_t n, res;
 
 	if (cmd & 0x80) {	/* Send a CMD55 prior to ACMD<n> */
 		cmd &= 0x7F;
-		res = sd_send_command(CMD55, 0);
+		res = sd_send_command(sd, CMD55, 0);
 		if (res > 1) return res;
 	}
 
 	/* Select the card and wait for ready except to stop multiple block read */
 	if (cmd != CMD12) {
-		sd_deselect();
-		if (sd_select()) return 0xFF;
+		sd_deselect(sd);
+		if (sd_select(sd)) return 0xFF;
 	}
 
 	/* Send command packet */
-	sd_spi_xchg(0x40 | cmd);				/* Start + command index */
-	sd_spi_xchg((uint8_t)(arg >> 24));		/* Argument[31..24] */
-	sd_spi_xchg((uint8_t)(arg >> 16));		/* Argument[23..16] */
-	sd_spi_xchg((uint8_t)(arg >> 8));			/* Argument[15..8] */
-	sd_spi_xchg((uint8_t)arg);				/* Argument[7..0] */
+	sd_spi_xchg(sd, 0x40 | cmd);				/* Start + command index */
+	sd_spi_xchg(sd, (uint8_t)(arg >> 24));		/* Argument[31..24] */
+	sd_spi_xchg(sd, (uint8_t)(arg >> 16));		/* Argument[23..16] */
+	sd_spi_xchg(sd, (uint8_t)(arg >> 8));			/* Argument[15..8] */
+	sd_spi_xchg(sd, (uint8_t)arg);				/* Argument[7..0] */
 	n = 0x01;							/* Dummy CRC + Stop */
 	if (cmd == CMD0) n = 0x95;			/* Valid CRC for CMD0(0) */
 	if (cmd == CMD8) n = 0x87;			/* Valid CRC for CMD8(0x1AA) */
-	sd_spi_xchg(n);
+	sd_spi_xchg(sd, n);
 
 	/* Receive command resp */
-	if (cmd == CMD12) sd_spi_xchg(0xFF);	/* Diacard following one byte when CMD12 */
+	if (cmd == CMD12) sd_spi_xchg(sd, 0xFF);	/* Diacard following one byte when CMD12 */
 	n = 10;								/* Wait for response (10 bytes max) */
 	do {
-		res = sd_spi_xchg(0xFF);
+		res = sd_spi_xchg(sd, 0xFF);
 	} while ((res & 0x80) && --n);
 
 	return res;							/* Return received response */
 }
 
-static size_t sd_sector_count(void)
+static size_t sd_sector_count(int sd)
 {
 	size_t csize = 0;
 	uint8_t csd[16];
 	uint8_t n;
 
-	if ((sd_send_command(CMD9, 0) == 0) && (sd_rcvr_datablock(csd, 16) == 0))
+	if ((sd_send_command(sd, CMD9, 0) == 0) &&
+			(sd_rcvr_datablock(sd, csd, 16) == 0))
 	{
 		if ((csd[0] >> 6) == 1)
 		{	/* SDC ver 2.00 */
@@ -252,7 +253,7 @@ static size_t sd_sector_count(void)
 			csize = csize << (n - 9);
 		}
 	}
-	sd_deselect();
+	sd_deselect(sd);
 
 	ASLOG(SDCARD, ("SD sector count %d!\n", (uint32_t)csize));
 	sd_show_csd(csd);
@@ -260,7 +261,7 @@ static size_t sd_sector_count(void)
 	return csize;
 }
 
-static size_t sd_block_size(void)
+static size_t sd_block_size(int sd)
 {
 	size_t blksz = 0;
 	uint8_t csd[16];
@@ -268,14 +269,14 @@ static size_t sd_block_size(void)
 
 	if (sd_type & CT_SD2)
 	{	/* SDC ver 2.00 */
-		if (sd_send_command(ACMD13, 0) == 0)
+		if (sd_send_command(sd, ACMD13, 0) == 0)
 		{	/* Read SD status */
-			sd_spi_xchg(0xFF);
-			if (0 == sd_rcvr_datablock(csd, 16))
+			sd_spi_xchg(sd, 0xFF);
+			if (0 == sd_rcvr_datablock(sd, csd, 16))
 			{	/* Read partial block */
 				for (n = 64 - 16; n; n--)
 				{
-					sd_spi_xchg(0xFF);	/* Purge trailing data */
+					sd_spi_xchg(sd, 0xFF);	/* Purge trailing data */
 				}
 				blksz = 16UL << (csd[10] >> 4);
 			}
@@ -283,7 +284,8 @@ static size_t sd_block_size(void)
 	}
 	else
 	{	/* SDC ver 1.XX or MMC */
-		if ((sd_send_command(CMD9, 0) == 0) && (sd_rcvr_datablock(csd, 16) == 0))
+		if ((sd_send_command(sd, CMD9, 0) == 0) &&
+				(sd_rcvr_datablock(sd, csd, 16) == 0))
 		{	/* Read CSD */
 			if (sd_type & CT_SD1)
 			{	/* SDC ver 1.XX */
@@ -295,7 +297,7 @@ static size_t sd_block_size(void)
 			}
 		}
 	}
-	sd_deselect();
+	sd_deselect(sd);
 
 	ASLOG(SDCARD, ("SD block size %d!\n", (uint32_t)blksz));
 	sd_show_csd(csd);
@@ -305,46 +307,46 @@ static size_t sd_block_size(void)
 	return blksz;
 }
 
-static int sd_init(void)
+static int sd_init(int sd)
 {
 	int ercd;
 	uint8_t n, cmd, ty, ocr[4], status;
 	TimerType timer;
 
-	sd_spi_clk_slow();
+	sd_spi_clk_slow(sd);
 	StartTimer(&timer);	/* Initialization timeout = 1 sec */
 
 	do {
 		for (n = 10; n; n--)
 		{
-			sd_spi_xchg(0xFF);	/* Send 80 dummy clocks */
+			sd_spi_xchg(sd, 0xFF);	/* Send 80 dummy clocks */
 		}
-		status = sd_send_command(CMD0,0); /* send IDLE command */
+		status = sd_send_command(sd, CMD0,0); /* send IDLE command */
 	} while((status != 1) && (GetTimer(&timer)<=MS2TICKS(1000)));
 
 	ty = 0;
 	if (1 == status)
 	{	/* Put the card SPI/Idle state */
-		if (sd_send_command(CMD8, 0x1AA) == 1)
+		if (sd_send_command(sd, CMD8, 0x1AA) == 1)
 		{	/* SDv2? */
 			for (n = 0; n < 4; n++)
 			{	/* Get 32 bit return value of R7 resp */
-				ocr[n] = sd_spi_xchg(0xFF);
+				ocr[n] = sd_spi_xchg(sd, 0xFF);
 			}
 			if (ocr[2] == 0x01 && ocr[3] == 0xAA)
 			{	/* Is the card supports vcc of 2.7-3.6V? */
 				/* Wait for end of initialization with ACMD41(HCS) */
-				while ((GetTimer(&timer)<=MS2TICKS(1000)) && sd_send_command(ACMD41, 1UL << 30));
-				if ((GetTimer(&timer)<=MS2TICKS(1000)) && sd_send_command(CMD58, 0) == 0)
+				while ((GetTimer(&timer)<=MS2TICKS(1000)) && sd_send_command(sd, ACMD41, 1UL << 30));
+				if ((GetTimer(&timer)<=MS2TICKS(1000)) && sd_send_command(sd, CMD58, 0) == 0)
 				{	/* Check CCS bit in the OCR */
-					for (n = 0; n < 4; n++) ocr[n] = sd_spi_xchg(0xFF);
+					for (n = 0; n < 4; n++) ocr[n] = sd_spi_xchg(sd, 0xFF);
 					ty = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;	/* Card id SDv2 */
 				}
 			}
 		}
 		else
 		{	/* Not SDv2 card */
-			if (sd_send_command(ACMD41, 0) <= 1)
+			if (sd_send_command(sd, ACMD41, 0) <= 1)
 			{	/* SDv1 or MMC? */
 				ty = CT_SD1; cmd = ACMD41;	/* SDv1 (ACMD41(0)) */
 			}
@@ -354,8 +356,8 @@ static int sd_init(void)
 			}
 
 			/* Wait for end of initialization */
-			while ((GetTimer(&timer)<=MS2TICKS(1000)) && sd_send_command(cmd, 0)) ;
-			if ((GetTimer(&timer)>MS2TICKS(1000)) || (sd_send_command(CMD16, 512) != 0))
+			while ((GetTimer(&timer)<=MS2TICKS(1000)) && sd_send_command(sd, cmd, 0)) ;
+			if ((GetTimer(&timer)>MS2TICKS(1000)) || (sd_send_command(sd, CMD16, 512) != 0))
 			{	/* Set block length: 512 */
 				ty = 0;
 			}
@@ -363,11 +365,11 @@ static int sd_init(void)
 	}
 
 	sd_type = ty;	/* Card type */
-	sd_deselect();
+	sd_deselect(sd);
 
 	if (ty)
 	{	/* OK */
-		sd_spi_fast_fast();			/* Set fast clock */
+		sd_spi_fast_fast(sd);			/* Set fast clock */
 		ercd = 0;
 	}
 	else
@@ -383,74 +385,81 @@ static int sd_init(void)
 static int asblk_open  (const device_t* device)
 {
 	int ercd;
+	int sd = (int)(long)device->priv;
 
-	sd_spi_init();
-	sd_deselect();
+	sd_spi_init(sd);
+	sd_deselect(sd);
 
-	ercd = sd_init();
+	ercd = sd_init(sd);
 
 	return ercd;
 }
 
 static int asblk_close (const device_t* device)
 {
-	sd_deselect();
+	int sd = (int)(long)device->priv;
+
+	sd_deselect(sd);
 	return 0;
 }
 
 static int asblk_read  (const device_t* device, size_t pos, void *buffer, size_t size)
 {
+	int sd = (int)(long)device->priv;
+
 	if (!(sd_type & CT_BLOCK)) pos *= 512;	/* LBA ot BA conversion (byte addressing cards) */
 
 	if (size == 1)
 	{	/* Single sector read */
-		if ((sd_send_command(CMD17, pos) == 0)	/* READ_SINGLE_BLOCK */
-			&& (0 == sd_rcvr_datablock(buffer, 512)))
+		if ((sd_send_command(sd, CMD17, pos) == 0)	/* READ_SINGLE_BLOCK */
+			&& (0 == sd_rcvr_datablock(sd, buffer, 512)))
 		{
 			size = 0;
 		}
 	}
 	else
 	{	/* Multiple sector read */
-		if (sd_send_command(CMD18, pos) == 0)
+		if (sd_send_command(sd, CMD18, pos) == 0)
 		{	/* READ_MULTIPLE_BLOCK */
 			do {
-				if (sd_rcvr_datablock(buffer, 512)) break;
-				buffer += 512;
+				if (sd_rcvr_datablock(sd, buffer, 512)) break;
+				buffer = (void*)(((unsigned long)buffer)+512);
 			} while (--size);
-			sd_send_command(CMD12, 0);	/* STOP_TRANSMISSION */
+			sd_send_command(sd, CMD12, 0);	/* STOP_TRANSMISSION */
 		}
 	}
-	sd_deselect();
+	sd_deselect(sd);
 
 	return (int)size;
 }
 
 static int asblk_write (const device_t* device, size_t pos, const void *buffer, size_t size)
 {
+	int sd = (int)(long)device->priv;
+
 	if (!(sd_type & CT_BLOCK)) pos *= 512;	/* LBA ==> BA conversion (byte addressing cards) */
 
 	if (size == 1)
 	{	/* Single sector write */
-		if ((sd_send_command(CMD24, pos) == 0)	/* WRITE_BLOCK */
-			&& (0 == sd_xmit_datablock(buffer, 0xFE)))
+		if ((sd_send_command(sd, CMD24, pos) == 0)	/* WRITE_BLOCK */
+			&& (0 == sd_xmit_datablock(sd, buffer, 0xFE)))
 		{
 			size = 0;
 		}
 	}
 	else
 	{	/* Multiple sector write */
-		if (sd_type & CT_SDC) sd_send_command(ACMD23, size);	/* Predefine number of sectors */
-		if (sd_send_command(CMD25, pos) == 0)
+		if (sd_type & CT_SDC) sd_send_command(sd, ACMD23, size);	/* Predefine number of sectors */
+		if (sd_send_command(sd, CMD25, pos) == 0)
 		{	/* WRITE_MULTIPLE_BLOCK */
 			do {
-				if (sd_xmit_datablock(buffer, 0xFC)) break;
-				buffer += 512;
+				if (sd_xmit_datablock(sd, buffer, 0xFC)) break;
+				buffer = (void*)(((unsigned long)buffer)+512);
 			} while (--size);
-			if (sd_xmit_datablock(0, 0xFD)) size = -1;	/* STOP_TRAN token */
+			if (sd_xmit_datablock(sd, 0, 0xFD)) size = -1;	/* STOP_TRAN token */
 		}
 	}
-	sd_deselect();
+	sd_deselect(sd);
 
 	return (int)size;
 }
@@ -458,6 +467,7 @@ static int asblk_write (const device_t* device, size_t pos, const void *buffer, 
 static int asblk_ctrl  (const device_t* device, int cmd,    void *args)
 {
 	int ercd = 0;
+	int sd = (int)(long)device->priv;
 
 	switch(cmd)
 	{
@@ -465,13 +475,13 @@ static int asblk_ctrl  (const device_t* device, int cmd,    void *args)
 			*(size_t*)args = 512;
 			break;
 		case DEVICE_CTRL_GET_BLOCK_SIZE:
-			*(size_t*)args = sd_block_size();
+			*(size_t*)args = sd_block_size(sd);
 			break;
 		case DEVICE_CTRL_GET_SECTOR_COUNT:
-			*(size_t*)args = sd_sector_count();
+			*(size_t*)args = sd_sector_count(sd);
 			break;
 		case DEVICE_CTRL_GET_DISK_SIZE:
-			*(size_t*)args = sd_sector_count()*512;
+			*(size_t*)args = sd_sector_count(sd)*512;
 		break;
 		default:
 			ercd = EINVAL;
@@ -490,5 +500,5 @@ const device_t device_asblk0 = {
 		asblk_write,
 		asblk_ctrl,
 	},
-	NULL
+	(void*)0
 };

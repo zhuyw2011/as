@@ -582,25 +582,25 @@ static int fatfs_mkfs (const device_t* device)
 /* ============================ [ FUNCTIONS ] ====================================================== */
 const struct vfs_filesystem_ops fatfs_ops =
 {
-	.name = "vfat",
-	.fopen = fatfs_fopen,
-	.fclose = fatfs_fclose,
-	.fread = fatfs_fread,
-	.fwrite = fatfs_fwrite,
-	.fflush = fatfs_fflush,
-	.fseek = fatfs_fseek,
-	.ftell = fatfs_ftell,
-	.unlink = fatfs_unlink,
-	.stat = fatfs_stat,
-	.opendir = fatfs_opendir,
-	.readdir = fatfs_readdir,
-	.closedir = fatfs_closedir,
-	.chdir = fatfs_chdir,
-	.mkdir = fatfs_mkdir,
-	.rmdir = fatfs_rmdir,
-	.rename = fatfs_rename,
-	.mount = fatfs_mount,
-	.mkfs = fatfs_mkfs
+	/*.name =*/ "vfat",
+	/*.fopen =*/ fatfs_fopen,
+	/*.fclose =*/ fatfs_fclose,
+	/*.fread =*/ fatfs_fread,
+	/*.fwrite =*/ fatfs_fwrite,
+	/*.fflush =*/ fatfs_fflush,
+	/*.fseek =*/ fatfs_fseek,
+	/*.ftell =*/ fatfs_ftell,
+	/*.unlink =*/ fatfs_unlink,
+	/*.stat =*/ fatfs_stat,
+	/*.opendir =*/ fatfs_opendir,
+	/*.readdir =*/ fatfs_readdir,
+	/*.closedir =*/ fatfs_closedir,
+	/*.chdir =*/ fatfs_chdir,
+	/*.mkdir =*/ fatfs_mkdir,
+	/*.rmdir =*/ fatfs_rmdir,
+	/*.rename =*/ fatfs_rename,
+	/*.mount =*/ fatfs_mount,
+	/*.mkfs =*/ fatfs_mkfs
 };
 
 
@@ -630,7 +630,7 @@ DSTATUS disk_initialize (
 	DSTATUS stat = STA_NOINIT;
 	const device_t* device;
 
-	ASLOG(FATFS, ("%s %d\n", __func__, pdrv));
+	ASLOG(FATFS, ("disk_initialize %d\n", pdrv));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -652,7 +652,7 @@ DRESULT disk_read (
 {
 	DRESULT res = RES_PARERR;
 	const device_t* device;
-	ASLOG(FATFS, ("%s %d %d %d\n", __func__, pdrv, sector, count));
+	ASLOG(FATFS, ("disk_read %d %d %d\n", pdrv, sector, count));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -674,7 +674,7 @@ DRESULT disk_write (
 {
 	DRESULT res = RES_PARERR;
 	const device_t* device;
-	ASLOG(FATFS, ("%s %d %d %d\n", __func__, pdrv, sector, count));
+	ASLOG(FATFS, ("disk_write %d %d %d\n", pdrv, sector, count));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -697,7 +697,7 @@ DRESULT disk_ioctl (
 	DRESULT res = RES_PARERR;
 	const device_t* device;
 	size_t sz;
-	ASLOG(FATFS, ("%s %d %d\n", __func__, pdrv, cmd));
+	ASLOG(FATFS, ("disk_ioctl %d %d\n", pdrv, cmd));
 
 	if(pdrv < FF_VOLUMES)
 	{
