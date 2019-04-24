@@ -630,7 +630,7 @@ DSTATUS disk_initialize (
 	DSTATUS stat = STA_NOINIT;
 	const device_t* device;
 
-	ASLOG(FATFS, ("disk_initialize %d\n", pdrv));
+	ASLOG(FATFS, ("disk_initialize %d\n", (uint32_t)pdrv));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -652,7 +652,7 @@ DRESULT disk_read (
 {
 	DRESULT res = RES_PARERR;
 	const device_t* device;
-	ASLOG(FATFS, ("disk_read %d %d %d\n", pdrv, sector, count));
+	ASLOG(FATFS, ("disk_read %d %d %d\n", (uint32_t)pdrv, (uint32_t)sector, (uint32_t)count));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -662,6 +662,7 @@ DRESULT disk_read (
 			res = (DRESULT)device->ops.read(device, sector, buff, count);
 		}
 	}
+
 	return res;
 }
 
@@ -674,7 +675,7 @@ DRESULT disk_write (
 {
 	DRESULT res = RES_PARERR;
 	const device_t* device;
-	ASLOG(FATFS, ("disk_write %d %d %d\n", pdrv, sector, count));
+	ASLOG(FATFS, ("disk_write %d %d %d\n", (uint32_t)pdrv, (uint32_t)sector, (uint32_t)count));
 
 	if(pdrv < FF_VOLUMES)
 	{
@@ -697,7 +698,7 @@ DRESULT disk_ioctl (
 	DRESULT res = RES_PARERR;
 	const device_t* device;
 	size_t sz;
-	ASLOG(FATFS, ("disk_ioctl %d %d\n", pdrv, cmd));
+	ASLOG(FATFS, ("disk_ioctl %d %d\n", (uint32_t)pdrv, (uint32_t)cmd));
 
 	if(pdrv < FF_VOLUMES)
 	{

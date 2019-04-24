@@ -381,7 +381,7 @@ static int lsFunc(int argc, char* argv[])
 			r = vfs_stat(dirent->d_name, &st);
 			if(0 == r)
 			{
-				SHELL_printf("%srw-rw-rw- 1 as vfs %11ld %s\r\n", VFS_ISDIR(st.st_mode)?"d":"-", st.st_size, dirent->d_name);
+				SHELL_printf("%srw-rw-rw- 1 as vfs %11ld %s\r\n", VFS_ISDIR(st.st_mode)?"d":"-", (uint32_t)st.st_size, dirent->d_name);
 				dirent = vfs_readdir(dir);
 			}
 			else

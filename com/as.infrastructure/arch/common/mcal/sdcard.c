@@ -185,14 +185,11 @@ static int sd_select (int sd)
 {
 	sd_spi_xchg(sd, 0xFF);	/* Dummy clock (force DO enabled) */
 	sd_chip_selected(sd, 0);		/* Set CS# low */
-#if 0
+
 	if (0 == sd_wait_ready(sd, 500)) return 0;	/* Wait for card ready */
 
 	sd_deselect(sd);
 	return -1;	/* Timeout */
-#else
-	return 0;
-#endif
 }
 
 static uint8_t sd_send_command(int sd, uint8_t cmd, long arg)
@@ -301,8 +298,6 @@ static size_t sd_block_size(int sd)
 
 	ASLOG(SDCARD, ("SD block size %d!\n", (uint32_t)blksz));
 	sd_show_csd(csd);
-
-	if(blksz < 4096) blksz = 4096; /* TODO: */
 
 	return blksz;
 }

@@ -154,7 +154,7 @@ static void asblk_mount(void)
 	ercd = vfs_mount(&device_asblk0, "vfat", FATFS_MP);
 	if(0 != ercd)
 	{
-		//ercd = vfs_mkfs(&device_asblk0, "vfat");
+		ercd = vfs_mkfs(&device_asblk0, "vfat");
 		if(0 == ercd)
 		{
 			ercd = vfs_mount(&device_asblk0, "vfat", FATFS_MP);
