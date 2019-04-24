@@ -19,9 +19,10 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/stat.h>
 #if defined(__WINDOWS__) || defined(__LINUX__)
+#include <sys/stat.h>
 #else
+#include "stat.h"
 #include <sys/dirent.h>
 #endif
 #include <time.h>

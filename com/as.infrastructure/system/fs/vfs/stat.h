@@ -24,6 +24,21 @@
 #define S_IREAD  0x0100
 #define S_IWRITE 0x0080
 #define S_IEXEC  0x0040
+
+#define S_IRWXU (S_IREAD | S_IWRITE | S_IEXEC)
+#define S_IXUSR S_IEXEC
+#define S_IWUSR S_IWRITE
+#define S_IRUSR S_IREAD
+
+#define S_IRGRP    (S_IRUSR >> 3)
+#define S_IWGRP    (S_IWUSR >> 3)
+#define S_IXGRP    (S_IXUSR >> 3)
+#define S_IRWXG    (S_IRWXU >> 3)
+
+#define S_IROTH    (S_IRGRP >> 3)
+#define S_IWOTH    (S_IWGRP >> 3)
+#define S_IXOTH    (S_IXGRP >> 3)
+#define S_IRWXO    (S_IRWXG >> 3)
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 /* ============================ [ DATAS     ] ====================================================== */
