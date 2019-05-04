@@ -52,6 +52,7 @@
 /* ============================ [ TYPES     ] ====================================================== */
 /* ============================ [ DECLARES  ] ====================================================== */
 extern void sd_spi_init(int sd);
+/* when txData is NULL, the SPI must send 0xFF */
 extern int  sd_spi_transmit(int sd, const uint8_t* txData, uint8_t* rxData, size_t size);
 extern void sd_chip_selected(int sd, int select);
 extern int  sd_is_detected(int sd);
