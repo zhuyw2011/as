@@ -91,10 +91,9 @@ def AppendPythonPath(lp):
     os.environ['PYTHONPATH'] = pypath
 
 def PrepareEnv(release):
-    # loop to search the ASROOT
-    if(os.getenv('ASPATH')):
-        ASROOT = os.getenv('ASPATH')
-    else:
+    ASROOT = os.getenv('ASPATH')
+    if((ASROOT==None) or (not os.path.exists(ASROOT))):
+        # loop to search the ASROOT
         p = os.curdir
         while(True):
             p=os.path.abspath('%s/..'%(p))

@@ -40,6 +40,7 @@ prepare() {
     echo "LIBS += -lpyas /mingw64/lib/Packet.lib /mingw64/lib/wpcap.lib /mingw64/lib/PCANBasic.lib /mingw64/lib/ControlCAN.lib" >> ${srcdir}/${_pkgfqn}/hw/char/Makefile.objs
   fi
 
+  export ASPATH=${asdir}
   cd ${asdir}/release/aslua
   make clean
   make dep-canlib SCONS=scons MSYS2=/
