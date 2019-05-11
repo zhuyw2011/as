@@ -763,7 +763,8 @@ class Qemu():
         ASROOT = Env['ASROOT']
         ARCH = Env['ARCH']
         self.arch = Env['arch']
-        self.params = '-serial tcp:127.0.0.1:1103,server'
+        self.port = self.FindPort()
+        self.params = '-serial tcp:127.0.0.1:%s,server'%(self.port)
         if('gdb' in COMMAND_LINE_TARGETS):
             self.params += ' -gdb tcp::1234 -S'
         if(self.arch in arch_map.keys()):
@@ -776,6 +777,19 @@ class Qemu():
         else:
             self.isAsQemu = False
             self.qemu = qemu
+
+    def FindPort(self):
+        import socket
+        port = 1103
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while(port < 2000):
+            try:
+                sock.bind(("127.0.0.1", port))
+                break
+            except:
+                port += 1
+        sock.close()
+        return port
 
     def LocateASQemu(self):
         ASROOT = Env['ASROOT']
@@ -821,10 +835,10 @@ class Qemu():
                 RunCommand('start %s/com/as.tool/lua/script/socketwin_can_driver.exe 0'%(ASROOT))
                 RunCommand('start %s/com/as.tool/lua/script/socketwin_can_driver.exe 1'%(ASROOT))
             RunCommand('cd %s && start cmd /C %s %s %s'%(where, self.qemu, params, self.params))
-            RunCommand('sleep 2 && telnet 127.0.0.1 1103')
+            RunCommand('sleep 2 && telnet 127.0.0.1 %s'%(self.port))
         else:
             fp = open('%s/telnet.sh'%(build),'w')
-            fp.write('sleep 0.5\ntelnet 127.0.0.1 1103\n')
+            fp.write('sleep 0.5\ntelnet 127.0.0.1 %s\n'%(self.port))
             fp.close()
             fp = open('%s/qemu.sh'%(build),'w')
             fp.write('%s %s %s & sh %s/telnet.sh\nsleep 3600000\n'%(self.qemu,params,self.params,build))
