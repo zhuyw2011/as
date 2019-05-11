@@ -5,7 +5,7 @@ studio=os.path.abspath('../../com/as.tool/config.infrastructure.system/')
 sys.path.append(studio)
 from building import *
 
-asenv = PrepareEnv('ascore')
+asenv = PrepareEnv()
 BOARD = asenv['BOARD']
 ASROOT = asenv['ASROOT']
 

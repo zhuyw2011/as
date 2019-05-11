@@ -160,6 +160,15 @@ class Plugin(QAction):
                 sig.attrib['Endianess'] = 'BIG_ENDIAN'
                 sig.attrib['StartBit'] = str(sg['start'])
                 sig.attrib['Size'] = str(sg['size'])
+                size = sg['size']
+                if(size <= 8):
+                    sig.attrib['Type'] = 'uint8'
+                elif(size <= 16):
+                    sig.attrib['Type'] = 'uint16'
+                elif(size <= 32):
+                    sig.attrib['Type'] = 'uint32'
+                else:
+                    sig.attrib['Type'] = 'uint8_n'
                 try: 
                     sig.attrib['InitialValue'] = str(sg['init']) 
                 except KeyError:

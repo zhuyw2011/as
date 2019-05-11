@@ -487,8 +487,8 @@ class ArgObjectTree(QTreeWidget):
        
     def onItemSelectionChanged(self):
         arobj = self.currentItem()
-        assert(isinstance(arobj,ArgObject))
-        arobj.onItemSelectionChanged()
+        if(isinstance(arobj,ArgObject)):
+            arobj.onItemSelectionChanged()
 
 class ArgModule(QMainWindow):
     # TODO: actions = []

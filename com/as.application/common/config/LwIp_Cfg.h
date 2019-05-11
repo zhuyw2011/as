@@ -26,7 +26,9 @@
 #define ETH_MAC_ADDR {0xde,0xed,0xbe,0xef,0xaa,0xbb}
 /* On Windows, by default use the VirtualBox Host-Only Ethernet Adapter #2,
  * And please configure its IPv4 address to 172.18.0.100. */
+#ifndef LWIP_AS_LOCAL_IP_ADDR
 #define LWIP_AS_LOCAL_IP_ADDR    "172.18.0.200"
+#endif
 #define LWIP_AS_LOCAL_IP_NETMASK "255.255.255.0"
 #define LWIP_AS_LOCAL_IP_GATEWAY "172.18.0.1"
 #define GET_BOOT_IPADDR ipaddr.addr = ipaddr_addr(LWIP_AS_LOCAL_IP_ADDR)

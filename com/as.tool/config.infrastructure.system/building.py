@@ -90,7 +90,7 @@ def AppendPythonPath(lp):
         sys.path.append(os.path.abspath(l))
     os.environ['PYTHONPATH'] = pypath
 
-def PrepareEnv(release):
+def PrepareEnv():
     ASROOT = os.getenv('ASPATH')
     if((ASROOT==None) or (not os.path.exists(ASROOT))):
         # loop to search the ASROOT
@@ -102,6 +102,8 @@ def PrepareEnv(release):
                os.path.isfile('%s/Console.bat'%(p))): break
         ASROOT=p
     BOARD=None
+
+    release = os.path.basename(os.path.abspath(os.curdir))
 
     AppendPythonPath(['%s/com/as.tool/config.infrastructure.system'%(ASROOT),
               '%s/com/as.tool/config.infrastructure.system/third_party'%(ASROOT)])

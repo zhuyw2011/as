@@ -65,6 +65,8 @@ static void ListSignal(void) {
 		for (uint16 i = 0; (IPdu->ComIPduSignalRef != NULL) && (IPdu->ComIPduSignalRef[i] != NULL); i++) {
 			const ComSignal_type *signal = IPdu->ComIPduSignalRef[i];
 
+			SHELL_printf("%s%s ", (IPdu->ComIPduDirection==COM_SEND)?"S":"R",
+					(signal->ComRxDataTimeoutAction==COM_TIMEOUT_DATA_ACTION_NONE)?" ":"r");
 			if(FALSE == signal->Com_Arc_IsSignalGroup)
 			{
 				switch(signal->ComSignalType)
