@@ -23,12 +23,12 @@
 #include "Dio.h"
 /* ============================ [ MACROS    ] ====================================================== */
 #define RTE_WRITE_PORT_FOR_TELLTALE(name)					\
-		Std_ReturnType Rte_Write_Telltale_##name##StatusPort_##name##Status(OnOff_T data)	\
+		Std_ReturnType Rte_Write_Telltale_Telltale_##name##State(OnOff_T data)				\
 		{																					\
 			Std_ReturnType ercd = E_NOT_OK;													\
 			if(data < eTelltaleStatusMax)													\
 			{																				\
-				TelltaleStatus[e##name] = data;												\
+				TelltaleStatus[eTelltale##name] = data;										\
 				ercd = E_OK;																\
 			}																				\
 			return ercd;																	\
@@ -89,16 +89,16 @@ static const TimerType    TellatleHzCfg[eTelltaleStatusMax][2] =
 /* ============================ [ LOCALS    ] ====================================================== */
 static OnOff_T TelltaleStatus[eTelltaleMax];
 /* ============================ [ FUNCTIONS ] ====================================================== */
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleTPMS)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleLowOil)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltalePosLamp)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleTurnLeft)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleTurnRight)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleAutoCruise)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleHighBeam)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleSeatbeltDriver)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleSeatbeltPassenger)
-RTE_WRITE_PORT_FOR_TELLTALE(TelltaleAirbag)
+RTE_WRITE_PORT_FOR_TELLTALE(TPMS)
+RTE_WRITE_PORT_FOR_TELLTALE(LowOil)
+RTE_WRITE_PORT_FOR_TELLTALE(PosLamp)
+RTE_WRITE_PORT_FOR_TELLTALE(TurnLeft)
+RTE_WRITE_PORT_FOR_TELLTALE(TurnRight)
+RTE_WRITE_PORT_FOR_TELLTALE(AutoCruise)
+RTE_WRITE_PORT_FOR_TELLTALE(HighBeam)
+RTE_WRITE_PORT_FOR_TELLTALE(SeatbeltDriver)
+RTE_WRITE_PORT_FOR_TELLTALE(SeatbeltPassenger)
+RTE_WRITE_PORT_FOR_TELLTALE(Airbag)
 
 
 void Swc_TelltaleManager(void)

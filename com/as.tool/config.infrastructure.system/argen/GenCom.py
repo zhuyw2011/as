@@ -60,11 +60,15 @@ def GenRTE():
     for sig in sigL:
         fp.write("C_{0}_IV = autosar.createConstantTemplateFromPhysicalType('C_{0}_IV', autosar.{1}_T)\n".format(GAGet(sig,'Name'),GAGet(sig,'Type').upper()))
     fp.write('\n')
+    fp.write('COM_D = []\n')
     for sig in sigL:
-        fp.write("{0}_I = autosar.createSenderReceiverInterfaceTemplate('{0}', autosar.{1}_T)\n".format(GAGet(sig,'Name'),GAGet(sig,'Type').upper()))
+        fp.write("COM_D.append(autosar.createDataElementTemplate('{0}', autosar.{1}_T))\n".format(GAGet(sig,'Name'),GAGet(sig,'Type').upper()))
+    fp.write('\n')
+    fp.write("COM_I = autosar.createSenderReceiverInterfaceTemplate('Com_I', COM_D)\n")
+    fp.write("COM_P = autosar.createSenderReceiverPortTemplate('Com', COM_I)\n")
     fp.write('\n')
     for sig in sigL:
-        fp.write("{0} = autosar.createSenderReceiverPortTemplate('{0}', {0}_I, C_{0}_IV, aliveTimeout=30)\n".format(GAGet(sig,'Name')))
+        fp.write("{0} = 'Com/{0}'\n".format(GAGet(sig,'Name')))
     fp.close()
 
 def toSignal(sig,pdu,isGroupSignal=False):

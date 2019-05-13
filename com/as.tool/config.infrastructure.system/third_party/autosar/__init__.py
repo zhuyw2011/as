@@ -71,7 +71,7 @@ def __createDataTypeFromTemplate(name, min, max):
 SINT8_T = __createDataTypeFromTemplate('SINT8_T', -128, 127)
 UINT8_T = __createDataTypeFromTemplate('UINT8_T', 0, 255)
 SINT16_T = __createDataTypeFromTemplate('SINT16_T', -32768, 32767)
-UINT16_T = __createDataTypeFromTemplate('UINT8_T', 0, 65535)
+UINT16_T = __createDataTypeFromTemplate('UINT16_T', 0, 65535)
 SINT32_T = __createDataTypeFromTemplate('SINT32_T', -2147483648, 2147483647)
 UINT32_T = __createDataTypeFromTemplate('UINT32_T', 0, 4294967295)
 #### Constant Helpers ####
@@ -94,16 +94,28 @@ def createConstantTemplateFromPhysicalType(name, dataTypeTemplate):
          ws.apply(cls.dataTypeTemplate)
          package.createConstant(cls.__name__, cls.dataTypeTemplate.__name__, cls.dataTypeTemplate.maxValue)
    return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply))
-#### Port Interface Helpers ####
+#### DataElement Helpers ####
+def createDataElementTemplate(name, dataTypeTemplate, default=None):   @classmethod
+   def apply(cls, ws):
+       ws.apply(cls.dataTypeTemplate)
+       return DataElement(name, dataTypeTemplate.__name__)   return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply))
+
+#### Port Interface Helpers, name is the data name ####
 def createSenderReceiverInterfaceTemplate(name, dataTypeTemplate, dataName=None):
    @classmethod
    def apply(cls, ws):
       package = ws.getPortInterfacePackage()
       if package.find(name) is None:
-         ws.apply(cls.dataTypeTemplate)
          if(cls.dataName is None):
              cls.dataName = name
-         package.createSenderReceiverInterface(name, autosar.DataElement(cls.dataName, cls.dataTypeTemplate.__name__))
+         if(type(cls.dataTypeTemplate) == list):
+             dataElements = []
+             for dataTypeTemplate in cls.dataTypeTemplate:
+                 dataElements.append(ws.apply(dataTypeTemplate))
+             package.createSenderReceiverInterface(name, dataElements)
+         else:
+             ws.apply(cls.dataTypeTemplate)
+             package.createSenderReceiverInterface(name, autosar.DataElement(cls.dataName, cls.dataTypeTemplate.__name__))
    return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply, dataName=dataName))
 #### Signal Helpers ####
 def _createProvidePortHelper(swc, name, portInterfaceTemplate, initValueTemplate=None):
@@ -135,8 +147,8 @@ def _createRequirePortTemplate(innerClassName, templateName, portInterfaceTempla
    def apply(cls, swc):
       _createRequirePortHelper(swc, cls.name, cls.portInterfaceTemplate, cls.initValueTemplate, cls.aliveTimeout)
    return type(innerClassName, (autosar.Template,), dict(name=templateName, portInterfaceTemplate=portInterfaceTemplate, initValueTemplate=initValueTemplate, aliveTimeout=aliveTimeout, apply=apply))
-   
 
+# name is the port name
 def createSenderReceiverPortTemplate(name, portInterfaceTemplate, initValueTemplate=None, aliveTimeout=0):
    return type(name, (), dict(Provide=_createProvidePortTemplate('Provide', name, portInterfaceTemplate, initValueTemplate),
                               Send=_createProvidePortTemplate('Send', name, portInterfaceTemplate, initValueTemplate),

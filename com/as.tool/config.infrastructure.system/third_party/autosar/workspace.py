@@ -450,10 +450,11 @@ class Workspace(object):
         Applies template to this workspace
         """
         if len(kwargs) == 0:
-            template.apply(self)
+            rv = template.apply(self)
         else:
-            template.apply(self, **kwargs)
+            rv = template.apply(self, **kwargs)
         template.usageCount+=1
+        return rv
 
     #---DEPRECATED CODE, TO BE REMOVED ---#
     @classmethod

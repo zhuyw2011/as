@@ -30,19 +30,11 @@ ttList=['TPMS','LowOil','PosLamp','TurnLeft','TurnRight','AutoCruise','HighBeam'
                 'SeatbeltDriver','SeatbeltPassenger','Airbag']
 # TelltaleStatus: means the COM signals which control the related Telltale status
 # TelltaleState: means the state of Telltale: on, off or flash
-C_TelltaleStatus_IV = {}
-C_TelltaleState_IV = {}
-TelltaleStatus_I = {}
-TelltaleState_I = {}
-TelltaleStatus = {}
-TelltaleState = {}
+TELLTALE_D = []
 for tt in ttList:
-    C_TelltaleStatus_IV[tt] = autosar.createConstantTemplateFromEnumerationType('C_%sStatus_IV'%(tt), InactiveActive_T, 3)
-    C_TelltaleState_IV[tt] = autosar.createConstantTemplateFromEnumerationType('C_Telltale%sStatus_IV'%(tt), OnOff_T, 3)
-    TelltaleStatus_I[tt] = autosar.createSenderReceiverInterfaceTemplate("%sStatus_I"%(tt),InactiveActive_T,"%sStatus"%(tt))
-    TelltaleState_I[tt] = autosar.createSenderReceiverInterfaceTemplate("Telltale%sStatus_I"%(tt),OnOff_T,"Telltale%sStatus"%(tt))
-    TelltaleStatus[tt] = autosar.createSenderReceiverPortTemplate('%sStatusPort'%(tt), TelltaleStatus_I[tt], C_TelltaleStatus_IV[tt], aliveTimeout=30)
-    TelltaleState[tt] = autosar.createSenderReceiverPortTemplate('Telltale%sStatusPort'%(tt), TelltaleState_I[tt], C_TelltaleState_IV[tt], aliveTimeout=30)
+    TELLTALE_D.append(autosar.createDataElementTemplate('%sState'%(tt), OnOff_T))
+TELLTALE_I = autosar.createSenderReceiverInterfaceTemplate('TELLTALE_I', TELLTALE_D)
+TELLTALE_P = autosar.createSenderReceiverPortTemplate('Telltale', TELLTALE_I)
 
 class Telltale(autosar.Template):
     @classmethod
@@ -57,17 +49,15 @@ class Telltale(autosar.Template):
     @classmethod
     def addPorts(cls, swc):
         componentName = cls.__name__
-        for tt in ttList:
-            #swc.apply(TelltaleStatus[tt].Receive)
-            swc.apply(TelltaleState[tt].Send)
-        swc.apply(Led1Sts.Receive)
-        swc.apply(Led2Sts.Receive)
-        swc.apply(Led3Sts.Receive)
+        swc.apply(COM_P.Receive)
+        swc.apply(TELLTALE_P.Send)
 
     @classmethod
     def addBehavior(cls, swc):
-         swc.behavior.createRunnable('Telltale_run', portAccess=[x.name for x in swc.requirePorts+swc.providePorts])
-         swc.behavior.createTimingEvent('Telltale_run', period=20)
+        portAccess=['Telltale/%sState'%(x) for x in ttList]
+        portAccess += [Led1Sts, Led2Sts, Led3Sts]
+        swc.behavior.createRunnable('Telltale_run', portAccess=portAccess)
+        swc.behavior.createTimingEvent('Telltale_run', period=20)
 
 if(__name__ == '__main__'):
     autosar.asSWCGen(Telltale)
