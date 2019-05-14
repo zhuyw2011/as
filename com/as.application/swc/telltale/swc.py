@@ -34,7 +34,10 @@ TELLTALE_D = []
 for tt in ttList:
     TELLTALE_D.append(autosar.createDataElementTemplate('%sState'%(tt), OnOff_T))
 TELLTALE_I = autosar.createSenderReceiverInterfaceTemplate('TELLTALE_I', TELLTALE_D)
-TELLTALE_P = autosar.createSenderReceiverPortTemplate('Telltale', TELLTALE_I)
+TELLTALE_P = {}
+for tt in ttList:
+    C_TELLTALE_IV = autosar.createConstantTemplateFromEnumerationType('C_Telltale%sStatus_IV'%(tt), OnOff_T, 3)
+    TELLTALE_P[tt] = autosar.createSenderReceiverPortTemplate('Telltale', TELLTALE_I, C_TELLTALE_IV, elemName='%sState'%(tt))
 
 class Telltale(autosar.Template):
     @classmethod
@@ -49,14 +52,15 @@ class Telltale(autosar.Template):
     @classmethod
     def addPorts(cls, swc):
         componentName = cls.__name__
-        swc.apply(COM_P.Receive)
-        swc.apply(TELLTALE_P.Send)
+        for name,p in TELLTALE_P.items():
+            swc.apply(p.Send)
+        swc.apply(Led1Sts.Receive)
+        swc.apply(Led2Sts.Receive)
+        swc.apply(Led3Sts.Receive)
 
     @classmethod
     def addBehavior(cls, swc):
-        portAccess=['Telltale/%sState'%(x) for x in ttList]
-        portAccess += [Led1Sts, Led2Sts, Led3Sts]
-        swc.behavior.createRunnable('Telltale_run', portAccess=portAccess)
+        swc.behavior.createRunnable('Telltale_run', portAccess=[p.url for p in swc.requirePorts+swc.providePorts])
         swc.behavior.createTimingEvent('Telltale_run', period=20)
 
 if(__name__ == '__main__'):

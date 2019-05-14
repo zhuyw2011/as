@@ -461,6 +461,10 @@ class Port(Element):
         else:
             return '/%s'%self.name
 
+    @property
+    def url(self):
+        return '%s/%s'%(self.name, self.comspec[0].name)
+
     def rootWS(self):
         if self.parent is None:
             return None

@@ -86,14 +86,16 @@ def createConstantTemplateFromEnumerationType(name, dataTypeTemplate, default=No
          package.createConstant(cls.__name__, cls.dataTypeTemplate.__name__, cls.default)
    return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply, default=default))
 
-def createConstantTemplateFromPhysicalType(name, dataTypeTemplate):
+def createConstantTemplateFromPhysicalType(name, dataTypeTemplate, default=None):
    @classmethod
    def apply(cls, ws):
       package = ws.getConstantPackage()
       if package.find(cls.__name__) is None:
          ws.apply(cls.dataTypeTemplate)
-         package.createConstant(cls.__name__, cls.dataTypeTemplate.__name__, cls.dataTypeTemplate.maxValue)
-   return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply))
+         if(cls.default is None):
+             cls.default = cls.dataTypeTemplate.maxValue
+         package.createConstant(cls.__name__, cls.dataTypeTemplate.__name__, cls.default)
+   return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply, default=default))
 #### DataElement Helpers ####
 def createDataElementTemplate(name, dataTypeTemplate, default=None):   @classmethod
    def apply(cls, ws):
@@ -118,42 +120,42 @@ def createSenderReceiverInterfaceTemplate(name, dataTypeTemplate, dataName=None)
              package.createSenderReceiverInterface(name, autosar.DataElement(cls.dataName, cls.dataTypeTemplate.__name__))
    return type(name, (autosar.Template,), dict(dataTypeTemplate=dataTypeTemplate, apply=apply, dataName=dataName))
 #### Signal Helpers ####
-def _createProvidePortHelper(swc, name, portInterfaceTemplate, initValueTemplate=None):
+def _createProvidePortHelper(swc, name, portInterfaceTemplate, initValueTemplate=None, elemName=None):
    ws = swc.rootWS()
    ws.apply(portInterfaceTemplate)
    if initValueTemplate is not None:
       ws.apply(initValueTemplate)
-      swc.createProvidePort(name, portInterfaceTemplate.__name__, initValueRef=initValueTemplate.__name__)
+      swc.createProvidePort(name, portInterfaceTemplate.__name__, elemName, initValueRef=initValueTemplate.__name__)
    else:
       swc.createProvidePort(name, portInterfaceTemplate.__name__)
 
-def _createRequirePortHelper(swc, name, portInterfaceTemplate, initValueTemplate=None, aliveTimeout=0):
+def _createRequirePortHelper(swc, name, portInterfaceTemplate, initValueTemplate=None, aliveTimeout=0, elemName=None):
    ws = swc.rootWS()
    ws.apply(portInterfaceTemplate)
    if initValueTemplate is not None:
       ws.apply(initValueTemplate)
-      swc.createRequirePort(name, portInterfaceTemplate.__name__, initValueRef=initValueTemplate.__name__, aliveTimeout=aliveTimeout)
+      swc.createRequirePort(name, portInterfaceTemplate.__name__, elemName, initValueRef=initValueTemplate.__name__, aliveTimeout=aliveTimeout)
    else:
       swc.createRequirePort(name, portInterfaceTemplate.__name__, aliveTimeout=aliveTimeout)
 
-def _createProvidePortTemplate(innerClassName, templateName, portInterfaceTemplate, initValueTemplate):
+def _createProvidePortTemplate(innerClassName, templateName, portInterfaceTemplate, initValueTemplate, elemName=None):
    @classmethod
    def apply(cls, swc):
-      _createProvidePortHelper(swc, cls.name, cls.portInterfaceTemplate, cls.initValueTemplate)
-   return type(innerClassName, (autosar.Template,), dict(name=templateName, portInterfaceTemplate=portInterfaceTemplate, initValueTemplate=initValueTemplate, apply=apply))
+      _createProvidePortHelper(swc, cls.name, cls.portInterfaceTemplate, cls.initValueTemplate, cls.elemName)
+   return type(innerClassName, (autosar.Template,), dict(name=templateName, portInterfaceTemplate=portInterfaceTemplate, initValueTemplate=initValueTemplate, apply=apply, elemName=elemName))
 
-def _createRequirePortTemplate(innerClassName, templateName, portInterfaceTemplate, initValueTemplate, aliveTimeout=0):
+def _createRequirePortTemplate(innerClassName, templateName, portInterfaceTemplate, initValueTemplate, aliveTimeout=0, elemName=None):
    @classmethod
    def apply(cls, swc):
-      _createRequirePortHelper(swc, cls.name, cls.portInterfaceTemplate, cls.initValueTemplate, cls.aliveTimeout)
-   return type(innerClassName, (autosar.Template,), dict(name=templateName, portInterfaceTemplate=portInterfaceTemplate, initValueTemplate=initValueTemplate, aliveTimeout=aliveTimeout, apply=apply))
+      _createRequirePortHelper(swc, cls.name, cls.portInterfaceTemplate, cls.initValueTemplate, cls.aliveTimeout, cls.elemName)
+   return type(innerClassName, (autosar.Template,), dict(name=templateName, portInterfaceTemplate=portInterfaceTemplate, initValueTemplate=initValueTemplate, aliveTimeout=aliveTimeout, apply=apply, elemName=elemName))
 
 # name is the port name
-def createSenderReceiverPortTemplate(name, portInterfaceTemplate, initValueTemplate=None, aliveTimeout=0):
-   return type(name, (), dict(Provide=_createProvidePortTemplate('Provide', name, portInterfaceTemplate, initValueTemplate),
-                              Send=_createProvidePortTemplate('Send', name, portInterfaceTemplate, initValueTemplate),
-                              Require=_createRequirePortTemplate('Require', name, portInterfaceTemplate, initValueTemplate, aliveTimeout),
-                              Receive=_createRequirePortTemplate('Receive', name, portInterfaceTemplate, initValueTemplate, aliveTimeout)))
+def createSenderReceiverPortTemplate(name, portInterfaceTemplate, initValueTemplate=None, aliveTimeout=0, elemName=None):
+   return type(name, (), dict(Provide=_createProvidePortTemplate('Provide', name, portInterfaceTemplate, initValueTemplate, elemName),
+                              Send=_createProvidePortTemplate('Send', name, portInterfaceTemplate, initValueTemplate, elemName),
+                              Require=_createRequirePortTemplate('Require', name, portInterfaceTemplate, initValueTemplate, aliveTimeout, elemName),
+                              Receive=_createRequirePortTemplate('Receive', name, portInterfaceTemplate, initValueTemplate, aliveTimeout, elemName)))
 
 def asSWCGen(cls):
     ws = autosar.workspace()

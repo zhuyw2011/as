@@ -58,17 +58,16 @@ def GenRTE():
             for sig in GLGet(grpSig,'SignalList'):
                 sigL.append(sig)
     for sig in sigL:
-        fp.write("C_{0}_IV = autosar.createConstantTemplateFromPhysicalType('C_{0}_IV', autosar.{1}_T)\n".format(GAGet(sig,'Name'),GAGet(sig,'Type').upper()))
+        fp.write("C_{0}_IV = autosar.createConstantTemplateFromPhysicalType('C_{0}_IV', autosar.{1}_T, {2})\n".format(GAGet(sig,'Name'),GAGet(sig,'Type').upper(),GAGet(sig,'InitialValue')))
     fp.write('\n')
     fp.write('COM_D = []\n')
     for sig in sigL:
         fp.write("COM_D.append(autosar.createDataElementTemplate('{0}', autosar.{1}_T))\n".format(GAGet(sig,'Name'),GAGet(sig,'Type').upper()))
     fp.write('\n')
     fp.write("COM_I = autosar.createSenderReceiverInterfaceTemplate('Com_I', COM_D)\n")
-    fp.write("COM_P = autosar.createSenderReceiverPortTemplate('Com', COM_I)\n")
     fp.write('\n')
     for sig in sigL:
-        fp.write("{0} = 'Com/{0}'\n".format(GAGet(sig,'Name')))
+        fp.write("{0} = autosar.createSenderReceiverPortTemplate('Com', COM_I, C_{0}_IV, aliveTimeout=30, elemName='{0}')\n".format(GAGet(sig,'Name')))
     fp.close()
 
 def toSignal(sig,pdu,isGroupSignal=False):
@@ -198,7 +197,7 @@ def toGSignalMaskAndInitValue(gsig, pduSize):
         init.append(0)
         mask.append(0)
     for sig in GLGet(gsig,'SignalList'):
-        InitialValue = int(GAGet(sig,'InitialValue'))
+        InitialValue = eval(GAGet(sig,'InitialValue'))
         StartBit = int(GAGet(sig,'StartBit'))
         Size = int(GAGet(sig,'Size'))
         if(GAGet(sig, 'Endianess') == 'BIG_ENDIAN'):

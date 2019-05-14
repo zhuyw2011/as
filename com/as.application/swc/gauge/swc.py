@@ -16,14 +16,15 @@ class Gauge(autosar.Template):
    @classmethod
    def addPorts(cls, swc):
       componentName = cls.__name__
-      swc.apply(COM_P.Receive)
+      swc.apply(VehicleSpeed.Receive)
+      swc.apply(TachoSpeed.Receive)
 
    @classmethod
    def addBehavior(cls, swc):
       componentName = cls.__name__
       swc.behavior.createRunnable(componentName+'_Init')
       swc.behavior.createRunnable(componentName+'_Exit')
-      swc.behavior.createRunnable(componentName+'_Run', portAccess=[VehicleSpeed, TachoSpeed])
+      swc.behavior.createRunnable(componentName+'_Run', portAccess=[p.url for p in swc.requirePorts+swc.providePorts])
       swc.behavior.createTimerEvent(componentName+'_Run', 20)
 
 if(__name__ == '__main__'):
