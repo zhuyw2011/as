@@ -234,6 +234,15 @@ class Message():
     def __setitem__(self, key, value):
         self.sgs[key].set_value(value)
 
+    def __getattr__(self, key):
+        return  self.__getitem__(key)
+
+    def __setattr__(self, key, value):
+        if(key in ['msg','busid','sgs','sdu','period','timer']):
+            self.__dict__[key] = value
+        else:
+            self.__setitem__(key, value)
+
 class Network(threading.Thread):
     def __init__(self, dbcf, busid=DFTBUS):
         threading.Thread.__init__(self)
@@ -266,7 +275,10 @@ class Network(threading.Thread):
             yield msg
 
     def __getitem__(self, key):
-        return  self.msgs[key]
+        return self.msgs[key]
+
+    def __getattr__(self, key):
+        return self.__getitem__(key)
 
     def parseCANDBC(self, dbc):
         pydbc = os.path.abspath('../py.can.database.access/ascc')
