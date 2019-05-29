@@ -20,6 +20,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from pyas.can import *
 import sys
+import time
 
 __all__ = ['UICan']
 
@@ -152,7 +153,7 @@ class UICan(QWidget):
     def on_canTraceEnable_stateChanged(self, state):
         if(state):
             self.traceTimer = self.startTimer(1)
-            self.timeTick = 0
+            self.timeTick = time.time()
         else:
             self.killTimer(self.traceTimer)
             self.traceTimer = None
@@ -170,7 +171,6 @@ class UICan(QWidget):
             assert(0)
 
     def onTraceTimerEvent(self):
-        self.timeTick += 1
         for bus in range(self.bus_num):
             if(self.online[bus]):
                 ercd,canid,data = can_read(bus,-2)
@@ -178,7 +178,7 @@ class UICan(QWidget):
                     cstr = 'bus=%s canid=%03X data=['%(bus,canid)
                     for d in data:
                         cstr += ' %02X'%(d)
-                    cstr += '] @ %d ms'%(self.timeTick)
+                    cstr += '] @ %.4f s'%(time.time() - self.timeTick)
                     self.canTrace.append(cstr)
 
     def on_btnOpen(self,id):
