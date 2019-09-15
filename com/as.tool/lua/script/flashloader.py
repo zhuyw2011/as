@@ -388,8 +388,12 @@ class AsFlashloader(QThread):
             self.protocol = 'unknown protocol %s'%(p)
             self.infor.emit(self.protocol)
 
+    def is_download_application_enabled(self):
+        return self.enable[7]
     def is_check_application_enabled(self):
         return self.enable[8]
+    def is_download_flash_driver_enabled(self):
+        return self.enable[4]
     def is_check_flash_driver_enabled(self):
         return self.enable[5]
     def setTarget(self,app,flsdrv=None, eraseProperty='512', writeProperty='8', signature='8', busPorperty='4096'):
@@ -620,7 +624,8 @@ class AsFlashloader(QThread):
         ary = app.getData(True)
         for id,ss in enumerate(ary):
             if((id==0)  and (self.flsSignature>0)):
-                assert(ss['size'] >= self.flsSignature)
+                if(self.flsSignature > ss['size']):
+                    self.flsSignature = ss['size']
                 addr = ss['address']+self.flsSignature
                 data = ss['data'][self.flsSignature:]
                 size = ss['size']-self.flsSignature
@@ -661,24 +666,20 @@ class AsFlashloader(QThread):
         return self.transmit([0x31,0x01,0xFF,0x03], [0x71,0x01,0xFF,0x03])
 
     def run_common(self, steps):
-        def ssz(ss):
-            sz = 0
-            for s in ss.getData(True):
-                sz += s['size']
-            return sz
-        self.sumSz = 0
-        if(os.path.exists(self.flsdrv)):
+        flsSz = 0
+        if(self.is_download_flash_driver_enabled()):
             self.flsdrvs = s19(self.flsdrv)
-            self.sumSz = ssz(self.flsdrvs)
-            if(self.is_check_flash_driver_enabled()):
-                self.sumSz += ssz(self.flsdrvs)
+            flsSz = self.flsdrvs.size
         self.apps = s19(self.app)
-        self.sumSz += ssz(self.apps)
+        appSz = self.apps.size
+        self.sumSz = appSz + flsSz
         if(self.is_check_application_enabled()):
-            self.sumSz += ssz(self.apps)
+            self.sumSz += appSz
+        if(self.is_check_flash_driver_enabled()):
+            self.sumSz += flsSz
         self.txSz = 0
         self.infor.emit('summary transfer size is %s bytes(app %s, flsdrv %s)!'%(
-                        self.sumSz,ssz(self.apps),ssz(self.flsdrvs)))
+                        self.sumSz,appSz,flsSz))
         pre = time.time()
         for id,s in enumerate(steps):
             if((self.enable[id] == True) and (s[0].__name__ != 'dummy')):
@@ -839,6 +840,7 @@ class UIFlashloader(QWidget):
 
     def on_cmbxProtocol_currentIndexChanged(self,index):
         self.loader.set_protocol(str(self.cmbxProtocol.currentText()))
+        self.leFlsBusProperty.setText('%s'%(self.loader.ability))
 
         for id,s in enumerate(self.loader.GetSteps()):
             self.cbxEnableList[id].setText(s[0])

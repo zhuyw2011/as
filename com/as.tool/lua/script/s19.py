@@ -26,6 +26,13 @@ class s19:
         self.hasS3 = False
         if(file != None):self.parse(file)
 
+    @property
+    def size(self):
+        sz = 0
+        for s in self.getData(True):
+            sz += s['size']
+        return sz
+
     def append(self,address,bytes):
         sz = len(bytes)
         alen = len(self.data)
