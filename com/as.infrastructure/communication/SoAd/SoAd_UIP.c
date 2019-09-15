@@ -37,6 +37,7 @@ static uint8  tcpBufRx[SOAD_TCP_SOCKET_NUM][SOAD_RX_BUFFER_SIZE];
 static uint8  tcpBufTx[SOAD_TCP_SOCKET_NUM][SOAD_TX_BUFFER_SIZE];
 static uint32 tcpSocketFlag = 0;
 static uint32 tcpSocketConnectFlag = 0;
+static uint32 tcpSocketErrorFlag = 0;
 static const uint8* tcpSocketDatatPtr[SOAD_TCP_SOCKET_NUM];
 static int          tcpSocketDatatLen[SOAD_TCP_SOCKET_NUM];
 /* ============================ [ LOCALS] ====================================================== */
@@ -96,10 +97,10 @@ void tcp_socket_event_callback(struct tcp_socket *s,
 		case TCP_SOCKET_CLOSED:
 			break;
 		case TCP_SOCKET_TIMEDOUT:
-			SoAd_SocketCloseImpl(slot);
+			tcpSocketErrorFlag |= 1<<slot;
 			break;
 		case TCP_SOCKET_ABORTED:
-			SoAd_SocketCloseImpl(slot);
+			tcpSocketErrorFlag |= 1<<slot;
 			break;
 		case TCP_SOCKET_DATA_SENT:
 			/* do nothing */
@@ -120,6 +121,7 @@ int SoAd_SocketCloseImpl(int s)
 		tcp_socket_close(&tcpSocket[s]);
 		tcp_socket_unregister(&tcpSocket[s]);
 		tcpSocketFlag &= ~(1<<s);
+		tcpSocketErrorFlag &= ~(1<<s);
 		r = 0;
 	}
 	else
@@ -132,7 +134,18 @@ int SoAd_SocketCloseImpl(int s)
 
 int SoAd_SocketStatusCheckImpl(int s)
 {
-	return 0;
+	int r = -1;
+
+	if((s < 32) && (0 == ((1<<s)&tcpSocketErrorFlag)))
+	{
+		r = 0;
+	}
+	else
+	{
+		s = s - 32;
+		/* TODO: for UDP */
+	}
+	return r;
 }
 
 int SoAd_SendImpl(int s, const void *data, size_t size, int flags)
@@ -169,6 +182,7 @@ int SoAd_CreateSocketImpl(int domain, int type, int protocol)
 							tcp_socket_data_callback, tcp_socket_event_callback);
 			tcpSocketFlag |= 1<<slot;
 			tcpSocketConnectFlag &= ~(1<<slot);
+			tcpSocketErrorFlag &= ~(1<<slot);
 			tcpSocketDatatPtr[slot] = NULL;
 			r = slot;
 		}
