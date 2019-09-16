@@ -187,6 +187,9 @@ class J1939Tp():
 
         return ercd,response
 
+    def reset(self):
+        pass
+
 if(__name__ == '__main__'):
     can_open(0,'socket',1,1000000)
     can_write(0,0x754,[0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77])

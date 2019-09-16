@@ -18,6 +18,7 @@ __lic__ = '''
 from .dcm import *
 from .s19 import *
 from .xcp import *
+import traceback
 
 
 from PyQt5 import QtCore, QtGui
@@ -39,29 +40,27 @@ class AsFlashloader(QThread):
     def __init__(self,parent=None):
         super(QThread, self).__init__(parent)
         self.steps = [ (self.enter_extend_session,True), (self.security_extds_access,True),
-                  (self.enter_program_session,True),(self.security_prgs_access,True),
+                  (self.enter_program_session,True),(self.reset_transimit_protocol,False),(self.security_prgs_access,True),
                   (self.download_flash_driver,True),(self.check_flash_driver,False),
                   (self.routine_erase_flash,True), (self.download_application,True),
                   (self.check_application,False), (self.launch_application,True) ]
         self.stepsXcp = [ (self.dummy,False), (self.dummy,False),
-                  (self.enter_program_session_xcp,True),(self.security_prgs_access_xcp,True),
+                  (self.enter_program_session_xcp,True),(self.reset_transimit_protocol,False),(self.security_prgs_access_xcp,True),
                   (self.download_flash_driver_xcp,True),(self.check_flash_driver_xcp,False),
                   (self.routine_erase_flash_xcp,True), (self.download_application_xcp,True),
                   (self.check_application_xcp,False), (self.launch_application_xcp,True) ]
         self.stepsCmd = [ (self.dummy,False), (self.dummy,False),
-                  (self.dummy,False),(self.dummy,False),
+                  (self.dummy,False),(self.reset_transimit_protocol,False),(self.dummy,False),
                   (self.download_flash_driver_cmd,True),(self.dummy,False),
                   (self.routine_erase_flash_cmd,True), (self.download_application_cmd,True),
                   (self.dummy,False), (self.dummy,False) ]
         self.enable = []
         for s in self.steps:
             self.enable.append(s[1])
-        self.dcm = dcm(DFTBUS,0x732,0x731)
-        self.xcp = xcp(DFTBUS, 0x554, 0x555)
         self.app = None
         self.flsdrv = None
-        self.protocol = 'UDS'
         self.ability = 4096
+        self.protocol = 'UDS on CAN'
 
     def add_progress(self,sz):
         self.txSz += sz
@@ -145,7 +144,7 @@ class AsFlashloader(QThread):
         return ercd,res
 
     def transmit_xcp(self, req, ignore=False):
-        res = self.xcp.transmit(req.toarray())
+        res = self.tp.transmit(req.toarray())
         if((res != None) and (res.toarray()[0] == 0xFF)):
             ercd = True
             if(not ignore): self.infor.emit('  success')
@@ -232,7 +231,7 @@ class AsFlashloader(QThread):
         ercd,res = self.transmit_xcp(req)
 
         self.infor.emit(' downloading data...')
-        ability = self.xcp.get_max_cto()-2
+        ability = self.tp.get_max_cto()-2
         left = size
         rPos = 0
         while((left > 0) and (ercd == True)):
@@ -259,12 +258,12 @@ class AsFlashloader(QThread):
         req.append(address,32)   # address
         self.infor.emit(' set MTA address %s, type %s'%(hex(address), identifier))
         ercd,res = self.transmit_xcp(req)
-        
+
         data = []
         left = size
 
         self.infor.emit(' uploading data...')
-        ability = self.xcp.get_max_cto()-1
+        ability = self.tp.get_max_cto()-1
         left = size
         while((left > 0) and (ercd == True)):
             doSz = left
@@ -361,54 +360,56 @@ class AsFlashloader(QThread):
         return self.transmit_xcp(req, True)
 
     def set_protocol(self,p):
+        self.protocol = p
+        if(p == 'UDS on DOIP'):
+            self.ability = 1400
+        else:
+            self.ability = 4096
+
+    def start_protocol(self):
+        p = self.protocol
         if(p == 'UDS on CAN'):
-            self.protocol = 'UDS'
-            self.dcm = dcm(DFTBUS,0x732,0x731)
-            self.ability = 4096
+            self.tp = dcm(DFTBUS,0x732,0x731)
         elif(p == 'UDS on USBCAN'):
-            self.protocol = 'UDS'
-            self.dcm = dcm(DFTBUS,0x732,0x731)
-            self.ability = 4096
-            self.dcm.usbcan=True
+            self.tp = dcm(DFTBUS,0x732,0x731)
         elif(p == 'UDS on CANFD'):
-            self.protocol = 'UDS'
-            self.dcm = dcm(DFTBUS,0x732,0x731)
-            self.dcm.set_ll_dl(64)
-            self.ability = 4096
+            self.tp = dcm(DFTBUS,0x732,0x731)
+            self.tp.set_ll_dl(64)
         elif(p == 'UDS on DOIP'):
-            self.protocol = 'UDS'
-            self.dcm = dcm('172.18.0.200',8989)
-            self.ability = 1400 # tested okay with this value
+            ip,port=self.misc.split(':')
+            port = eval(port)
+            self.infor.emit('start DoIP over %s:%s'%(ip, port))
+            self.tp = dcm(ip,port)
         elif(p == 'XCP on CAN'):
-            self.protocol = 'XCP'
+            self.tp = xcp(DFTBUS, 0x554, 0x555)
         elif(p.startswith('CMD on COM')):
-            self.protocol = 'CMD'
             self.port = p.split(' ')[2]
         else:
             self.protocol = 'unknown protocol %s'%(p)
             self.infor.emit(self.protocol)
 
     def is_download_application_enabled(self):
-        return self.enable[7]
-    def is_check_application_enabled(self):
         return self.enable[8]
+    def is_check_application_enabled(self):
+        return self.enable[9]
     def is_download_flash_driver_enabled(self):
-        return self.enable[4]
-    def is_check_flash_driver_enabled(self):
         return self.enable[5]
-    def setTarget(self,app,flsdrv=None, eraseProperty='512', writeProperty='8', signature='8', busPorperty='4096'):
+    def is_check_flash_driver_enabled(self):
+        return self.enable[6]
+    def setTarget(self,app,flsdrv=None, eraseProperty='512', writeProperty='8', signature='8', busPorperty='4096', misc=''):
         self.app = app
         self.flsdrv = flsdrv
         self.eraseProperty = eval(str(eraseProperty))
         self.writeProperty = eval(str(writeProperty))
         self.flsSignature = eval(str(signature))
         self.ability = eval(str(busPorperty))
+        self.misc = misc
 
     def GetSteps(self):
         ss = []
-        if(self.protocol == 'XCP'):
+        if('XCP' in self.protocol):
             steps = self.stepsXcp
-        elif(self.protocol == 'CMD'):
+        elif('CMD' in self.protocol):
             steps = self.stepsCmd
         else:
             steps = self.steps
@@ -425,7 +426,7 @@ class AsFlashloader(QThread):
         self.progress.emit(v)
 
     def transmit(self,req,exp,ignore=False):
-        ercd,res = self.dcm.transmit(req)
+        ercd,res = self.tp.transmit(req)
         if(ercd == True):
             if(len(res)>=len(exp)):
                 for i in range(len(exp)):
@@ -452,6 +453,12 @@ class AsFlashloader(QThread):
         return ercd,res
     def enter_program_session(self):
         return self.transmit([0x10,0x02], [0x50,0x02])
+
+    def reset_transimit_protocol(self):
+        self.infor.emit('reset protocol...')
+        self.tp.reset()
+        return True,None
+
     def security_prgs_access(self):
         ercd,res = self.transmit([0x27,0x03], [0x67,0x03,-1,-1,-1,-1])
         if(ercd):
@@ -684,7 +691,12 @@ class AsFlashloader(QThread):
         for id,s in enumerate(steps):
             if((self.enable[id] == True) and (s[0].__name__ != 'dummy')):
                 self.infor.emit('>> '+s[0].__name__.replace('_',' '))
-                ercd,res = s[0]()
+                try:
+                    ercd,res = s[0]()
+                except Exception as e:
+                    ercd = False
+                    self.infor.emit('%s'%(e))
+                    print(traceback.format_exc())
                 if(ercd == False):
                     self.infor.emit("\n\n  >> boot failed <<\n\n")
                     return
@@ -705,12 +717,13 @@ class AsFlashloader(QThread):
         self.close_cmd()
 
     def run(self):
+        self.start_protocol()
         self.infor.emit('starting with protocol "%s"... '%(self.protocol))
-        if(self.protocol == 'UDS'):
+        if('UDS' in self.protocol):
             self.run_uds()
-        elif(self.protocol == 'CMD'):
+        elif('CMD' in self.protocol):
             self.run_cmd()
-        elif(self.protocol == 'XCP'):
+        elif('XCP' in self.protocol):
             self.run_xcp()
         else:
             self.infor.emit('invalid protocol')
@@ -759,18 +772,11 @@ class UIFlashloader(QWidget):
         grid.addWidget(self.cmbxProtocol,2,2)
         self.btnStart=QPushButton('Start')
         grid.addWidget(self.btnStart,2,3)
-        grid.addWidget(QLabel('aslua bootloader:'),3,0)
-        self.cmbxCanDevice = QComboBox()
-        self.cmbxCanDevice.addItems(['socket','serial','vxl','peak','tcp'])
-        self.cmbxCanPort = QComboBox()
-        self.cmbxCanPort.addItems(['port 0','port 1','port 2','port 3','port 4','port 5','port 6','port 7'])
-        self.cmbxCanBaud = QComboBox()
-        self.cmbxCanBaud.addItems(['125000','250000','500000','1000000','115200'])
-        self.btnStartASLUA=QPushButton('Start')
-        grid.addWidget(self.cmbxCanDevice,3,1)
-        grid.addWidget(self.cmbxCanPort,3,2)
-        grid.addWidget(self.cmbxCanBaud,3,3)
-        grid.addWidget(self.btnStartASLUA,3,4)
+        self.lblMisc = QLabel()
+        self.leMisc = QLineEdit()
+        self.leMisc.setDisabled(True)
+        grid.addWidget(self.lblMisc,3,0)
+        grid.addWidget(self.leMisc,3,1)
         vbox.addLayout(grid)
 
         grid.addWidget(QLabel('Erase Property:'),4,0)
@@ -814,9 +820,7 @@ class UIFlashloader(QWidget):
         self.btnOpenApp.clicked.connect(self.on_btnOpenApp_clicked)
         self.btnOpenFlsDrv.clicked.connect(self.on_btnOpenFlsDrv_clicked)
         self.btnStart.clicked.connect(self.on_btnStart_clicked)
-        self.btnStartASLUA.clicked.connect(self.on_btnStartASLUA_clicked)
         self.cmbxProtocol.currentIndexChanged.connect(self.on_cmbxProtocol_currentIndexChanged)
-        self.btnStartASLUA.setDisabled(True)
         aspath = os.path.abspath('%s/../../..'%(os.curdir))
         default_app='%s/com/as.application/board.mpc56xx/MPC5634M_MLQB80/Project/bin/internal_FLASH.mot'%(aspath)
         default_flsdrv='%s/com/as.application/board.mpc56xx/MPC5634M_MLQB80/FlsDrv/bin/internal_FLASH.mot'%(aspath)
@@ -839,8 +843,18 @@ class UIFlashloader(QWidget):
             self.leFlsDrv.setText(default_flsdrv)
 
     def on_cmbxProtocol_currentIndexChanged(self,index):
-        self.loader.set_protocol(str(self.cmbxProtocol.currentText()))
+        protocol = str(self.cmbxProtocol.currentText())
+        self.loader.set_protocol(protocol)
         self.leFlsBusProperty.setText('%s'%(self.loader.ability))
+
+        if('UDS on DOIP' == protocol):
+            self.leMisc.setDisabled(False)
+            self.leMisc.setText('172.18.0.200:8989')
+            self.lblMisc.setText('DoIP Address:')
+        else:
+            self.leMisc.setDisabled(True)
+            self.leMisc.setText('')
+            self.lblMisc.setText('')
 
         for id,s in enumerate(self.loader.GetSteps()):
             self.cbxEnableList[id].setText(s[0])
@@ -868,21 +882,8 @@ class UIFlashloader(QWidget):
             self.pgbProgress.setValue(1)
             self.loader.setTarget(str(self.leApplication.text()), str(self.leFlsDrv.text()),
                                   str(self.leFlsEraseProperty.text()),str(self.leFlsWriteProperty.text()),
-                                  str(self.leFlsSignature.text()),str(self.leFlsBusProperty.text()))
+                                  str(self.leFlsSignature.text()),str(self.leFlsBusProperty.text()),
+                                  str(self.leMisc.text()))
             self.loader.start()
         else:
             QMessageBox.information(self, 'Tips', 'Please load a valid application first!')
-
-    def on_btnStartASLUA_clicked(self):
-        aslua = os.path.abspath('%s/pyas/aslua.exe'%(os.curdir))
-        fbl = os.path.abspath('%s/pyas/flashloader.lua'%(os.curdir))
-        cmd = '%s %s %s %s %s %s %s'%(aslua, fbl, self.leFlsDrv.text(), self.leApplication.text(),
-                             self.cmbxCanDevice.currentText(),
-                             str(self.cmbxCanPort.currentText()).replace('port',''),
-                             self.cmbxCanBaud.currentText())
-        print(cmd)
-        self.leinfor.append(cmd+'\n')
-        if(0 == os.system(cmd)):
-            self.leinfor.append('run aslua bootloader done successfully!')
-        else:
-            self.leinfor.append('run aslua bootloader done failed!')

@@ -233,3 +233,6 @@ class xcp():
             xcp_cpu_endian = self.last_response.toarray()[2]&0x01
             print('XCP slave is online with CPU endian %s (0=little,1=big)!'%(xcp_cpu_endian))
         return self.last_response
+
+    def reset(self):
+        pass

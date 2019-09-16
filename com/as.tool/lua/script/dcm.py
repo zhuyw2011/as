@@ -54,17 +54,16 @@ class dcm():
     def __init__(self,busid_or_uri,rxid_or_port=None,txid=None,cfgSTmin=10,cfgBS=8,padding=0x55):
         # Okay, I know, this is ugly but for the compatiability
         if(rxid_or_port == None):
-            self.cantp = J1939Tp(busid_or_uri)
+            self.tp = J1939Tp(busid_or_uri)
         elif(txid != None):
-            self.cantp = cantp(busid_or_uri,rxid_or_port,txid,cfgSTmin,cfgBS,padding)
+            self.tp = cantp(busid_or_uri,rxid_or_port,txid,cfgSTmin,cfgBS,padding)
         else:
-            self.cantp = doip(busid_or_uri,rxid_or_port)
+            self.tp = doip(busid_or_uri,rxid_or_port)
         self.last_error = None
         self.last_reponse = None
-        self.usbcan=False
 
     def set_ll_dl(self,v):
-        self.cantp.set_ll_dl(v)
+        self.tp.set_ll_dl(v)
 
     def __get_service_name__(self,serviceid):
         try:
@@ -112,26 +111,26 @@ class dcm():
         self.last_reponse = ss
         print(ss)
 
+    def reset(self):
+        # workaround for USBCAN/DoIP as RESET will cause the USB/DoIP device disconnect
+        r = self.tp.reset()
+        tryTimes = 1
+        while((False == r) and (tryTimes<10)):
+            time.sleep(0.1)
+            r = self.tp.reset()
+            tryTimes += 1
+
     def transmit(self,req):
         self.last_error = None
         self.last_reponse = None
         response  = None
         self.__show_request__(req)
-        ercd = self.cantp.transmit(req)
-        if((req[0]==0x10) and (req[1]==0x02) and
-           (type(self.cantp)==cantp) and (self.usbcan==True)):
-            # workaround for USBCAN as RESET will cause the USB device disconnect
-            r = self.cantp.reset()
-            tryTimes = 1
-            while((False == r) and (tryTimes<10)):
-                time.sleep(0.1)
-                r = self.cantp.reset()
-                tryTimes += 1
+        ercd = self.tp.transmit(req)
         if((len(req)>=2) and (req[0] in self.__sbr__) and ((req[1]&0x80) != 0)):
             # suppress positive response
             return True,[req[0]|0x40]
         while(ercd == True):
-            ercd,res = self.cantp.receive()
+            ercd,res = self.tp.receive()
             if(ercd == True):
                 self.__show_response__(res)
                 if (req[0]|0x40 == res[0]):

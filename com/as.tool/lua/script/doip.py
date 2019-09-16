@@ -18,6 +18,7 @@ __lic__ = '''
 __all__ = ['doip']
 
 import socket
+import time
 
 class doip():
     #Generic doip header negative acknowledge codes
@@ -38,12 +39,32 @@ class doip():
             0x11:'Routing will be activated; confirmation required',
             0x7e:'Vehicle manufacturer-specific',}
     def __init__(self,uri='172.18.0.200',port=8989):
+        self.uri = uri
+        self.port = port
+        self.startup()
+
+    def startup(self):
+        self.online = False
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((uri, port))
+        self.sock.settimeout(5)
+        try:
+            self.sock.connect((self.uri, self.port))
+        except Exception as e:
+            self.sock.close()
+            self.sock = None
+            print('DoIP connect: %s'%(e))
+            return
+        self.sock.settimeout(None)
         # do Routing Activation request, sa=0xbeef, activationType=0xda, and padding 0x00 to payloadLength to 7
         res = self.transmit([0xbe,0xef,0xda,0x00,0x00,0x00,0x00],0x0005)
+        if(res == False):
+            self.sock.close()
+            print('DoIP Routing Activation failed')
+            return
         ercd,data=self.checkResponse(res)
         if(ercd==False):
+            self.sock.close()
+            self.sock = None
             raise Exception('  >> DoIP: do Routing Activation request failed as %s!'%(self.__generalAck[data]))
         else:
             ackcode=data[0]
@@ -57,6 +78,15 @@ class doip():
             if(self.routingActivationResponseCode != 0x10):
                 raise Exception('  >> DoIP: do Routing Activation request failed as %s!'%(self.__rapc[self.routingActivationResponseCode]))
         print('DoIP online!')
+        self.online = True
+
+    def reset(self):
+        self.sock.close()
+        time.sleep(2)
+        self.startup()
+
+    def __delete__(self):
+        self.sock.close()
 
     def set_ll_dl(self,v):
         pass
@@ -88,7 +118,11 @@ class doip():
     def receive(self):
         ''' for UDS only '''
         # DoIP protocal response
-        res = self.sock.recv(4096)
+        try:
+            res = self.sock.recv(4096)
+        except Exception as e:
+            print('DoIP receive: %s'%(e))
+            return False,None
         ercd,data=self.checkResponse(res)
         if(ercd==False):
             raise Exception('  >> DoIP: do UDS request failed as %s!'%(self.__generalAck[data]))
@@ -116,6 +150,8 @@ class doip():
 
     def transmit(self,payload,payloadType=0x8001):
         ''' generally for UDS purpose '''
+        if(None == self.sock):
+            return False
         if(payloadType==0x8001):
             try:
                 payload = [(self.sa>>8)&0xFF,self.sa&0xFF,(self.ta>>8)&0xFF,self.ta&0xFF] + payload
