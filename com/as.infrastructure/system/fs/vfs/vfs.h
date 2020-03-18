@@ -66,10 +66,6 @@ typedef struct
 	void* priv;
 } VFS_FILE;
 
-#ifdef USE_LIBELF
-typedef struct stat vfs_stat_t;
-typedef struct dirent vfs_dirent_t;
-#else
 typedef struct {
 	uint32_t st_mode;     /* File mode */
 	size_t   st_size;     /* File size (regular files only) */
@@ -80,7 +76,6 @@ typedef struct
 	unsigned short	d_namlen;	/* Length of name in d_name. */
 	char		d_name[FILENAME_MAX]; /* [FILENAME_MAX] */ /* File name. */
 } vfs_dirent_t;
-#endif
 
 /* File system operations */
 struct vfs_filesystem_ops
