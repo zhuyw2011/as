@@ -12,7 +12,15 @@ config ARCH
     string
     default "stm32f1"
 
+choice
+	prompt "USB demo application"
+	default USB_CAN
+	depends on USB
+
 config USB_SERIAL
 	bool "demo USB on serial application"
-	default y
-	depends on USB
+
+config USB_CAN
+	bool "demo USB on CAN application"
+
+endchoice
