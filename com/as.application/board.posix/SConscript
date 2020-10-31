@@ -62,7 +62,7 @@ MODULES = ['ECUM','SCHM','MCU',
            'LCD','FDT',
            'TINYOS',
            'J1939TP',
-           'TRACE',
+           'TRACE',,'COMMONXML'
            ]
 
 MODULES.append('AWS')
@@ -112,7 +112,7 @@ if(asenv['RELEASE']=='asboot'):
                'DCM','XCP',
                'FLASH',
                'TINYOS',
-               'CANTP_MINI',
+               'CANTP_MINI','BOOTLOADER'
                ]
 
 if(asenv['MODULES'] is None):

@@ -31,6 +31,7 @@ MODULES = ['ECUM','SCHM','MCU','DET',
            'SOAD','DOIP','LWIP','FTP','SD',
            'ASKAR','PTHREAD','PTHREAD_CLEANUP','PTHREAD_SIGNAL',
            'FATFS','FATFS_DRV','LIBELF','LIBDL','VFS','DEV',
+           'COMMONXML'
            ]
 
 ARCH='x86'

@@ -9,7 +9,7 @@ MODULES = asenv['MODULES']
 
 objs = []
 
-if(asenv['RELEASE'] != 'asboot'):
+if('COMMONXML' in MODULES):
     objs += Glob('*.xml')
     objs += Glob('*.arxml')
 

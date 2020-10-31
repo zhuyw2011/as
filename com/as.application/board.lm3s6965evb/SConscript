@@ -22,7 +22,7 @@ MODULES = ['ECUM','SCHM','MCU',
            'CAN','CANIF','PDUR','COM','COMM','CANTP','CANNM',
            'DCM','CANNM','CANSM','NM','OSEKNM','XCP',
            'CLIB_MISCLIB','CLIB_STDIO_PRINTF',
-           'ASKAR'
+           'ASKAR','COMMONXML'
            ]
 
 ARCH='lm3s'

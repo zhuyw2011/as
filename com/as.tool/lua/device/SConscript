@@ -1,0 +1,18 @@
+import os
+from building import *
+
+cwd = GetCurrentDir()
+
+Import('asenv')
+MODULES=asenv['MODULES']
+
+objs = []
+
+asenv.Append(CPPPATH=[cwd])
+
+objs += Glob('lasdevlib.c')
+
+if('LUA_DEV_RS232' in MODULES):
+    objs +=  Glob('lasdev_rs232.c')
+
+Return('objs')

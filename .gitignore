@@ -2,6 +2,11 @@
 ## Eclipse
 #################
 
+.sconsign.dblite
+
+build
+*.pyd
+
 release/aslinux/build
 release/aslinux/kernel/drivers/remoteproc/rproc-asvirt
 

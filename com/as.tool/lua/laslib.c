@@ -14,8 +14,13 @@
  */
 /* LUA version is 5.3.1 */
 /* ============================ [ INCLUDES  ] ====================================================== */
+#include "lualib.h"
+#ifdef USE_LUA_CAN
 #include "lascanlib.h"
+#endif
+#ifdef USE_LUA_DEV
 #include "lasdevlib.h"
+#endif
 #include <sys/time.h>
 /* ============================ [ MACROS    ] ====================================================== */
 
@@ -26,16 +31,20 @@ typedef void (*luaL_close_t)(void);
 static int luai_as_time (lua_State *L);
 /* ============================ [ DATAS     ] ====================================================== */
 static const luaL_Reg aslib[] = {
+#ifdef USE_LUA_CAN
 		{"can_write",luai_can_write},
 		{"can_read", luai_can_read},
 		{"can_open", luai_can_open},
 		{"can_log",  luai_can_log},
+#endif
 		{"time",     luai_as_time},
+#ifdef USE_LUA_DEV
 		{"open",     luai_as_open},
 		{"read",     luai_as_read},
 		{"write",     luai_as_write},
 		{"ioctl",     luai_as_ioctl},
 		{"close",     luai_as_close},
+#endif
 		{NULL,NULL}
 };
 static const luaL_open_t open_ops[] =

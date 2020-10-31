@@ -34,7 +34,7 @@ MODULES = ['ECUM','SCHM','MCU',
            'CAN','CANIF','PDUR','COM','COMM','CANTP','CANNM',
            'DCM','CANNM','CANSM','NM','OSEKNM','XCP',
            'SOAD','DOIP','LWIP','PCI',
-           'J1939TP',
+           'J1939TP','COMMONXML'
            ]
 
 if(cwd.find('travis') != -1):
@@ -78,7 +78,8 @@ if(asenv['RELEASE']=='asboot'):
            'CLIB_STDIO_PRINTF',
            'ANYOS',
            'MINIBLT',
-           'CANTP_MINI','DCM_MINI'
+           'CANTP_MINI','DCM_MINI',
+           'BOOTLOADER'
            ]
     else:
         MODULES = ['ECUM','SCHM','MCU','DET',
@@ -90,7 +91,7 @@ if(asenv['RELEASE']=='asboot'):
                'PCI',
                'CLIB_ASHEAP','CLIB_MISCLIB',
                'CLIB_STDIO_PRINTF',
-               'TINYOS'
+               'TINYOS','BOOTLOADER'
                ]
     lds = '%s/com/as.application/board.bcm2835/script/linker-flsdrv.lds'%(ASROOT)
     asenv['flsdrv'] = {'CPPDEFINES':['FLASH_DRIVER_DYNAMIC_DOWNLOAD',

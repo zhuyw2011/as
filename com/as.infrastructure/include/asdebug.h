@@ -72,7 +72,7 @@
 	}
 #else	/* USE_DET */
 #define ASLOG(level,msg)
-#define ASWARNING(fmt,msg)
+#define ASWARNING(msg)
 #define ASMEM(level,prefix,p,len)
 #endif
 

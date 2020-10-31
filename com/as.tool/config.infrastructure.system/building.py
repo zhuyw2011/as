@@ -96,10 +96,10 @@ def PrepareEnv():
         # loop to search the ASROOT
         p = os.curdir
         while(True):
-            p=os.path.abspath('%s/..'%(p))
             if(os.path.isdir('%s/com'%(p)) and 
                os.path.isdir('%s/release'%(p)) and
                os.path.isfile('%s/Console.bat'%(p))): break
+            p=os.path.abspath('%s/..'%(p))
         ASROOT=p
     BOARD=None
 
@@ -234,7 +234,10 @@ def PrepareBuilding(env):
           ASPPCOMSTR = 'AS $SOURCE',
           CCCOMSTR = 'CC $SOURCE',
           CXXCOMSTR = 'CXX $SOURCE',
-          LINKCOMSTR = 'LINK $TARGET'
+          LINKCOMSTR = 'LINK $TARGET',
+          SHCCCOMSTR = 'SHCC $SOURCE',
+          SHCXXCOMSTR = 'SHCXX $SOURCE',
+          SHLINKCOMSTR = 'SHLINK $TARGET'
         )
     if(GetOption('menuconfig')):
         menuconfig(env)
@@ -1070,6 +1073,36 @@ def SelectCompilerPPCEabi():
     Env['CXX']  = ppc + '/bin/powerpc-eabi-g++.exe'
     Env['LINK'] = ppc + '/bin/powerpc-eabi-link.exe'
 
+def AddPythonDev(env):
+    pyp = sys.executable
+    if(IsPlatformWindows()):
+        pyp = pyp.replace(os.sep, '/')[:-10]
+        pylib = 'python'+sys.version[0]+sys.version[2]
+        if(pylib in env.get('LIBS',[])): return
+        pf = '%s/libs/lib%s.a'%(pyp, pylib)
+        if(not os.path.exists(pf)):
+            RunCommand('cp {0}/libs/{1}.lib {0}/libs/lib{1}.a'.format(pyp, pylib))
+        env.Append(CPPDEFINES=['_hypot=hypot'])
+        env.Append(CPPPATH=['%s/include'%(pyp)])
+        env.Append(LIBPATH=['%s/libs'%(pyp)])
+        istr = 'set'
+    else:
+        pyp = os.sep.join(pyp.split(os.sep)[:-2])
+        if(sys.version[0:3] == '2.7'):
+            pylib = 'python'+sys.version[0:3]
+        else:
+            pylib = 'python'+sys.version[0:3]+'m'
+        if(pylib in env.get('LIBS',[])): return
+        env.Append(CPPPATH=['%s/include/%s'%(pyp,pylib)])
+        if(pyp == '/usr'):
+            env.Append(LIBPATH=['%s/lib/x86_64-linux-gnu'%(pyp)])
+            env.Append(CPPPATH=['%s/local/include/%s'%(pyp,pylib[:9])])
+        else:
+            env.Append(LIBPATH=['%s/lib'%(pyp)])
+        istr = 'export'
+    #print('%s PYTHONHOME=%s if see error " Py_Initialize: unable to load the file system codec"'%(istr, pyp))
+    env.Append(LIBS=[pylib, 'pthread', 'stdc++', 'm'])
+
 def MemoryUsage(target, objs):
     try:
         from elftools.elf.elffile import ELFFile
@@ -1201,7 +1234,10 @@ def Building(target, sobjs, env=None):
         env = Env
     if(GetOption('splint')):
         splint(objs, env)
-    bdir = 'build/%s'%(target)
+    if('BDIR' in env):
+        bdir = env['BDIR']
+    else:
+        bdir = 'build/%s'%(target)
     objs = []
     xmls = []
     ofs = []
@@ -1246,17 +1282,17 @@ def Building(target, sobjs, env=None):
         shaO = open(cfgdone).read()
         if(shaN != shaO):
             forceGen = True
-    if( (arxml!=None) and ( 
-        ( (not os.path.exists(cfgdone)) and (not GetOption('clean')) ) 
-            or forceGen ) ):
+    if( ( (not os.path.exists(cfgdone)) and (not GetOption('clean')) ) 
+            or forceGen ):
         MKDir(cfgdir)
         RMFile(cfgdone)
         xcc.XCC(cfgdir, env, True)
-        arxmlR = PreProcess(cfgdir, str(arxml))
-        for xml in xmls:
-            MKSymlink(str(xml),'%s/%s'%(cfgdir,os.path.basename(str(xml))))
-        xcc.XCC(cfgdir)
-        argen.ArGen.ArGenMain(arxmlR,cfgdir)
+        if(arxml != None):
+            arxmlR = PreProcess(cfgdir, str(arxml))
+            for xml in xmls:
+                MKSymlink(str(xml),'%s/%s'%(cfgdir,os.path.basename(str(xml))))
+            xcc.XCC(cfgdir)
+            argen.ArGen.ArGenMain(arxmlR,cfgdir)
         MKFile(cfgdone, SHA256(glob.glob('%s/*xml'%(cfgdir))))
     if('studio' in COMMAND_LINE_TARGETS):
         studio=os.path.abspath('../../com/as.tool/config.infrastructure.system/')
@@ -1282,7 +1318,14 @@ def Building(target, sobjs, env=None):
         # special program for some compiler
         env['Program'](target, objs, env)
     else:
-        env.Program(target, objs)
+        if('BUILD_TYPE' in env):
+            BUILD_TYPE = env['BUILD_TYPE']
+        else:
+            BUILD_TYPE = 'exe'
+        if(BUILD_TYPE == 'exe'):
+            env.Program(target, objs)
+        elif(BUILD_TYPE == 'dll'):
+            env.SharedLibrary(target, objs)
 
     if(IsPlatformWindows()):target += '.exe'
     if(GetOption('memory')):
