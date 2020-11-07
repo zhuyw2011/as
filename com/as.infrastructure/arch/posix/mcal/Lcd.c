@@ -18,9 +18,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #elif defined(USE_SDL)
-#ifdef __WINDOWS__
-#undef _MSC_VER
-#endif
 #include <SDL2/SDL.h>
 #else
 #include "VG/openvg.h"
@@ -32,7 +29,6 @@
 #endif
 
 #include <stdio.h>
-#include <stdint.h>
 #include <assert.h>
 #include <sys/time.h>
 #include <pthread.h>

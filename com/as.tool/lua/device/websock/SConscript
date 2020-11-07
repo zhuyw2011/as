@@ -27,7 +27,5 @@ asenv.Append(CPPPATH=['%s'%(cwd)])
 
 objs +=  Glob('json-c/*.c')
 asenv.Append(CPPPATH=['%s/json-c'%(cwd)])
-if(('_MSC_VER' not in asenv['CPPDEFINES']) and (IsPlatformWindows())):
-    asenv.Append(CPPDEFINES=['_MSC_VER'])
 
 Return('objs')

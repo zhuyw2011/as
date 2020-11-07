@@ -101,9 +101,6 @@ def PrepareEnv():
                os.path.isfile('%s/Console.bat'%(p))): break
             p=os.path.abspath('%s/..'%(p))
         ASROOT=p
-    BOARD=None
-
-    release = os.path.basename(os.path.abspath(os.curdir))
 
     AppendPythonPath(['%s/com/as.tool/config.infrastructure.system'%(ASROOT),
               '%s/com/as.tool/config.infrastructure.system/third_party'%(ASROOT)])
@@ -111,10 +108,10 @@ def PrepareEnv():
     asenv=Environment(TOOLS=['as','gcc','g++','gnulink'])
     os.environ['ASROOT'] = ASROOT
     asenv['ASROOT'] = ASROOT
-    asenv['RELEASE'] = release
     asenv['PACKAGES'] = []
     board_list = []
     any_list = []
+    release_list = []
     for dir in os.listdir('%s/com/as.application'%(ASROOT)):
         if(dir[:6]=='board.' and 
            os.path.exists('%s/com/as.application/%s/SConscript'%(ASROOT,dir))):
@@ -124,40 +121,62 @@ def PrepareEnv():
         if(os.path.exists('%s/com/as.application/board.any/%s/SConscript'%(ASROOT,dir))):
             any_list.append(dir)
 
+    for dir in os.listdir('%s/release'%(ASROOT)):
+        if(os.path.exists('%s/release/%s/SConscript'%(ASROOT,dir))):
+            release_list.append(dir)
+
     def help():
         if(IsPlatformWindows()):
             set = 'set'
         else:
             set = 'export'
-        print('Usage:scons [studio/run]\n\tboard list: %s\n\tany   list: %s'%(board_list,any_list))
+        print('Usage:scons [studio/run]\n\tboard list: %s\n\tany   list: %s\n\trelease list: %s'%(board_list,any_list,release_list))
         print('  studio: optional for launch studio GUI tool')
         print('  run: optional for run the application on the target board')
         print('  use command "%s BOARD=board_name" to choose a board from the board list'%(set))
         print('  use command "%s ANY=any_board_name" to choose a board from the any list if BOARD is any'%(set))
-        print('    for example, not an any board:\n\tset BOARD=posix')
-        print('    for example, an any board:\n\tset BOARD=any\n\tset ANY=mc9s12xep100')
+        print('  use command "%s RELEASE=release_name" to choose a release from the release list'%(set))
+        print('    for example, not an any board:\n\tset BOARD=posix\n\t{0} RELEASE=ascore'.format(set))
+        print('    for example, an any board:\n\t{0} BOARD=any\n\t{0} ANY=mc9s12xep100\n\t{0} RELEASE=ascore'.format(set))
 
     if('help' in COMMAND_LINE_TARGETS):
         help()
         exit(0)
-    else:
-        for b in COMMAND_LINE_TARGETS:
-            if(b in board_list):
-                BOARD = b
 
-    if(BOARD is None):
-        if(os.getenv('BOARD') in board_list):
-            BOARD = os.getenv('BOARD')
-
-    if(BOARD is None):
+    BOARD = os.getenv('BOARD')
+    if(BOARD not in board_list):
         print('Error: no BOARD specified!')
         help()
         exit(-1)
 
-    if((BOARD == 'any') and (os.getenv('ANY') not in any_list)):
+    ANY = os.getenv('ANY')
+    if((BOARD == 'any') and (ANY not in any_list)):
         print('Error: invalid ANY specified!')
         help()
         exit(-1)
+    else:
+        ANY = None
+
+    RELEASE = os.getenv('RELEASE')
+    if(ANY in ['pyas', 'lua', 'aslib']):
+        RELEASE=None
+    elif(RELEASE not in release_list):
+        print('Error: invalid RELEASE specified!')
+        help()
+        exit(-1)
+
+    BDIR = 'build/%s/%s'%(os.name, BOARD)
+    if(BOARD == 'any'):
+        BDIR = '%s/%s'%(bdir, ANY)
+        TARGET = ANY
+    else:
+        TARGET = BOARD
+    if(RELEASE!=None):
+        BDIR = '%s/%s'%(BDIR, RELEASE)
+    BDIR = os.path.abspath(BDIR)
+    MKDir(BDIR)
+    asenv['BDIR'] = BDIR
+    asenv['target'] = '%s/%s'%(BDIR, TARGET)
 
     if(IsPlatformWindows()):
         asEnvPath = os.getenv('ASENV')
@@ -166,6 +185,7 @@ def PrepareEnv():
             print('Welcome to the world of asenv for %s!'%(ASROOT))
 
     asenv['BOARD'] = BOARD
+    asenv['RELEASE'] = RELEASE
     Export('asenv')
     PrepareBuilding(asenv)
     return asenv
@@ -173,7 +193,7 @@ def PrepareEnv():
 def PrepareBuilding(env):
     global Env
     Env = env
-    GetConfig('.config',env)
+    GetConfig('%s/.config'%(env['BDIR']),env)
     env['pkgconfig'] = 'pkg-config'
     env['mingw64'] = False
     env['POSTACTION'] = []
@@ -326,6 +346,7 @@ def GetConfig(cfg,env):
 def menuconfig(env):
     import time
     import xcc
+    BDIR = env['BDIR']
     kconfig = '%s/com/as.tool/kconfig-frontends/kconfig-mconf'%(env['ASROOT'])
     if(IsPlatformWindows() and ('ASENV' in Env)):
         kconfig='%s/tools/kconfig-frontends/kconfig-mconf.exe'%(Env['ASENV'])
@@ -354,13 +375,15 @@ def menuconfig(env):
         RunCommand('cd %s/com/as.tool/kconfig-frontends && make'%(env['ASROOT']))
     if(os.path.exists(kconfig)):
         assert(os.path.exists('Kconfig'))
-        cmd += kconfig + ' Kconfig'
-
-        fn = '.config'
+        fn = '%s/.config'%(BDIR)
+        cmd += 'rm .config && '
         if(os.path.isfile(fn)):
+            cmd += 'cp -fv %s .config && '%(fn)
             mtime = os.path.getmtime(fn)
         else:
             mtime = -1
+        cmd += kconfig + ' Kconfig && '
+        cmd += 'cp -fv .config %s'%(fn)
         if(IsPlatformWindows()):
             cmd = '@echo off\n'+cmd.replace(' && ','\n')
             MKFile('menuconfig.bat', cmd)
@@ -372,7 +395,7 @@ def menuconfig(env):
             mtime2 = -1
         if(mtime != mtime2):
             GetConfig(fn,env)
-            cfgdir = 'build/%s/config'%(env['BOARD'])
+            cfgdir = '%s/config'%(BDIR)
             MKDir(cfgdir)
             xcc.XCC(cfgdir,env)
         if('RTTHREAD' in env['MODULES']):
@@ -1163,6 +1186,7 @@ def MemoryUsage(target, objs):
 def BuildingSWCS(swcs):
     for swc in swcs:
         swc = str(swc)
+        swc = os.path.abspath(swc)
         path = os.path.dirname(swc)
         cmd = 'cd %s && %s %s'%(path, Env['python3'], swc)
         tgt = path+'/Rte_Type.h'
@@ -1326,6 +1350,8 @@ def Building(target, sobjs, env=None):
             env.Program(target, objs)
         elif(BUILD_TYPE == 'dll'):
             env.SharedLibrary(target, objs)
+        elif(BUILD_TYPE == 'lib'):
+            env.Library(target, objs)
 
     if(IsPlatformWindows()):target += '.exe'
     if(GetOption('memory')):

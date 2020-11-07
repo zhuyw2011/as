@@ -65,8 +65,6 @@ if('LWIP' in MODULES):
         else:
             asenv.Append(LIBS=['packet','wpcap'])
             asenv.Append(LIBPATH=['%s/WpdPack/Lib'%(cwd)])
-        if('-D_MSC_VER' not in asenv['CCFLAGS']):
-            asenv.Append(CPPDEFINES='_MSC_VER')
 
 if('UIP' in MODULES):
     uip=Package('contiki')
@@ -80,8 +78,6 @@ if('UIP' in MODULES):
 
 asenv.Append(CPPDEFINES='__AS_CAN_BUS__')
 asenv.Append(CPPPATH=['%s/com/as.infrastructure/communication/RPmsg'%(asenv['ASROOT'])])
-
-objs += SConscript('%s/com/as.tool/lua/SConscript'%(asenv['ASROOT']))
 
 if('GTK' in MODULES):
     asenv.ParseConfig('%s --cflags gtk+-3.0'%(asenv['pkgconfig']))
@@ -127,8 +123,6 @@ if(IsPlatformWindows()):
     asenv.Append(CPPDEFINES='__WINDOWS__')
     if(asenv['mingw64']):
         asenv.Append(CPPDEFINES='__X86_64__')
-        print('WARNING: need modify the c:/msys64/mingw64/x86_64-w64-mingw32/include/ws2tcpip.h line 86-103, add WS2TCPIP_INLINE')
-        print('WARNING: need modify the c:/msys64/mingw64/x86_64-w64-mingw32/include/ws2ipdef.h line 127, add WS2TCPIP_INLINE')
 else:
     asenv.Append(CPPDEFINES='__LINUX__')
 

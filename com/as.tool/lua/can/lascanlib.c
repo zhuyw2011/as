@@ -82,15 +82,27 @@ static const Can_DeviceOpsType* canOps [] =
 	#ifdef USE_RPMSG
 	&can_rpmsg_ops,
 	#endif
+	#ifdef USE_LUA_SERIAL_CAN
 	&can_serial_ops,
+	#endif
 	#ifdef __WINDOWS__
+	#ifdef USE_LUA_VXL_CAN
 	&can_vxl_ops,
+	#endif
+	#ifdef USE_LUA_PEAK_CAN
 	&can_peak_ops,
+	#endif
+	#ifdef USE_LUA_ZLG_CAN
 	&can_zlg_ops,
+	#endif
 	#else
+	#ifdef USE_LUA_SOCKET_CAN
 	&can_socket_ops,
 	#endif
+	#endif
+	#ifdef USE_LUA_SOCKET_CAN
 	&can_socketwin_ops,
+	#endif
 	NULL
 };
 static FILE* canLog = NULL;

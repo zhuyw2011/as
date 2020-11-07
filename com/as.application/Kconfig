@@ -1,5 +1,10 @@
 source "$ASROOT/com/as.application/board.$BOARD/Kconfig"
 
+config IS_ASTOOL
+    bool
+    default n
+
+if !IS_ASTOOL
 menu "Run Time Environment"
 config RTE
 	bool "Run Time Environment"
@@ -49,4 +54,4 @@ config DEM_TEST
 	default n
 
 endmenu
-
+endif

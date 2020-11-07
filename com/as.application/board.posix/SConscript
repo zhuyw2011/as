@@ -8,7 +8,7 @@ Import('asenv')
 ASROOT = asenv['ASROOT']
 
 if('run' in COMMAND_LINE_TARGETS):
-    build = '%s/release/%s'%(ASROOT,asenv['RELEASE'])
+    build = asenv['BDIR']
     python = asenv['python3']
     if(IsPlatformWindows()):
         python = 'start ' + python
@@ -36,7 +36,7 @@ if('run' in COMMAND_LINE_TARGETS):
         else:
             RunCommand('cd %s/com/as.tool/as.one.py && %s assg.py &'%(ASROOT,python))
     time.sleep(1)
-    target = '%s/release/%s/posix'%(ASROOT,asenv['RELEASE'])
+    target = asenv['target']
     if(not IsPlatformWindows()):
         target = 'sudo ' + target
     else:
@@ -59,13 +59,14 @@ MODULES = ['ECUM','SCHM','MCU',
            'DCM','CANNM','CANSM','NM','OSEKNM','XCP',
            'PORT','DIO','EEP','FLS','STMO',
            'EA','FEE','MEMIF','NVM',
-           'LCD','FDT',
+           'LCD',
            'TINYOS',
            'J1939TP',
-           'TRACE',,'COMMONXML'
+           'LUA_CAN','LUA_SOCKET_CAN',
+           'TRACE','COMMONXML'
            ]
 
-MODULES.append('AWS')
+#MODULES.append('AWS')
 
 ARCH='posix'
 arch='posix'

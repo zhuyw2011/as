@@ -9,8 +9,8 @@ CPPFLAGS = -DNDEBUG -DUNICODE -DWIN32 -I. -IC:\Anaconda3\include
 CFLAGS = --std=gnu99 -I$(LUA)/pyas -nologo -Zm200 -Zc:wchar_t- -FS -Zc:strictStrings -O2 -MD -W3 -w44456 -w44457 -w44458
 CXXFLAGS = -I$(LUA)/pyas -nologo -Zm200 -Zc:wchar_t- -FS -Zc:strictStrings -D_HAS_EXCEPTIONS=0 -O2 -MD -W3 -w34100 -w34189 -w44996 -w44456 -w44457 -w44458 -wd4577
 LFLAGS = /NOLOGO /DYNAMICBASE /NXCOMPAT /DLL /MANIFEST /MANIFESTFILE:$(TARGET).manifest /SUBSYSTEM:WINDOWS /INCREMENTAL:NO
-LIBS = /LIBPATH:D:\repository\as\build\any\pyas /LIBPATH:C:\Anaconda3\libs pyas.lib aws.lib pthread.lib m.lib PCANBasic.lib pyas.lib wsock32.lib python36.lib
-VPATH = D:\repository\as\build\any\pyas
+LIBS = /LIBPATH:D:\repository\as\build\posix\ascore /LIBPATH:C:\Anaconda3\libs pyas.lib aws.lib pthread.lib m.lib PCANBasic.lib pyas.lib wsock32.lib python36.lib
+VPATH = D:\repository\as\build\posix\ascore
 
 .SUFFIXES: .c .cpp .cc .cxx .C
 

@@ -1,0 +1,3 @@
+if IS_ASTOOL
+source "$ASROOT/com/as.tool/lua/Kconfig"
+endif

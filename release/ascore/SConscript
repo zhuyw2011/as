@@ -1,17 +1,15 @@
-# scons for ascore
 import os
-import sys
-studio=os.path.abspath('../../com/as.tool/config.infrastructure.system/')
-sys.path.append(studio)
 from building import *
 
-asenv = PrepareEnv()
-BOARD = asenv['BOARD']
-ASROOT = asenv['ASROOT']
+cwd = GetCurrentDir()
 
-bdir = 'build/%s'%(BOARD)
-objs = SConscript('%s/com/SConscript'%(ASROOT),variant_dir=bdir, duplicate=0)
-objs += SConscript('app/SConscript',variant_dir=bdir+'/app', duplicate=0)
+Import('asenv')
+BOARD = asenv['BOARD']
+MODULES = asenv['MODULES']
+
+objs = SConscript('app/SConscript')
+if('SG' in MODULES):
+    objs += SConscript('SgDesign/SConscript')
 
 try:
     target = BOARD
@@ -26,6 +24,7 @@ try:
 except KeyError:
     pass
 
-Building(BOARD,objs)
-
 SConscript('elf/SConscript')
+
+Return('objs')
+

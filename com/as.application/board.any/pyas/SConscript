@@ -1,0 +1,37 @@
+from building import *
+
+cwd = GetCurrentDir()
+
+Import('asenv')
+ASROOT = asenv['ASROOT']
+
+if(IsPlatformWindows()):
+    asenv.Append(CPPDEFINES=['__WINDOWS__'])
+else:
+    asenv.Append(CPPDEFINES=['__LINUX__'])
+
+asenv.Append(CPPDEFINES=['__AS_BY_PARAI__','__AS_PY_CAN__','__AS_PY_DEV__',
+                         'NDEBUG','UNICODE','QT_LARGEFILE_SUPPORT'])
+
+MODULES = ['LUA_CAN','LUA_SERIAL_CAN','LUA_PEAK_CAN',
+           'LUA_ZLG_CAN','LUA_VXL_CAN','LUA_SOCKET_CAN',
+           'ANYOS', 'PYAS', 
+           'LUA_DEV','LUA_DEV_RS232',
+           ]
+
+if(asenv['MODULES'] is None):
+    asenv['MODULES'] = MODULES
+else:
+    MODULES = asenv['MODULES']
+
+MODULES.append('ANYOS')
+
+asenv['ARCH'] = 'host'
+
+asenv['BUILD_TYPE'] = 'dll'
+
+AddPythonDev(asenv)
+
+objs = []
+
+Return('objs')

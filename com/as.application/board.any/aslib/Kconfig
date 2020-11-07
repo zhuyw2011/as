@@ -1,0 +1,10 @@
+
+config ARCH_ANY
+    bool
+    default y
+    select DEFAULT_ANYOS
+    select IS_ASTOOL
+
+config ARCH
+    string
+    default "host"
