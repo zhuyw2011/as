@@ -105,7 +105,7 @@ def PrepareEnv():
     AppendPythonPath(['%s/com/as.tool/config.infrastructure.system'%(ASROOT),
               '%s/com/as.tool/config.infrastructure.system/third_party'%(ASROOT)])
 
-    asenv=Environment(TOOLS=['as','gcc','g++','gnulink'])
+    asenv=Environment(TOOLS=['ar', 'as','gcc','g++','gnulink'])
     os.environ['ASROOT'] = ASROOT
     asenv['ASROOT'] = ASROOT
     asenv['PACKAGES'] = []
@@ -149,13 +149,14 @@ def PrepareEnv():
         help()
         exit(-1)
 
-    ANY = os.getenv('ANY')
-    if((BOARD == 'any') and (ANY not in any_list)):
-        print('Error: invalid ANY specified!')
-        help()
-        exit(-1)
-    else:
+    if(BOARD != 'any'):
         ANY = None
+    else:
+        ANY = os.getenv('ANY')
+        if(ANY not in any_list):
+            print('Error: invalid ANY specified!')
+            help()
+            exit(-1)
 
     RELEASE = os.getenv('RELEASE')
     if(ANY in ['pyas', 'lua', 'aslib']):
@@ -167,7 +168,7 @@ def PrepareEnv():
 
     BDIR = 'build/%s/%s'%(os.name, BOARD)
     if(BOARD == 'any'):
-        BDIR = '%s/%s'%(bdir, ANY)
+        BDIR = '%s/%s'%(BDIR, ANY)
         TARGET = ANY
     else:
         TARGET = BOARD
@@ -198,7 +199,11 @@ def PrepareBuilding(env):
     env['mingw64'] = False
     env['POSTACTION'] = []
     if(IsPlatformWindows()):
-        mpath = os.path.abspath(os.getenv('MSYS2').replace('"',''))
+        msys2 = os.getenv('MSYS2')
+        if(msys2 != None):
+            mpath = os.path.abspath(msys2.replace('"',''))
+        else:
+            mpath = 'C:/msys64'
         err,txt = RunSysCmd('which gcc')
         if(None != err):
             print('ERROR: not msys2 enviroment!')
@@ -786,7 +791,7 @@ def ForkEnv(father=None, attr={}):
 class Qemu():
     def __init__(self, qemu=None):
         arch_map = {'x86':'i386','cortex-m':'arm', 'arm64':'aarch64'}
-        ASROOT = Env['ASROOT']
+        BDIR = Env['BDIR']
         ARCH = Env['ARCH']
         self.arch = Env['arch']
         self.port = self.FindPort()
@@ -798,8 +803,8 @@ class Qemu():
         if(qemu is None):
             self.isAsQemu = True
             self.qemu = self.LocateASQemu()
-            self.CreateDiskImg('%s/release/%s/asblk0.img'%(ASROOT,Env['RELEASE']), 32*1024*1024, 'vfat')
-            self.CreateDiskImg('%s/release/%s/asblk1.img'%(ASROOT,Env['RELEASE']), 32*1024*1024, 'ext4')
+            self.CreateDiskImg('%s/asblk0.img'%(BDIR), 32*1024*1024, 'vfat')
+            self.CreateDiskImg('%s/asblk1.img'%(BDIR), 32*1024*1024, 'ext4')
         else:
             self.isAsQemu = False
             self.qemu = qemu
@@ -848,7 +853,7 @@ class Qemu():
     def Run(self, params, where=None):
         ASROOT = Env['ASROOT']
         MODULES = Env['MODULES']
-        build = '%s/release/%s'%(ASROOT, Env['RELEASE'])
+        build = Env['BDIR']
         if(where is None):
             where = build
         python = Env['python3']
@@ -906,6 +911,7 @@ class Qemu():
     def BuildASQemu(self):
         ASROOT = Env['ASROOT']
         if(IsPlatformWindows()):
+            RunCommand('cd %s && set BOARD=any&& set ANY=aslib&& scons'%(ASROOT))
             mpath = os.getenv('MSYS2')
             RunCommand('%s/msys2_shell.cmd -mingw64 -where %s/com/as.tool/qemu'%(mpath,ASROOT))
             print('please mannuly invoke below comand in the poped up msys2 window:')
@@ -916,20 +922,19 @@ class Qemu():
         else:
             fp = open('/tmp/asqemu.mk','w')
             fp.write('''download = $(prj-dir)/release/download
-LNFS=python $(prj-dir)/release/make/lnfs.py
 $(download)/qemu/hw/char/libpyas.a:
-\t(cd $(prj-dir)/release/aslua; make clean; make 81; make 82 forceclib=yes)
+\t(cd $(prj-dir); BOARD=any ANY=aslib scons; cp build/%s/any/aslib/libaslib.a $@)
 
 $(download)/qemu: $(download)/qemu/hw/char/libpyas.a $(dep-wincap)
 \t@(cd $(download); git clone https://github.com/qemu/qemu.git; \
         cd qemu; git submodule update --init dtc ; \
         git checkout 223cd0e13f2e46078d7b573f0b8402bfbee339be; \
-        cd hw/char; $(LNFS) $(prj-dir)/com/as.tool/qemu/hw/char TRUE; \
+        cd hw/char; cp $(prj-dir)/com/as.tool/qemu/hw/char/* .; \
         cp $(prj-dir)/release/aslua/out/libpyas.a .; \
         cat Makefile >> Makefile.objs)
 
 asqemu:$(download)/qemu
-\t@(cd $(download)/qemu; ./configure; make LDFLAGS="-L/usr/lib/x86_64-linux-gnu")\n''')
+\t@(cd $(download)/qemu; ./configure; make LDFLAGS="-L/usr/lib/x86_64-linux-gnu")\n'''%(os.name))
             fp.close()
             RunCommand('make asqemu -f /tmp/asqemu.mk prj-dir=%s'%(ASROOT))
 

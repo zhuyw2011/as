@@ -30,12 +30,12 @@ config LUA_SERIAL_CAN
 config LUA_PEAK_CAN
 	bool "as PEAK CAN device"
 	depends on LUA_CAN
-	default y
+	default n
 
 config LUA_ZLG_CAN
 	bool "as ZLG CAN device"
 	depends on LUA_CAN
-	default y
+	default n
 
 config LUA_VXL_CAN
 	bool "as VXL CAN device"

@@ -6,10 +6,9 @@ sys.path.append(studio)
 from building import *
 
 asenv = PrepareEnv()
-ASROOT = asenv['ASROOT']
 BDIR = asenv['BDIR']
 target = asenv['target']
 
-objs = SConscript('%s/SConscript'%(ASROOT),variant_dir=BDIR, duplicate=0)
+objs = SConscript('SConscript',variant_dir=BDIR, duplicate=0)
 
 Building(target,objs)

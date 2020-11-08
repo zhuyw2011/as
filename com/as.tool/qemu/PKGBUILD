@@ -33,19 +33,15 @@ noextract=(${_pkgfqn}.tar.xz)
 
 prepare() {
   asdir=${srcdir}/../../../..
+
   if ! [[ -d ${srcdir}/${_pkgfqn} ]] ; then
     tar -xJf ${srcdir}/${_pkgfqn}.tar.xz -C ${srcdir} 2>/dev/null || true
     tar -xJf ${srcdir}/${_pkgfqn}.tar.xz -C ${srcdir} --skip-old-files
     head -n 11 ${asdir}/com/as.tool/qemu//hw/char/Makefile >> ${srcdir}/${_pkgfqn}/hw/char/Makefile.objs
-    echo "LIBS += -lpyas /mingw64/lib/Packet.lib /mingw64/lib/wpcap.lib /mingw64/lib/PCANBasic.lib /mingw64/lib/ControlCAN.lib" >> ${srcdir}/${_pkgfqn}/hw/char/Makefile.objs
+    echo "LIBS += -lpyas /mingw64/lib/Packet.lib /mingw64/lib/wpcap.lib" >> ${srcdir}/${_pkgfqn}/hw/char/Makefile.objs
   fi
 
-  export ASPATH=${asdir}
-  cd ${asdir}/release/aslua
-  make clean
-  make dep-canlib SCONS=scons MSYS2=/
-  make 82 forceclib=yes
-  cp ${asdir}/release/aslua/out/libpyas.a /mingw64/lib -v
+  cp ${asdir}/build/nt/any/aslib/libaslib.a /mingw64/lib/libpyas.a -v
 
   if ! [[ -d ${asdir}/release/download/WpdPack_4_1_2/WpdPack ]] ; then
     cd ${asdir}/release/download
@@ -58,10 +54,6 @@ prepare() {
   if ! [[ -d /mingw64/include/pcap ]] ; then
     cp ${asdir}/release/download/WpdPack_4_1_2/WpdPack/Include/* /mingw64/include -rv
     cp ${asdir}/release/download/WpdPack_4_1_2/WpdPack/Lib/x64/* /mingw64/lib -v
-  fi
-  
-  if ! [[ -f /mingw64/lib/PCANBasic.lib ]] ; then
-    cp ${asdir}/release/download/pcan-basic/"PCAN-Basic API"/x64/VC_LIB/PCANBasic.lib /mingw64/lib -v
   fi
 
   if ! [[ -f /mingw64/include/sys/queue.h ]] ; then
