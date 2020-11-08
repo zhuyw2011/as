@@ -5,6 +5,7 @@ cwd = GetCurrentDir()
 
 Import('asenv')
 ASROOT = asenv['ASROOT']
+BDIR = asenv['BDIR']
 
 objs = []
 
@@ -27,7 +28,7 @@ else:
 if((asenv['MODULES'] != None) and ('RTTHREAD' in asenv['MODULES'])):
     lds = '%s/versatilepb.lds'%(cwd)
 asenv.Append(LINKFLAGS='-static -T %s'%(lds))
-asenv.Append(LINKFLAGS='-Map build/versatilepb/versatilepb.map')
+asenv.Append(LINKFLAGS='-Map %s/versatilepb.map'%(BDIR))
 
 MODULES = ['ECUM','SCHM','MCU',
            'DET','RINGBUFFER',
@@ -113,7 +114,7 @@ asenv['arch'] = arch
 
 if('run' in COMMAND_LINE_TARGETS):
     qemu = Qemu()
-    target = '%s/release/%s/versatilepb'%(ASROOT,asenv['RELEASE'])
+    target = asenv['target']
     if(IsPlatformWindows()): target = target + '.exe'
     qemu.Run('-m 128 -M versatilepb -kernel %s'%(target))
 

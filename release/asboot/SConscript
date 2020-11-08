@@ -1,0 +1,30 @@
+import os
+from building import *
+
+Import('asenv')
+BDIR = asenv['BDIR']
+ASROOT = asenv['ASROOT']
+target = asenv['target']
+
+if('flsdrv' in asenv):
+    flsdrv = asenv['flsdrv']
+    flsobjs = flsdrv['objs']
+    flsenv = ForkEnv(asenv, flsdrv)
+    flstgt=target+'-flsdrv'
+    flsenv['BDIR'] = '%s/flsdrv'%(BDIR)
+    Building(flstgt,flsobjs,flsenv)
+    if('S19' in asenv):
+        if(IsPlatformWindows()):flstgt += '.exe'
+        action = '%s %s %s.s19'%(asenv['S19'],flstgt,flstgt)
+        flsenv.AddPostAction(flstgt,action)
+
+if(IsPlatformWindows()):target += '.exe'
+if('S19' in asenv):
+    RunCommand('cp -fv %s/.app_s19.c.lds %s'%(BDIR, ASROOT))
+    action = '%s %s %s.s19'%(asenv['S19'],target,target)
+    asenv['POSTACTION'].append(action)
+
+objs = []
+objs += Glob('%s/app_s19.c'%(BDIR))
+Return('objs')
+

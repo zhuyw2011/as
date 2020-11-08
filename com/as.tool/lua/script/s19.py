@@ -197,12 +197,9 @@ class s19:
 
         fp.close()
         # generate the link script
-        try:
-            fp = open('../../.%s.lds'%(file),'w')
-        except IOError:
-            path = os.path.dirname(file)
-            bf = os.path.basename(file)
-            fp = open('%s/../../../.%s.lds'%(path,bf),'w')
+        path = os.path.dirname(file)
+        bf = os.path.basename(file)
+        fp = open('%s/.%s.lds'%(path,bf),'w')
         for ss in self.data:
             bAllZero = True
             for b in ss['data']:

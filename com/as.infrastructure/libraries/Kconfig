@@ -6,7 +6,7 @@ config IFX
 
 config FDT
 	bool "flat device tree library"
-	default y
+	default n
 
 config TRACE
 	bool "enable the trace library"

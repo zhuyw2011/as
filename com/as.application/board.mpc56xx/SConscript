@@ -5,7 +5,7 @@ cwd = GetCurrentDir()
 
 Import('asenv')
 ASROOT = asenv['ASROOT']
-
+BDIR = asenv['BDIR']
 MODULES = ['ECUM','SCHM','MCU',
            'DET',
            'TRACE',
@@ -44,7 +44,7 @@ asenv['arch'] = arch
 
 objs = []
 
-asenv.Append(LINKFLAGS=['-map','build/mpc56xx/mpc56xx.map'])
+asenv.Append(LINKFLAGS=['-map','%s/mpc56xx.map'%(BDIR)])
 
 MKDir('%s/common/'%(cwd))
 MKSymlink('%s/../board.posix/common/Mcu_Cfg.h'%(cwd),'%s/common/Mcu_Cfg.h'%(cwd))

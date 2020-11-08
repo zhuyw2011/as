@@ -1246,6 +1246,7 @@ def BuildDTS(dts,bdir):
         dtc = Package('dtc')+'/dtc'
     for src in dts:
         src=str(src)
+        src = os.path.abspath(src)
         bp = os.path.dirname(src)
         tgt = '%s/%s.dtb'%(os.path.abspath(bdir), os.path.basename(src)[:-4])
         cmd = 'cd %s && %s -I dts -O dtb %s -o %s'%(bp, dtc, src, tgt)
@@ -1332,7 +1333,7 @@ def Building(target, sobjs, env=None):
 
     if(GetOption('clean')):
         if(os.path.exists('%s/autosar.arxml'%(cfgdir))):
-            RunCommand('mv {0}/autosar.arxml . && rm -frv {0}/* {0}/../*.map && mv autosar.arxml {0}/'.format(cfgdir))
+            RunCommand('mv {0}/autosar.arxml . && rm -frv {0} {0}/../*.map && mkdir -p {0} && mv autosar.arxml {0}/'.format(cfgdir))
         RunCommand('rm -fv *.s19')
 
     BuildDTS(dts,bdir)

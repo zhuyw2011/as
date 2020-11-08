@@ -5,13 +5,13 @@ cwd = GetCurrentDir()
 
 Import('asenv')
 ASROOT = asenv['ASROOT']
-
+BDIR = asenv['BDIR']
 MODULES = ['ECUM','SCHM','MCU',
            'DET','SHELL',
            'USB','USB_SERIAL',
            'CLIB_ASHEAP','CLIB_MBOX','CLIB_MISCLIB',
            'CLIB_STRTOK_R','CLIB_STDIO_PRINTF',
-           'ASKAR',,'COMMONXML'
+           'ASKAR','COMMONXML'
            ]
 
 
@@ -55,7 +55,7 @@ asenv.Append(CPPDEFINES=['ENABLE_SHELL_ECHO_BACK','OS_STK_SIZE_SCALER=1/2'])
 if('run' in COMMAND_LINE_TARGETS):
     SelectCompilerArmNoneEabi()
     gdb = asenv['CC'].split(' ')[0][:-3]+'gdb'
-    cmd = 'cd %s/release/ascore && %s -x %s/script/rom.gdbinit'%(ASROOT,gdb, cwd)
+    cmd = 'cd %s && %s -x %s/script/rom.gdbinit'%(BDIR,gdb, cwd)
     RunCommand(cmd)
     exit()
 Return('objs')

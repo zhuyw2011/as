@@ -90,7 +90,7 @@ endchoice
 
 config AWS
 	bool "AS remote websock device"
-	default y
+	default n
 
 endmenu
 endif

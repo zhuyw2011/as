@@ -1,2 +1,7 @@
-source "SgDesign/Kconfig"
-source "elf/Kconfig"
+source "$ASROOT/release/ascore/SgDesign/Kconfig"
+source "$ASROOT/release/ascore/elf/Kconfig"
+
+config RELEASE_ASCORE
+	bool
+	default y
+

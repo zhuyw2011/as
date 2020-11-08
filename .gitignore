@@ -7,6 +7,7 @@
 build
 *.pyd
 *.done
+*.lds
 
 release/aslinux/build
 release/aslinux/kernel/drivers/remoteproc/rproc-asvirt

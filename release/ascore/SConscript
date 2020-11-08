@@ -4,7 +4,9 @@ from building import *
 cwd = GetCurrentDir()
 
 Import('asenv')
-BOARD = asenv['BOARD']
+ASROOT = asenv['ASROOT']
+target = asenv['target']
+BDIR = asenv['BDIR']
 MODULES = asenv['MODULES']
 
 objs = SConscript('app/SConscript')
@@ -12,14 +14,12 @@ if('SG' in MODULES):
     objs += SConscript('SgDesign/SConscript')
 
 try:
-    target = BOARD
     if(IsPlatformWindows()):target += '.exe'
-    action = '%s %s %s.s19'%(asenv['S19'],target,BOARD)
+    action = '%s %s %s.s19'%(asenv['S19'],target,target)
     asenv['POSTACTION'].append(action)
     pys19 = '%s %s/com/as.tool/lua/script/s19.py'%(asenv['python3'],ASROOT)
-    s19dir = '%s/release/asboot/build/%s/config'%(ASROOT,BOARD)
-    MKDir(s19dir)
-    action = '%s -c %s.s19 -o %s/app_s19.c'%(pys19,BOARD,s19dir)
+    ASBOOT = os.path.abspath('%s/../asboot'%(BDIR))
+    action = '%s -c %s.s19 -o %s/app_s19.c'%(pys19,target,ASBOOT)
     asenv['POSTACTION'].append(action)
 except KeyError:
     pass

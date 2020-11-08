@@ -62,7 +62,6 @@ MODULES = ['ECUM','SCHM','MCU',
            'LCD',
            'TINYOS',
            'J1939TP',
-           'LUA_CAN','LUA_SOCKET_CAN',
            'TRACE','COMMONXML'
            ]
 
@@ -127,6 +126,9 @@ if(not IsPlatformWindows()):
         asenv['MODULES'].remove('CLIB_MISCLIB')
     except:
         pass
+
+if('CAN' in MODULES):
+    MODULES.extend(['LUA_CAN','LUA_SOCKET_CAN'])
 
 asenv['ARCH'] = ARCH
 asenv['arch'] = arch

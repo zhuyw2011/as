@@ -7,4 +7,5 @@ source "$ASROOT/com/as.infrastructure/system/Kconfig"
 source "$ASROOT/com/as.infrastructure/clib/Kconfig"
 source "$ASROOT/com/as.infrastructure/libraries/Kconfig"
 source "$ASROOT/com/as.infrastructure/libraries/nn/Kconfig"
+source "$ASROOT/com/as.infrastructure/boot/Kconfig"
 endif

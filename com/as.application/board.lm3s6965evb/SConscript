@@ -5,14 +5,14 @@ cwd = GetCurrentDir()
 
 Import('asenv')
 ASROOT = asenv['ASROOT']
-
+BDIR = asenv['BDIR']
 objs = []
 
 asenv.Append(CCFLAGS=' -I%s/common '%(cwd))
 
 lds = '%s/script/linker.lds'%(cwd)
 asenv.Append(LINKFLAGS=' -static -T %s '%(lds))
-asenv.Append(LINKFLAGS='-Map build/lm3s6965evb/lm3s6965evb.map')
+asenv.Append(LINKFLAGS='-Map %s/lm3s6965evb.map'%(BDIR))
 
 asenv.Append(CPPDEFINES='OS_TICKS_PER_SECOND=100')
 asenv.Append(CPPDEFINES='USECONDS_PER_TICK=10000')
@@ -35,7 +35,7 @@ asenv['arch'] = arch
 if('run' in COMMAND_LINE_TARGETS):
     qemu = Qemu()
     qemu = Qemu(qemu.qemu)
-    target = '%s/release/%s/lm3s6965evb'%(ASROOT,asenv['RELEASE'])
+    target = asenv['target']
     if(IsPlatformWindows()): target = target + '.exe'
     qemu.Run('-cpu cortex-m3 -nographic -monitor null -semihosting -machine lm3s6965evb -kernel %s'%(target))
 

@@ -5,6 +5,11 @@ config DCM
 	depends on PDUR
 	default y
 
+config DCM_MINI
+	bool "mini Diagnostic Communication Manager"
+	depends on DCM
+	default n
+
 config DEM
 	bool "Diagnostic Event Manager"
 	depends on NVM

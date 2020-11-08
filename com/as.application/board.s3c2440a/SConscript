@@ -22,7 +22,7 @@ asenv.Append(LINKFLAGS='-Map build/s3c2440a/s3c2440a.map')
 MODULES = ['ECUM','SCHM','MCU','DET',
            'CLIB_ASHEAP','CLIB_MISCLIB',
            'CLIB_STDIO_PRINTF',
-           'TRAMPOLINE',,'COMMONXML'
+           'TRAMPOLINE','COMMONXML'
            ]
 
 ARCH='s3c2440a'
