@@ -829,12 +829,12 @@ class UIFlashloader(QWidget):
         if(not os.path.exists(default_flsdrv)):
             default_flsdrv = ''
         if(os.path.exists(aspath)):
-            for ss in glob.glob('%s/release/ascore/*.s19'%(aspath)):
+            for ss in glob.glob('%s/build/*/*/ascore/*.s19'%(aspath)):
                 default_app = ss
                 self.leFlsEraseProperty.setText('2*1024')
                 self.leFlsSignature.setText('0x500')
                 break
-            for ss in glob.glob('%s/release/asboot/*-flsdrv.s19'%(aspath)):
+            for ss in glob.glob('%s/build/*/*/asboot/*-flsdrv*.s19'%(aspath)):
                 default_flsdrv = ss
                 break
         if(os.path.exists(default_app)):

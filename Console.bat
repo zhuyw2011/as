@@ -79,21 +79,29 @@ cd \
 mkdir asci
 cd asci
 git clone https://github.com/parai/as.git
-cd as\release
-rm download -fr
-mkdir download
+cd as
+rm release/download build -fr
+mkdir -p release/download
 git pull
-cd aslua
-make aslua
-cd ..\ascore
+
 set BOARD=posix
+set RELEASE=ascore
 scons
+set RELEASE=asboot
+scons
+
 set BOARD=versatilepb
+set RELEASE=ascore
 scons
-cd ..\asboot
-set BOARD=posix
+set RELEASE=asboot
 scons
-set BOARD=versatilepb
+
+set BOARD=any
+set ANY=lua
+scons
+set ANY=pyas
+scons
+set ANY=aslib
 scons
 goto exitPoint
 

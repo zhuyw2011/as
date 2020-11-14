@@ -17,7 +17,7 @@ try:
     if(IsPlatformWindows()):target += '.exe'
     action = '%s %s %s.s19'%(asenv['S19'],target,target)
     asenv['POSTACTION'].append(action)
-    pys19 = '%s %s/com/as.tool/lua/script/s19.py'%(asenv['python3'],ASROOT)
+    pys19 = '%s %s/com/as.tool/as.one.py/pyas/s19.py'%(asenv['python3'],ASROOT)
     ASBOOT = os.path.abspath('%s/../asboot'%(BDIR))
     action = '%s -c %s.s19 -o %s/app_s19.c'%(pys19,target,ASBOOT)
     asenv['POSTACTION'].append(action)
