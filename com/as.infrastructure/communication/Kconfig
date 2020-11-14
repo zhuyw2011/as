@@ -19,7 +19,6 @@ config CANTP
 	bool "Communication CAN Transport Layer"
 	depends on CANIF
 	default y
-	depends on !CANTP_MINI
 
 config CANTP_MINI
 	bool "Mini Communication CAN Transport Layer"

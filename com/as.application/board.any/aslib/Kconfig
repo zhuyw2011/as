@@ -8,3 +8,7 @@ config ARCH_ANY
 config ARCH
     string
     default "host"
+
+config ASLIB
+    bool
+    default y

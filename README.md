@@ -88,9 +88,7 @@ General supported CPU architecture list:
 
 ## 7. Setup Environment and Run
 
-* [pan.baidu.com asenv.zip](https://pan.baidu.com/s/1NNNiSBCyYsdsvSknBKe3JQ)
-
->Check the page [as-study-platform](http://autoas.github.io/as/autosar/2018/02/20/as-study-platform.html) for how to use asenv or how to setup the environment from zero by yourself.
+>Check the page [as-study-platform](http://autoas.github.io/as/autosar/2018/02/20/as-study-platform.html) for how to setup the environment from zero by yourself.
 
 ## 8. AS USB2CAN device
 
