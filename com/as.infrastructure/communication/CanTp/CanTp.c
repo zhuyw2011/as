@@ -561,7 +561,7 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 						rxRuntime->iso15765.state = IDLE;
 						rxRuntime->mode = CANTP_RX_WAIT;
 						dataCopyFailure = TRUE;
-						ASLOG(CANTP, ("Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n"));
+						ASLOG(CANTPE, ("Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n"));
 					}
 				} else {
 					if ( copySegmentToLocalRxBuffer(rxRuntime,  /** @req CANTP067 */
@@ -570,7 +570,7 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 						rxRuntime->iso15765.state = IDLE;
 						rxRuntime->mode = CANTP_RX_WAIT;
 						dataCopyFailure = TRUE;
-						ASLOG(CANTP, ("Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n"));
+						ASLOG(CANTPE, ("Unexpected error, could not copy 'unaligned leftover' " "data to local buffer!\n"));
 					}
 				}
 				if ( !dataCopyFailure ) {
@@ -587,9 +587,8 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 					COUNT_DECREMENT(rxRuntime->iso15765.nextFlowControlCount);
 					if (rxRuntime->iso15765.nextFlowControlCount == 0  && rxRuntime->iso15765.BS > 0) {
 						sendFlowControlFrame(rxConfig, rxRuntime, BUFREQ_OK);
-					} else {
-						rxRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(rxConfig->CanTpNcr);  //UH
 					}
+					rxRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(rxConfig->CanTpNcr);  //UH
 				} else {
 					ASLOG(CANTP, ("ISO15765-Rx session finished, going back to IDLE!\n"));
 					rxRuntime->iso15765.state = IDLE;
@@ -598,6 +597,8 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,
 				}
 			}
 		}
+	} else {
+		ASLOG(CANTPE, ("CF received and channel not wait CF!\n"));
 	}
 } // 438, 550 PC-lint: extendedAdress not accessed. Extended adress needs to be implemented. Ticket #136
 
@@ -754,7 +755,7 @@ static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,
 			break;
 		}
 	} else {
-		ASLOG(CANTP, ("Ignoring flow control, we do not expect it!"));
+		ASLOG(CANTPE, ("Ignoring flow control, we do not expect it!"));
 	}
 } // 438, 550 PC-lint: extendAdress används inte. EN BUG? Behöver fixas
 
@@ -771,7 +772,7 @@ static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,
 
 	if (rxRuntime->iso15765.state != IDLE) {
 		PduR_CanTpRxIndication(rxConfig->PduR_PduId, NTFRSLT_E_NOT_OK);  // Abort current reception, we need to tell the current receiver it has been aborted.
-		ASLOG(CANTP, ("Single frame received and channel not IDLE!\n"));
+		ASLOG(CANTPE, ("Single frame received and channel not IDLE!\n"));
 	}
 	(void) initRx15765RuntimeData(rxConfig, rxRuntime); /** @req CANTP124 */
 	pduLength = getPduLength(&rxConfig->CanTpAddressingFormant, SINGLE_FRAME, rxPduData);
@@ -831,7 +832,7 @@ static void handleFirstFrame(const CanTp_RxNSduType *rxConfig,
 
 
 	if (rxRuntime->iso15765.state != IDLE) {
-		ASLOG(CANTP, ("First frame received during Rx-session!\n" ));
+		ASLOG(CANTPE, ("First frame received during Rx-session!\n" ));
 		PduR_CanTpRxIndication(rxConfig->PduR_PduId, NTFRSLT_E_NOT_OK);  // Abort current reception, we need to tell the current receiver it has been aborted.
 	}
 
@@ -1117,12 +1118,13 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId, /** @req CANTP078 */ /** @req CA
 		DET_REPORTERROR(MODULE_ID_CANTP, 0, SERVICE_ID_CANTP_RX_INDICATION, CANTP_E_UNINIT );  /** @req CANTP238 */ /** @req CANTP031 */
 		return;
 	}
-	ASLOG(CANTP, ("CanTp_RxIndication: PduId=%d,  LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X]\n", 
+	ASLOG(CANTP, ("CanTp_RxIndication: PduId=%d,  LEN=%d DATA=[%02X %02X %02X %02X %02X %02X %02X %02X] @%u\n",
 			(uint32)CanTpRxPduId,(uint32)CanTpRxPduPtr->SduLength,
 			(uint32)CanTpRxPduPtr->SduDataPtr[0],(uint32)CanTpRxPduPtr->SduDataPtr[1],
 			(uint32)CanTpRxPduPtr->SduDataPtr[2],(uint32)CanTpRxPduPtr->SduDataPtr[3],
 			(uint32)CanTpRxPduPtr->SduDataPtr[4],(uint32)CanTpRxPduPtr->SduDataPtr[5],
-			(uint32)CanTpRxPduPtr->SduDataPtr[6],(uint32)CanTpRxPduPtr->SduDataPtr[7]));
+			(uint32)CanTpRxPduPtr->SduDataPtr[6],(uint32)CanTpRxPduPtr->SduDataPtr[7],
+			GetOsTick()));
 
 	VALIDATE_NO_RV( CanTpRunTimeData.internalState == CANTP_ON,
 			SERVICE_ID_CANTP_RX_INDICATION, CANTP_E_UNINIT ); /** @req CANTP031 */
@@ -1138,7 +1140,7 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId, /** @req CANTP078 */ /** @req CA
 			runtimeParams = &CanTpRunTimeData.runtimeDataList[txConfigParams->CanTpTxChannel];
 		}
 		else {
-			//Invalid FC received
+			ASLOG(CANTPE, ("Invalid FC received\n"));
 			return;
 		}
 		rxConfigParams = NULL;
@@ -1150,7 +1152,7 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId, /** @req CANTP078 */ /** @req CA
 			runtimeParams = &CanTpRunTimeData.runtimeDataList[rxConfigParams->CanTpRxChannel];  /** @req CANTP096 *//** @req CANTP121 *//** @req CANTP122 *//** @req CANTP190 */
 		}
 		else {
-			//Invalid Frame received
+			ASLOG(CANTPE, ("Invalid Frame received\n"));
 			return;
 		}
 		txConfigParams = NULL;

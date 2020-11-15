@@ -1246,14 +1246,14 @@ def PreProcess(cfgdir, fil):
     MKFile(filR, newTxt)
     return filR
 
-def BuildDTS(dts,bdir):
+def BuildDTS(dts,BDIR):
     if(len(dts) > 0):
         dtc = Package('dtc')+'/dtc'
     for src in dts:
         src=str(src)
         src = os.path.abspath(src)
         bp = os.path.dirname(src)
-        tgt = '%s/%s.dtb'%(os.path.abspath(bdir), os.path.basename(src)[:-4])
+        tgt = '%s/%s.dtb'%(os.path.abspath(BDIR), os.path.basename(src)[:-4])
         cmd = 'cd %s && %s -I dts -O dtb %s -o %s'%(bp, dtc, src, tgt)
         MKObject([src], tgt, cmd)
 
@@ -1265,9 +1265,9 @@ def Building(target, sobjs, env=None):
     if(GetOption('splint')):
         splint(objs, env)
     if('BDIR' in env):
-        bdir = env['BDIR']
+        BDIR = env['BDIR']
     else:
-        bdir = 'build/%s'%(target)
+        BDIR = 'build/%s'%(target)
     objs = []
     xmls = []
     ofs = []
@@ -1275,7 +1275,7 @@ def Building(target, sobjs, env=None):
     dts = []
     arxml= None
 
-    cfgdir = '%s/config'%(bdir)
+    cfgdir = '%s/config'%(BDIR)
     MKDir(cfgdir)
     env.Append(CPPPATH=['%s'%(cfgdir)])
     env.Append(ASFLAGS='-I%s'%(cfgdir))
@@ -1283,7 +1283,7 @@ def Building(target, sobjs, env=None):
     if('PACKAGES' in env):
         for p in env['PACKAGES']:
             pkg = Package(p)
-            pbdir = '%s/packages/%s'%(bdir,os.path.basename(pkg))
+            pbdir = '%s/packages/%s'%(BDIR,os.path.basename(pkg))
             sobjs += SConscript('%s/SConscript'%(pkg),variant_dir=pbdir, duplicate=0)
 
     for obj in sobjs:
@@ -1324,8 +1324,8 @@ def Building(target, sobjs, env=None):
             xcc.XCC(cfgdir)
             argen.ArGen.ArGenMain(arxmlR,cfgdir)
         MKFile(cfgdone, SHA256(glob.glob('%s/*xml'%(cfgdir))))
-    if('studio' in COMMAND_LINE_TARGETS):
-        studio=os.path.abspath('../../com/as.tool/config.infrastructure.system/')
+    if(('studio' in COMMAND_LINE_TARGETS) and (env == Env)):
+        studio=os.path.abspath('%s/com/as.tool/config.infrastructure.system/'%(env['ASROOT']))
         assert(arxml)
         pd = os.path.abspath(cfgdir)
         RunCommand('cd %s && %s studio.py %s'%(studio,env['python3'],pd))
@@ -1338,10 +1338,13 @@ def Building(target, sobjs, env=None):
 
     if(GetOption('clean')):
         if(os.path.exists('%s/autosar.arxml'%(cfgdir))):
-            RunCommand('mv {0}/autosar.arxml . && rm -frv {0} {0}/../*.map && mkdir -p {0} && mv autosar.arxml {0}/'.format(cfgdir))
+            shutil.copy('%s/autosar.arxml'%(cfgdir), '%s/autosar.arxml'%(BDIR))
+            shutil.rmtree(cfgdir)
+            MKDir(cfgdir)
+            shutil.move('%s/autosar.arxml'%(BDIR), '%s/autosar.arxml'%(cfgdir))
         RunCommand('rm -fv *.s19')
 
-    BuildDTS(dts,bdir)
+    BuildDTS(dts,BDIR)
     BuildOFS(ofs)
     BuildingSWCS(swcs)
     if('Program' in env):
