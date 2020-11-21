@@ -46,6 +46,18 @@
 /* -lwsock32 */
 #endif
 /* ============================ [ MACROS    ] ====================================================== */
+/* http://www.cs.ubbcluj.ro/~dadi/compnet/labs/lab3/udp-broadcast.html
+ * https://www.tack.ch/multicast/ */
+//#define USE_CAN_UDP
+
+#ifdef USE_CAN_UDP
+#define CAN_SOCKET_TYPE SOCK_DGRAM
+#define CAN_SOCKET_IP   INADDR_BROADCAST
+#else
+#define CAN_SOCKET_TYPE SOCK_STREAM
+#define CAN_SOCKET_IP   inet_addr("127.0.0.1")
+#endif
+
 #define CAN_MAX_DLEN 64 /* 64 for CANFD */
 #define CAN_MTU sizeof(struct can_frame)
 #define CAN_PORT_MIN  80
@@ -178,15 +190,50 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 	{
 		int s;
 		struct sockaddr_in addr;
+		memset(&addr, 0, sizeof(struct sockaddr_in));
 		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+		addr.sin_addr.s_addr = CAN_SOCKET_IP;
 		addr.sin_port = htons(CAN_PORT_MIN+port);
 		/* open socket */
-		if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		if ((s = socket(AF_INET, CAN_SOCKET_TYPE, 0)) < 0) {
 			ASWARNING(("CAN Socket port=%d open failed!\n",port));
 			rv = FALSE;
 		}
+#ifdef USE_CAN_UDP
+#if 0
+		if ( rv ) {
+			char broadcast = '1';
+			if(setsockopt(s, SOL_SOCKET, SO_BROADCAST,&broadcast, sizeof(broadcast)) < 0) {
+				ASWARNING(("Error in setting broadcast option: %d\n", WSAGetLastError()));
+				(void)closesocket(s);
+				rv = FALSE;
+			}
+		}
+#else
+		if ( rv ) {
+			struct ip_mreq imreq;
+			memset(&imreq, 0, sizeof(struct ip_mreq));
+			imreq.imr_multiaddr.s_addr = inet_addr("226.0.0.1");
+			imreq.imr_interface.s_addr = INADDR_ANY;
+			if(setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+					  (const void *)&imreq, sizeof(struct ip_mreq)) < 0) {
+				ASWARNING(("Error in setting multicast option: %d\n", WSAGetLastError()));
+				(void)closesocket(s);
+				rv = FALSE;
+			}
+		}
+#endif
+		if ( rv ) {
+			addr.sin_addr.s_addr = INADDR_ANY;
+			if (bind(s, (struct sockaddr*)&addr, sizeof(struct sockaddr)) < 0) {
+				ASWARNING(("Error in binding: %d\n", WSAGetLastError()));
+				(void)closesocket(s);
+				rv = FALSE;
+			}
+		}
 
+
+#else
 		if( rv )
 		{
 			/* Connect to server. */
@@ -200,7 +247,7 @@ static boolean socket_probe(uint32_t busid,uint32_t port,uint32_t baudrate,can_d
 				rv = FALSE;
 			}
 		}
-
+#endif
 		if( rv )
 		{	/* open port OK */
 			handle = malloc(sizeof(struct Can_SocketHandle_s));
@@ -246,8 +293,11 @@ static boolean socket_write(uint32_t busid,uint32_t port,uint32_t canid,uint32_t
 		mSetCANDLC(frame , dlc);
 		asAssert(dlc <= CAN_MAX_DLEN);
 		memcpy(frame.data,data,dlc);
-
+#ifdef USE_CAN_UDP
+		if (sendto(handle->s, (const char*)&frame, CAN_MTU, 0, (struct sockaddr*)&handle->addr, sizeof(struct sockaddr)) != CAN_MTU) {
+#else
 		if (send(handle->s, (const char*)&frame, CAN_MTU,0) != CAN_MTU) {
+#endif
 			perror("CAN socket write");
 			ASWARNING(("CAN Socket port=%d send message failed!\n",port));
 			rv = FALSE;
@@ -281,9 +331,10 @@ static void socket_close(uint32_t busid,uint32_t port)
 
 static void rx_notifiy(struct Can_SocketHandle_s* handle)
 {
-	int nbytes,len;
+	int nbytes,len = sizeof(struct sockaddr_in);
 	struct can_frame frame;
-	nbytes = recvfrom(handle->s, (char*)&frame, sizeof(frame), 0, (struct sockaddr*)&handle->addr, &len);
+	struct sockaddr_in addr;
+	nbytes = recvfrom(handle->s, (char*)&frame, sizeof(frame), 0, (struct sockaddr*)&addr, &len);
 	if (nbytes < 0) {
 		perror("CAN socket read");
 		ASWARNING(("CAN Socket port=%d read message failed!\n",handle->port));

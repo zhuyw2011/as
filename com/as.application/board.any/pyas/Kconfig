@@ -12,3 +12,7 @@ config ARCH
 config PYAS
     bool
     default y
+
+config DET
+    bool
+    default y

@@ -12,8 +12,8 @@ config ARCH
 
 
 config DET
-	bool
-	default y
+    bool
+    default y
 
 config SHELL
 	bool

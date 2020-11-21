@@ -12,3 +12,7 @@ config ARCH
 config ASLIB
     bool
     default y
+
+config DET
+    bool
+    default y
