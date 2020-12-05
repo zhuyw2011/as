@@ -57,10 +57,9 @@ if('LUA_VXL_CAN' in MODULES):
 
 if('LUA_SOCKET_CAN' in MODULES):
     if(IsPlatformWindows()):
-        objs += Glob('socketwin_can.c')
         asenv.Append(LIBS=['wsock32'])
-    else:
-        objs += Glob('socket_can.c')
+    objs += Glob('socket_can.c')
+    objs += Glob('socketwin_can.c')
 
 if(IsPlatformWindows()):
     if(asenv['mingw64']):

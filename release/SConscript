@@ -1,0 +1,11 @@
+from building import *
+
+Import('asenv')
+RELEASE = asenv['RELEASE']
+
+objs = []
+
+if(RELEASE != None):
+    objs += SConscript('%s/SConscript'%(RELEASE))
+
+Return('objs')

@@ -12,11 +12,7 @@ else:
 
 asenv.Append(CPPDEFINES=['__AS_BY_PARAI__','__AS_CAN_BUS__'])
 
-MODULES = ['LUA_CAN','LUA_SERIAL_CAN',
-           'LUA_VXL_CAN','LUA_SOCKET_CAN',
-           #'LUA_PEAK_CAN','LUA_ZLG_CAN',
-           'DET'
-           ]
+MODULES = ['LUA_CAN','LUA_SERIAL_CAN','LUA_SOCKET_CAN','DET']
 
 if(asenv['MODULES'] is None):
     asenv['MODULES'] = MODULES

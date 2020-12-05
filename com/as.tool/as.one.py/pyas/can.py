@@ -18,13 +18,13 @@ import os,sys
 CWD = os.path.dirname(__file__)
 ASROOT = os.path.abspath('%s/../../../../'%(CWD))
 PYAS = '%s/build/%s/any/pyas'%(ASROOT, os.name)
-if(not os.path.exists('%s/AS.pyd'%(CWD))):
+if(not os.path.exists('%s/AS.%s'%(CWD, 'pyd' if os.name == 'nt' else 'so'))):
     if(os.name == 'nt'):
         cmd = 'cd %s & set BOARD=any& set ANY=pyas& scons'%(ASROOT)
         cmd += '& cp -v %s/pyas.dll %s/AS.pyd'%(PYAS, CWD)
     else:
-        cmd = 'cd %s && export BOARD=any && export ANY=pyas && scons'%(ASROOT)
-        cmd += ' && cp -v %s/pyas.so %s/AS.pyd'%(PYAS, CWD)
+        cmd = 'cd %s && export BOARD=any && export ANY=pyas && scons --verbose'%(ASROOT)
+        cmd += ' && cp -v %s/libpyas.so %s/AS.so'%(PYAS, CWD)
     os.system(cmd)
 
 try:

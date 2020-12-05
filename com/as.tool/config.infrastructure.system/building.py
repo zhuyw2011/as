@@ -5,6 +5,7 @@ import sys
 import shutil
 import string
 import re
+import cmd
 
 bScons = True
 try:
@@ -101,6 +102,7 @@ def PrepareEnv():
                os.path.isfile('%s/Console.bat'%(p))): break
             p=os.path.abspath('%s/..'%(p))
         ASROOT=p
+    ASROOT = os.path.abspath(ASROOT)
 
     AppendPythonPath(['%s/com/as.tool/config.infrastructure.system'%(ASROOT),
               '%s/com/as.tool/config.infrastructure.system/third_party'%(ASROOT)])
@@ -136,7 +138,7 @@ def PrepareEnv():
         print('  use command "%s BOARD=board_name" to choose a board from the board list'%(set))
         print('  use command "%s ANY=any_board_name" to choose a board from the any list if BOARD is any'%(set))
         print('  use command "%s RELEASE=release_name" to choose a release from the release list'%(set))
-        print('    for example, not an any board:\n\tset BOARD=posix\n\t{0} RELEASE=ascore'.format(set))
+        print('    for example, not an any board:\n\t{0} BOARD=posix\n\t{0} RELEASE=ascore'.format(set))
         print('    for example, an any board:\n\t{0} BOARD=any\n\t{0} ANY=mc9s12xep100\n\t{0} RELEASE=ascore'.format(set))
 
     if('help' in COMMAND_LINE_TARGETS):
@@ -254,7 +256,7 @@ def PrepareBuilding(env):
     if(not GetOption('verbose')):
     # override the default verbose command string
         env.Replace(
-          ARCOMSTR = 'AR $SOURCE',
+          ARCOMSTR = 'AR $TARGET',
           ASCOMSTR = 'AS $SOURCE',
           ASPPCOMSTR = 'AS $SOURCE',
           CCCOMSTR = 'CC $SOURCE',
@@ -381,7 +383,7 @@ def menuconfig(env):
     if(os.path.exists(kconfig)):
         assert(os.path.exists('Kconfig'))
         fn = '%s/.config'%(BDIR)
-        cmd += 'rm .config && '
+        cmd += 'rm -f .config && '
         if(os.path.isfile(fn)):
             cmd += 'cp -fv %s .config && '%(fn)
             mtime = os.path.getmtime(fn)
@@ -857,10 +859,13 @@ class Qemu():
         if(where is None):
             where = build
         python = Env['python3']
+        cmd = 'python main.py'
         if(IsPlatformWindows()):
-            python = 'start ' + python
+            python = 'start ' + cmd
+        else:
+            cmd += ' &'
         if('asone' in COMMAND_LINE_TARGETS):
-            RunCommand('cd %s/com/as.tool/as.one.py && %s main.py'%(ASROOT,python))
+            RunCommand('cd %s/com/as.tool/as.one.py && %s'%(ASROOT,cmd))
         if(IsPlatformWindows()):
             if(self.isAsQemu and ('CAN' in MODULES)):
                 RunCommand('start %s/com/as.tool/lua/script/socketwin_can_driver.exe 0'%(ASROOT))
@@ -922,19 +927,19 @@ class Qemu():
         else:
             fp = open('/tmp/asqemu.mk','w')
             fp.write('''download = $(prj-dir)/release/download
-$(download)/qemu/hw/char/libpyas.a:
-\t(cd $(prj-dir); BOARD=any ANY=aslib scons; cp build/%s/any/aslib/libaslib.a $@)
+pkgver=2.10.0
+$(download)/qemu-$(pkgver).tar.xz:
+\t@(cd $(download); wget https://download.qemu.org/qemu-$(pkgver).tar.xz)
 
-$(download)/qemu: $(download)/qemu/hw/char/libpyas.a $(dep-wincap)
-\t@(cd $(download); git clone https://github.com/qemu/qemu.git; \
-        cd qemu; git submodule update --init dtc ; \
-        git checkout 223cd0e13f2e46078d7b573f0b8402bfbee339be; \
-        cd hw/char; cp $(prj-dir)/com/as.tool/qemu/hw/char/* .; \
-        cp $(prj-dir)/release/aslua/out/libpyas.a .; \
+$(download)/qemu: $(download)/qemu-$(pkgver).tar.xz
+\t@(cd $(download); tar xf qemu-$(pkgver).tar.xz; ln -fs qemu-$(pkgver) qemu)
+\t@(sed -i "40cint memfd_create(const char *name, unsigned int flags)" $(download)/qemu/util/memfd.c)
+\t@(cd $(prj-dir); BOARD=any ANY=aslib scons; cp build/%s/any/aslib/libaslib.a $(download)/qemu/hw/char/libpyas.a)
+\t@(cd $(download)/qemu/hw/char; cp $(prj-dir)/com/as.tool/qemu/hw/char/* .; \
         cat Makefile >> Makefile.objs)
 
 asqemu:$(download)/qemu
-\t@(cd $(download)/qemu; ./configure; make LDFLAGS="-L/usr/lib/x86_64-linux-gnu")\n'''%(os.name))
+\t@(cd $(download)/qemu; ./configure --python=/usr/bin/python2; make LDFLAGS="-L/usr/lib/x86_64-linux-gnu")\n'''%(os.name))
             fp.close()
             RunCommand('make asqemu -f /tmp/asqemu.mk prj-dir=%s'%(ASROOT))
 
@@ -1117,7 +1122,10 @@ def AddPythonDev(env):
     else:
         pyp = os.sep.join(pyp.split(os.sep)[:-2])
         if(sys.version[0:3] == '2.7'):
-            pylib = 'python'+sys.version[0:3]
+            _,pyp = RunSysCmd('which python3')
+            pyp = os.sep.join(pyp.split(os.sep)[:-2])
+            _,version = RunSysCmd('python3 -c "import sys; print(sys.version[0:3])"')
+            pylib = 'python'+version+'m'
         else:
             pylib = 'python'+sys.version[0:3]+'m'
         if(pylib in env.get('LIBS',[])): return
