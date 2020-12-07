@@ -4,58 +4,76 @@ from building import *
 cwd = GetCurrentDir()
 
 Import('asenv')
-
-assert(asenv['BOARD'] == 'posix')
+MODULES=asenv['MODULES']
+BDIR = asenv['BDIR']
 
 objs = []
 
-asenv.Append(CCFLAGS='-I%s'%(cwd))
-asenv.Append(CCFLAGS='-I%s/rs232'%(cwd))
+asenv.Append(CPPPATH=[cwd])
 
-if(IsPlatformWindows()):
+if(IsPlatformWindows() and ('LUA_PEAK_CAN' in MODULES)):
     peakcan = Package('https://www.peak-system.com/fileadmin/media/files/pcan-basic.zip')
+    asenv.Append(CPPPATH=['%s/PCAN-Basic API/Include'%(peakcan)])
+    if(asenv['mingw64']):
+        MKSymlink('%s/"PCAN-Basic API"/x64/PCANBasic.dll'%(peakcan),
+                  '%s/PCANBasic.dll'%(asenv['ASROOT']))
+    else:
+        MKSymlink('%s/"PCAN-Basic API"/Win32/PCANBasic.dll'%(peakcan),
+                  '%s/PCANBasic.dll'%(asenv['ASROOT']))
+
+if(IsPlatformWindows() and ('LUA_ZLG_CAN' in MODULES)):
     zlgcan_o = Package('http://www.zlg.cn/data/upload/software/Can/CAN_lib.rar')
     zlgcan = str(Glob('%s/CAN*'%(zlgcan_o))[0])
+    if(asenv['mingw64']):
+        asenv.Append(CPPPATH=['%s/ControlCAN/64'%(zlgcan)])
+        MKSymlink('%s/ControlCAN/64/ControlCAN.dll'%(zlgcan),
+                  '%s/ControlCAN.dll'%(asenv['ASROOT']))
+    else:
+        asenv.Append(CPPPATH=['%s/ControlCAN/32'%(zlgcan)])
+        MKSymlink('%s/ControlCAN/32/ControlCAN.dll'%(zlgcan),
+                  '%s/ControlCAN.dll'%(asenv['ASROOT']))
 
-if(IsPlatformWindows()):
-    asenv.Append(CCFLAGS='-I%s/"PCAN-Basic API"/Include'%(peakcan))
+if(IsPlatformWindows() and ('LUA_VXL_CAN' in MODULES)):
     MKSymlink('%s/../../cancasexl.access/vxlapi.h'%(cwd),'%s/vxlapi.h'%(cwd))
     MKSymlink('%s/../../cancasexl.access/xlLoadlib.cpp'%(cwd),'%s/xlLoadlib.c'%(cwd))
-    asenv.Append(CCFLAGS=['-DDYNAMIC_XLDRIVER_DLL', '-DPOINTER_32='])
-    if(asenv['mingw64']):
-        asenv.Append(CCFLAGS='-I%s/ControlCAN/64'%(zlgcan))
-        
-        MKSymlink('%s/ControlCAN/64/ControlCAN.dll'%(zlgcan),
-                  '%s/release/%s/ControlCAN.dll'%(asenv['ASROOT'],asenv['RELEASE']))
-        MKSymlink('%s/"PCAN-Basic API"/x64/PCANBasic.dll'%(peakcan),
-                  '%s/release/%s/PCANBasic.dll'%(asenv['ASROOT'],asenv['RELEASE']))
-    else:
-        asenv.Append(CCFLAGS='-I%s/ControlCAN/32'%(zlgcan))
-        MKSymlink('%s/ControlCAN/32/ControlCAN.dll'%(zlgcan),
-                  '%s/release/%s/ControlCAN.dll'%(asenv['ASROOT'],asenv['RELEASE']))
-        MKSymlink('%s/"PCAN-Basic API"/Win32/PCANBasic.dll'%(peakcan),
-                  '%s/release/%s/PCANBasic.dll'%(asenv['ASROOT'],asenv['RELEASE']))
+    asenv.Append(CPPDEFINES=['DYNAMIC_XLDRIVER_DLL', 'POINTER_32='])
 
-AddOption('--canlib',
-        dest = 'canlib',
-        action = 'store_true',
-        default = False,
-        help = 'do only downloading the 3rd party canlib')
+objs += Glob('lascanlib.c')
 
-if(GetOption('canlib')):
-    print('zlgcan and peakcan is ready.')
-    exit()
+if('LUA_SERIAL_CAN' in MODULES):
+    objs +=  Glob('serial_can.c')
 
-objs +=  Glob('*.c')
-objs +=  Glob('rs232/*.c')
+if('LUA_PEAK_CAN' in MODULES):
+    objs += Glob('peak_can.c')
+    asenv.Append(LIBS=['PCANBasic'])
+
+if('LUA_ZLG_CAN' in MODULES):
+    objs += Glob('zlg_can.c')
+    asenv.Append(LIBS=['ControlCAN'])
+
+if('LUA_VXL_CAN' in MODULES):
+    objs += Glob('vxl_can.c')
+    objs += Glob('xlLoadlib.c')
+
+if('LUA_SOCKET_CAN' in MODULES):
+    if(IsPlatformWindows()):
+        asenv.Append(LIBS=['wsock32'])
+    objs += Glob('socket_can.c')
+    objs += Glob('socketwin_can.c')
 
 if(IsPlatformWindows()):
     if(asenv['mingw64']):
-        objs += Glob('%s/PCAN-Basic API/x64/VC_LIB/PCANBasic.lib'%(peakcan))
-        objs += Glob('%s/ControlCAN/64/ControlCAN.lib'%(zlgcan))
+        if('LUA_PEAK_CAN' in MODULES):
+            MKSymlink('%s/"PCAN-Basic API"/x64/VC_LIB/PCANBasic.lib'%(peakcan), '%s/libPCANBasic.a'%(BDIR))
+        if('LUA_ZLG_CAN' in MODULES):
+            MKSymlink('%s/ControlCAN/64/ControlCAN.lib'%(zlgcan), '%s/libControlCAN.a'%(BDIR))
     else:
-        objs += Glob('%s/PCAN-Basic API/Win32/VC_LIB/PCANBasic.lib'%(peakcan))
-        objs += Glob('%s/ControlCAN/32/ControlCAN.lib'%(zlgcan))
+        if('LUA_PEAK_CAN' in MODULES):
+            MKSymlink('%s/"PCAN-Basic API"/Win32/VC_LIB/PCANBasic.lib'%(peakcan), '%s/libPCANBasic.a'%(BDIR))
+        if('LUA_ZLG_CAN' in MODULES):
+            MKSymlink('%s/ControlCAN/32/ControlCAN.lib'%(zlgcan), '%s/libControlCAN.a'%(BDIR))
+    asenv.Append(LIBPATH=[BDIR])
+
 src = '%s/socketwin_can_driver.c'%(cwd)
 tgt = '%s/../script/socketwin_can_driver.exe'%(cwd)
 cmd = 'gcc %s -D__SOCKET_WIN_CAN_DRIVER__ -I%s/com/as.infrastructure/include -o %s'%(src,asenv['ASROOT'],tgt)

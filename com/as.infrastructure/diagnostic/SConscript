@@ -32,6 +32,7 @@ if((BOARD=='posix') and IsPlatformWindows()):
     cmd = '%s -O2 -shared -Wall -D__ASDEBUG_BACKTRACE__ -o %s' \
         ' %s/Det/backtrace.c -lbfd -lintl -liberty -limagehlp -lz -L%s'%(
             gcc, target, cwd, binutils)
-    MKObject(Glob('Det/backtrace.c'), target, cmd, False)
+    if(not asenv['mingw64']):
+        MKObject(Glob('Det/backtrace.c'), target, cmd, False)
 
 Return('objs')

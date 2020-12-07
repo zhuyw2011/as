@@ -1,0 +1,12 @@
+menu "bootloader config"
+
+config BOOTLOADER
+	bool "as demo bootloader"
+	default y if RELEASE_ASBOOT
+
+config MINIBLT
+	bool "as mini bootloader"
+	default n
+	depends on BOOTLOADER
+
+endmenu

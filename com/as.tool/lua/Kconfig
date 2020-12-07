@@ -1,0 +1,52 @@
+
+config LUA
+	bool "LUA"
+	depends on !PYAS && !ASLIB
+	default y
+
+config LUA_ASLIB
+	bool
+	depends on LUA
+	default y
+
+config LUA_DEV
+	bool "as device library"
+	default y
+
+config LUA_DEV_RS232
+	bool "as rs232 device"
+	depends on LUA_DEV
+	default y
+
+config LUA_CAN
+	bool "as CAN library"
+	default y
+
+config LUA_SERIAL_CAN
+	bool "as CAN on serial device"
+	depends on LUA_CAN
+	default y
+
+config LUA_PEAK_CAN
+	bool "as PEAK CAN device"
+	depends on LUA_CAN
+	default n
+
+config LUA_ZLG_CAN
+	bool "as ZLG CAN device"
+	depends on LUA_CAN
+	default n
+
+config LUA_VXL_CAN
+	bool "as VXL CAN device"
+	depends on LUA_CAN
+	default y
+
+config LUA_SOCKET_CAN
+	bool "as socket virtual CAN device"
+	depends on LUA_CAN
+	default y
+
+
+
+

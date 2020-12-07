@@ -1,5 +1,10 @@
 source "$ASROOT/com/as.application/board.$BOARD/Kconfig"
 
+config IS_ASTOOL
+    bool
+    default n
+
+if !IS_ASTOOL
 menu "Run Time Environment"
 config RTE
 	bool "Run Time Environment"
@@ -14,6 +19,11 @@ config RTE_SWC_GAUGE
 	bool "demo gauge software component"
 	default y if ARCH_POSIX && STMO
 	depends on RTE
+
+config COMMONXML
+	bool "default as config arxml"
+	default y
+	depends on !BOOTLOADER
 
 endmenu
 
@@ -49,4 +59,4 @@ config DEM_TEST
 	default n
 
 endmenu
-
+endif

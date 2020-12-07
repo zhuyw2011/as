@@ -5,6 +5,7 @@ cwd = GetCurrentDir()
 
 Import('asenv')
 ASROOT = asenv['ASROOT']
+BDIR = asenv['BDIR']
 
 MODULES = ['ECUM','SCHM','MCU',
            'DET','SHELL',
@@ -13,7 +14,7 @@ MODULES = ['ECUM','SCHM','MCU',
            'DCM',
            'PORT','DIO','DEMO_LED_APP',
            'ASKAR',
-           'USB','USB_CAN'
+           'USB','USB_CAN','COMMONXML'
            ]
 
 ARCH='stm32f1'
@@ -34,7 +35,7 @@ if(asenv['RELEASE']=='asboot'):
                'SCAN','CANIF','PDUR','CANTP','DCM',
                'CLIB_STDIO_PRINTF',
                'CLIB_MISCLIB',
-               'TINYOS',
+               'TINYOS','BOOTLOADER',
                'USB','USB_CAN','CANTP_MINI','DCM_MINI',
                'SHELL','FLASH_CMD','MEM_CMD','JMP_CMD','CLIB_STRTOK_R'
                ]
@@ -44,7 +45,7 @@ if(asenv['RELEASE']=='asboot'):
                                   'CHIP_STM32F10X','STM32F10X_CL'],
                        'CCFLAGS':[],
                        'CPPPATH':['%s/com/as.infrastructure/include'%(ASROOT)],
-                       'LINKFLAGS':['-static','-T%s'%(lds),'-Map','build/stm32f107vc/stm32f107vc-flsdrv.map'],
+                       'LINKFLAGS':['-static','-T%s'%(lds),'-Map','%s/stm32f107vc-flsdrv.map'%(BDIR)],
                        'objs':[]}
 
 if(asenv['MODULES'] is None):
@@ -62,7 +63,7 @@ if(asenv['RELEASE']=='asboot'):
 else:
     lds = '%s/script/linker-app.lds'%(cwd)
 asenv.Append(LINKFLAGS='-static -T %s'%(lds))
-asenv.Append(LINKFLAGS='-Map build/stm32f107vc/stm32f107vc.map')
+asenv.Append(LINKFLAGS='-Map %s/stm32f107vc.map'%(BDIR))
 
 asenv.Append(CPPPATH=['%s/common'%(cwd)])
 
@@ -102,11 +103,8 @@ asenv.Append(CPPDEFINES=['OS_STK_SIZE_SCALER=1/2'])
 
 if('run' in COMMAND_LINE_TARGETS):
     SelectCompilerArmNoneEabi()
-    if(asenv['RELEASE']!='asboot'):
-        cmd = 'cd %s/release/asboot && scons'%(ASROOT)
-        RunCommand(cmd)
     gdb = asenv['CC'].split(' ')[0][:-3]+'gdb'
-    cmd = 'cd %s/release/asboot && %s -x %s/script/rom.gdbinit'%(ASROOT,gdb, cwd)
+    cmd = 'cd %s && %s -x %s/script/rom.gdbinit'%(BDIR,gdb, cwd)
     RunCommand(cmd)
     exit()
 

@@ -1,0 +1,29 @@
+mainmenu "Automotive Software AS Configuration"
+
+config BOARD
+    string
+    option env="BOARD"
+    default "posix"
+
+config ANY
+    string
+    option env="ANY"
+    default "none"
+
+config RELEASE
+    string
+    option env="RELEASE"
+    default "ascore"
+
+config ASROOT
+    string
+    option env="ASROOT"
+    default "../.."
+
+source "$ASROOT/com/as.application/Kconfig"
+source "$ASROOT/com/as.infrastructure/Kconfig"
+source "$ASROOT/com/as.tool/Kconfig"
+if !IS_ASTOOL
+source "$ASROOT/release/$RELEASE/Kconfig"
+endif
+

@@ -5,6 +5,7 @@ import sys
 import shutil
 import string
 import re
+import cmd
 
 bScons = True
 try:
@@ -96,25 +97,23 @@ def PrepareEnv():
         # loop to search the ASROOT
         p = os.curdir
         while(True):
-            p=os.path.abspath('%s/..'%(p))
             if(os.path.isdir('%s/com'%(p)) and 
                os.path.isdir('%s/release'%(p)) and
                os.path.isfile('%s/Console.bat'%(p))): break
+            p=os.path.abspath('%s/..'%(p))
         ASROOT=p
-    BOARD=None
-
-    release = os.path.basename(os.path.abspath(os.curdir))
+    ASROOT = os.path.abspath(ASROOT)
 
     AppendPythonPath(['%s/com/as.tool/config.infrastructure.system'%(ASROOT),
               '%s/com/as.tool/config.infrastructure.system/third_party'%(ASROOT)])
 
-    asenv=Environment(TOOLS=['as','gcc','g++','gnulink'])
+    asenv=Environment(TOOLS=['ar', 'as','gcc','g++','gnulink'])
     os.environ['ASROOT'] = ASROOT
     asenv['ASROOT'] = ASROOT
-    asenv['RELEASE'] = release
     asenv['PACKAGES'] = []
     board_list = []
     any_list = []
+    release_list = []
     for dir in os.listdir('%s/com/as.application'%(ASROOT)):
         if(dir[:6]=='board.' and 
            os.path.exists('%s/com/as.application/%s/SConscript'%(ASROOT,dir))):
@@ -124,40 +123,63 @@ def PrepareEnv():
         if(os.path.exists('%s/com/as.application/board.any/%s/SConscript'%(ASROOT,dir))):
             any_list.append(dir)
 
+    for dir in os.listdir('%s/release'%(ASROOT)):
+        if(os.path.exists('%s/release/%s/SConscript'%(ASROOT,dir))):
+            release_list.append(dir)
+
     def help():
         if(IsPlatformWindows()):
             set = 'set'
         else:
             set = 'export'
-        print('Usage:scons [studio/run]\n\tboard list: %s\n\tany   list: %s'%(board_list,any_list))
+        print('Usage:scons [studio/run]\n\tboard list: %s\n\tany   list: %s\n\trelease list: %s'%(board_list,any_list,release_list))
         print('  studio: optional for launch studio GUI tool')
         print('  run: optional for run the application on the target board')
         print('  use command "%s BOARD=board_name" to choose a board from the board list'%(set))
         print('  use command "%s ANY=any_board_name" to choose a board from the any list if BOARD is any'%(set))
-        print('    for example, not an any board:\n\tset BOARD=posix')
-        print('    for example, an any board:\n\tset BOARD=any\n\tset ANY=mc9s12xep100')
+        print('  use command "%s RELEASE=release_name" to choose a release from the release list'%(set))
+        print('    for example, not an any board:\n\t{0} BOARD=posix\n\t{0} RELEASE=ascore'.format(set))
+        print('    for example, an any board:\n\t{0} BOARD=any\n\t{0} ANY=mc9s12xep100\n\t{0} RELEASE=ascore'.format(set))
 
     if('help' in COMMAND_LINE_TARGETS):
         help()
         exit(0)
-    else:
-        for b in COMMAND_LINE_TARGETS:
-            if(b in board_list):
-                BOARD = b
 
-    if(BOARD is None):
-        if(os.getenv('BOARD') in board_list):
-            BOARD = os.getenv('BOARD')
-
-    if(BOARD is None):
+    BOARD = os.getenv('BOARD')
+    if(BOARD not in board_list):
         print('Error: no BOARD specified!')
         help()
         exit(-1)
 
-    if((BOARD == 'any') and (os.getenv('ANY') not in any_list)):
-        print('Error: invalid ANY specified!')
+    if(BOARD != 'any'):
+        ANY = None
+    else:
+        ANY = os.getenv('ANY')
+        if(ANY not in any_list):
+            print('Error: invalid ANY specified!')
+            help()
+            exit(-1)
+
+    RELEASE = os.getenv('RELEASE')
+    if(ANY in ['pyas', 'lua', 'aslib']):
+        RELEASE=None
+    elif(RELEASE not in release_list):
+        print('Error: invalid RELEASE specified!')
         help()
         exit(-1)
+
+    BDIR = 'build/%s/%s'%(os.name, BOARD)
+    if(BOARD == 'any'):
+        BDIR = '%s/%s'%(BDIR, ANY)
+        TARGET = ANY
+    else:
+        TARGET = BOARD
+    if(RELEASE!=None):
+        BDIR = '%s/%s'%(BDIR, RELEASE)
+    BDIR = os.path.abspath(BDIR)
+    MKDir(BDIR)
+    asenv['BDIR'] = BDIR
+    asenv['target'] = '%s/%s'%(BDIR, TARGET)
 
     if(IsPlatformWindows()):
         asEnvPath = os.getenv('ASENV')
@@ -166,6 +188,7 @@ def PrepareEnv():
             print('Welcome to the world of asenv for %s!'%(ASROOT))
 
     asenv['BOARD'] = BOARD
+    asenv['RELEASE'] = RELEASE
     Export('asenv')
     PrepareBuilding(asenv)
     return asenv
@@ -173,12 +196,16 @@ def PrepareEnv():
 def PrepareBuilding(env):
     global Env
     Env = env
-    GetConfig('.config',env)
+    GetConfig('%s/.config'%(env['BDIR']),env)
     env['pkgconfig'] = 'pkg-config'
     env['mingw64'] = False
     env['POSTACTION'] = []
     if(IsPlatformWindows()):
-        mpath = os.path.abspath(os.getenv('MSYS2').replace('"',''))
+        msys2 = os.getenv('MSYS2')
+        if(msys2 != None):
+            mpath = os.path.abspath(msys2.replace('"',''))
+        else:
+            mpath = 'C:/msys64'
         err,txt = RunSysCmd('which gcc')
         if(None != err):
             print('ERROR: not msys2 enviroment!')
@@ -229,12 +256,15 @@ def PrepareBuilding(env):
     if(not GetOption('verbose')):
     # override the default verbose command string
         env.Replace(
-          ARCOMSTR = 'AR $SOURCE',
+          ARCOMSTR = 'AR $TARGET',
           ASCOMSTR = 'AS $SOURCE',
           ASPPCOMSTR = 'AS $SOURCE',
           CCCOMSTR = 'CC $SOURCE',
           CXXCOMSTR = 'CXX $SOURCE',
-          LINKCOMSTR = 'LINK $TARGET'
+          LINKCOMSTR = 'LINK $TARGET',
+          SHCCCOMSTR = 'SHCC $SOURCE',
+          SHCXXCOMSTR = 'SHCXX $SOURCE',
+          SHLINKCOMSTR = 'SHLINK $TARGET'
         )
     if(GetOption('menuconfig')):
         menuconfig(env)
@@ -323,6 +353,7 @@ def GetConfig(cfg,env):
 def menuconfig(env):
     import time
     import xcc
+    BDIR = env['BDIR']
     kconfig = '%s/com/as.tool/kconfig-frontends/kconfig-mconf'%(env['ASROOT'])
     if(IsPlatformWindows() and ('ASENV' in Env)):
         kconfig='%s/tools/kconfig-frontends/kconfig-mconf.exe'%(Env['ASENV'])
@@ -351,13 +382,15 @@ def menuconfig(env):
         RunCommand('cd %s/com/as.tool/kconfig-frontends && make'%(env['ASROOT']))
     if(os.path.exists(kconfig)):
         assert(os.path.exists('Kconfig'))
-        cmd += kconfig + ' Kconfig'
-
-        fn = '.config'
+        fn = '%s/.config'%(BDIR)
+        cmd += 'rm -f .config && '
         if(os.path.isfile(fn)):
+            cmd += 'cp -fv %s .config && '%(fn)
             mtime = os.path.getmtime(fn)
         else:
             mtime = -1
+        cmd += kconfig + ' Kconfig && '
+        cmd += 'cp -fv .config %s'%(fn)
         if(IsPlatformWindows()):
             cmd = '@echo off\n'+cmd.replace(' && ','\n')
             MKFile('menuconfig.bat', cmd)
@@ -369,7 +402,7 @@ def menuconfig(env):
             mtime2 = -1
         if(mtime != mtime2):
             GetConfig(fn,env)
-            cfgdir = 'build/%s/config'%(env['BOARD'])
+            cfgdir = '%s/config'%(BDIR)
             MKDir(cfgdir)
             xcc.XCC(cfgdir,env)
         if('RTTHREAD' in env['MODULES']):
@@ -760,7 +793,7 @@ def ForkEnv(father=None, attr={}):
 class Qemu():
     def __init__(self, qemu=None):
         arch_map = {'x86':'i386','cortex-m':'arm', 'arm64':'aarch64'}
-        ASROOT = Env['ASROOT']
+        BDIR = Env['BDIR']
         ARCH = Env['ARCH']
         self.arch = Env['arch']
         self.port = self.FindPort()
@@ -772,8 +805,8 @@ class Qemu():
         if(qemu is None):
             self.isAsQemu = True
             self.qemu = self.LocateASQemu()
-            self.CreateDiskImg('%s/release/%s/asblk0.img'%(ASROOT,Env['RELEASE']), 32*1024*1024, 'vfat')
-            self.CreateDiskImg('%s/release/%s/asblk1.img'%(ASROOT,Env['RELEASE']), 32*1024*1024, 'ext4')
+            self.CreateDiskImg('%s/asblk0.img'%(BDIR), 32*1024*1024, 'vfat')
+            self.CreateDiskImg('%s/asblk1.img'%(BDIR), 32*1024*1024, 'ext4')
         else:
             self.isAsQemu = False
             self.qemu = qemu
@@ -822,14 +855,17 @@ class Qemu():
     def Run(self, params, where=None):
         ASROOT = Env['ASROOT']
         MODULES = Env['MODULES']
-        build = '%s/release/%s'%(ASROOT, Env['RELEASE'])
+        build = Env['BDIR']
         if(where is None):
             where = build
         python = Env['python3']
+        cmd = 'python main.py'
         if(IsPlatformWindows()):
-            python = 'start ' + python
+            python = 'start ' + cmd
+        else:
+            cmd += ' &'
         if('asone' in COMMAND_LINE_TARGETS):
-            RunCommand('cd %s/com/as.tool/as.one.py && %s main.py'%(ASROOT,python))
+            RunCommand('cd %s/com/as.tool/as.one.py && %s'%(ASROOT,cmd))
         if(IsPlatformWindows()):
             if(self.isAsQemu and ('CAN' in MODULES)):
                 RunCommand('start %s/com/as.tool/lua/script/socketwin_can_driver.exe 0'%(ASROOT))
@@ -880,6 +916,7 @@ class Qemu():
     def BuildASQemu(self):
         ASROOT = Env['ASROOT']
         if(IsPlatformWindows()):
+            RunCommand('cd %s && set BOARD=any&& set ANY=aslib&& scons'%(ASROOT))
             mpath = os.getenv('MSYS2')
             RunCommand('%s/msys2_shell.cmd -mingw64 -where %s/com/as.tool/qemu'%(mpath,ASROOT))
             print('please mannuly invoke below comand in the poped up msys2 window:')
@@ -890,20 +927,19 @@ class Qemu():
         else:
             fp = open('/tmp/asqemu.mk','w')
             fp.write('''download = $(prj-dir)/release/download
-LNFS=python $(prj-dir)/release/make/lnfs.py
-$(download)/qemu/hw/char/libpyas.a:
-\t(cd $(prj-dir)/release/aslua; make clean; make 81; make 82 forceclib=yes)
+pkgver=2.10.0
+$(download)/qemu-$(pkgver).tar.xz:
+\t@(cd $(download); wget https://download.qemu.org/qemu-$(pkgver).tar.xz)
 
-$(download)/qemu: $(download)/qemu/hw/char/libpyas.a $(dep-wincap)
-\t@(cd $(download); git clone https://github.com/qemu/qemu.git; \
-        cd qemu; git submodule update --init dtc ; \
-        git checkout 223cd0e13f2e46078d7b573f0b8402bfbee339be; \
-        cd hw/char; $(LNFS) $(prj-dir)/com/as.tool/qemu/hw/char TRUE; \
-        cp $(prj-dir)/release/aslua/out/libpyas.a .; \
+$(download)/qemu: $(download)/qemu-$(pkgver).tar.xz
+\t@(cd $(download); tar xf qemu-$(pkgver).tar.xz; ln -fs qemu-$(pkgver) qemu)
+\t@(sed -i "40cint memfd_create(const char *name, unsigned int flags)" $(download)/qemu/util/memfd.c)
+\t@(cd $(prj-dir); BOARD=any ANY=aslib scons; cp build/%s/any/aslib/libaslib.a $(download)/qemu/hw/char/libpyas.a)
+\t@(cd $(download)/qemu/hw/char; cp $(prj-dir)/com/as.tool/qemu/hw/char/* .; \
         cat Makefile >> Makefile.objs)
 
 asqemu:$(download)/qemu
-\t@(cd $(download)/qemu; ./configure; make LDFLAGS="-L/usr/lib/x86_64-linux-gnu")\n''')
+\t@(cd $(download)/qemu; ./configure --python=/usr/bin/python2; make LDFLAGS="-L/usr/lib/x86_64-linux-gnu")\n'''%(os.name))
             fp.close()
             RunCommand('make asqemu -f /tmp/asqemu.mk prj-dir=%s'%(ASROOT))
 
@@ -1070,6 +1106,39 @@ def SelectCompilerPPCEabi():
     Env['CXX']  = ppc + '/bin/powerpc-eabi-g++.exe'
     Env['LINK'] = ppc + '/bin/powerpc-eabi-link.exe'
 
+def AddPythonDev(env):
+    pyp = sys.executable
+    if(IsPlatformWindows()):
+        pyp = pyp.replace(os.sep, '/')[:-10]
+        pylib = 'python'+sys.version[0]+sys.version[2]
+        if(pylib in env.get('LIBS',[])): return
+        pf = '%s/libs/lib%s.a'%(pyp, pylib)
+        if(not os.path.exists(pf)):
+            RunCommand('cp {0}/libs/{1}.lib {0}/libs/lib{1}.a'.format(pyp, pylib))
+        env.Append(CPPDEFINES=['_hypot=hypot'])
+        env.Append(CPPPATH=['%s/include'%(pyp)])
+        env.Append(LIBPATH=['%s/libs'%(pyp)])
+        istr = 'set'
+    else:
+        pyp = os.sep.join(pyp.split(os.sep)[:-2])
+        if(sys.version[0:3] == '2.7'):
+            _,pyp = RunSysCmd('which python3')
+            pyp = os.sep.join(pyp.split(os.sep)[:-2])
+            _,version = RunSysCmd('python3 -c "import sys; print(sys.version[0:3])"')
+            pylib = 'python'+version+'m'
+        else:
+            pylib = 'python'+sys.version[0:3]+'m'
+        if(pylib in env.get('LIBS',[])): return
+        env.Append(CPPPATH=['%s/include/%s'%(pyp,pylib)])
+        if(pyp == '/usr'):
+            env.Append(LIBPATH=['%s/lib/x86_64-linux-gnu'%(pyp)])
+            env.Append(CPPPATH=['%s/local/include/%s'%(pyp,pylib[:9])])
+        else:
+            env.Append(LIBPATH=['%s/lib'%(pyp)])
+        istr = 'export'
+    #print('%s PYTHONHOME=%s if see error " Py_Initialize: unable to load the file system codec"'%(istr, pyp))
+    env.Append(LIBS=[pylib, 'pthread', 'stdc++', 'm'])
+
 def MemoryUsage(target, objs):
     try:
         from elftools.elf.elffile import ELFFile
@@ -1130,6 +1199,7 @@ def MemoryUsage(target, objs):
 def BuildingSWCS(swcs):
     for swc in swcs:
         swc = str(swc)
+        swc = os.path.abspath(swc)
         path = os.path.dirname(swc)
         cmd = 'cd %s && %s %s'%(path, Env['python3'], swc)
         tgt = path+'/Rte_Type.h'
@@ -1184,13 +1254,14 @@ def PreProcess(cfgdir, fil):
     MKFile(filR, newTxt)
     return filR
 
-def BuildDTS(dts,bdir):
+def BuildDTS(dts,BDIR):
     if(len(dts) > 0):
         dtc = Package('dtc')+'/dtc'
     for src in dts:
         src=str(src)
+        src = os.path.abspath(src)
         bp = os.path.dirname(src)
-        tgt = '%s/%s.dtb'%(os.path.abspath(bdir), os.path.basename(src)[:-4])
+        tgt = '%s/%s.dtb'%(os.path.abspath(BDIR), os.path.basename(src)[:-4])
         cmd = 'cd %s && %s -I dts -O dtb %s -o %s'%(bp, dtc, src, tgt)
         MKObject([src], tgt, cmd)
 
@@ -1201,7 +1272,10 @@ def Building(target, sobjs, env=None):
         env = Env
     if(GetOption('splint')):
         splint(objs, env)
-    bdir = 'build/%s'%(target)
+    if('BDIR' in env):
+        BDIR = env['BDIR']
+    else:
+        BDIR = 'build/%s'%(target)
     objs = []
     xmls = []
     ofs = []
@@ -1209,7 +1283,7 @@ def Building(target, sobjs, env=None):
     dts = []
     arxml= None
 
-    cfgdir = '%s/config'%(bdir)
+    cfgdir = '%s/config'%(BDIR)
     MKDir(cfgdir)
     env.Append(CPPPATH=['%s'%(cfgdir)])
     env.Append(ASFLAGS='-I%s'%(cfgdir))
@@ -1217,7 +1291,7 @@ def Building(target, sobjs, env=None):
     if('PACKAGES' in env):
         for p in env['PACKAGES']:
             pkg = Package(p)
-            pbdir = '%s/packages/%s'%(bdir,os.path.basename(pkg))
+            pbdir = '%s/packages/%s'%(BDIR,os.path.basename(pkg))
             sobjs += SConscript('%s/SConscript'%(pkg),variant_dir=pbdir, duplicate=0)
 
     for obj in sobjs:
@@ -1246,20 +1320,20 @@ def Building(target, sobjs, env=None):
         shaO = open(cfgdone).read()
         if(shaN != shaO):
             forceGen = True
-    if( (arxml!=None) and ( 
-        ( (not os.path.exists(cfgdone)) and (not GetOption('clean')) ) 
-            or forceGen ) ):
+    if( ( (not os.path.exists(cfgdone)) and (not GetOption('clean')) ) 
+            or forceGen ):
         MKDir(cfgdir)
         RMFile(cfgdone)
         xcc.XCC(cfgdir, env, True)
-        arxmlR = PreProcess(cfgdir, str(arxml))
-        for xml in xmls:
-            MKSymlink(str(xml),'%s/%s'%(cfgdir,os.path.basename(str(xml))))
-        xcc.XCC(cfgdir)
-        argen.ArGen.ArGenMain(arxmlR,cfgdir)
+        if(arxml != None):
+            arxmlR = PreProcess(cfgdir, str(arxml))
+            for xml in xmls:
+                MKSymlink(str(xml),'%s/%s'%(cfgdir,os.path.basename(str(xml))))
+            xcc.XCC(cfgdir)
+            argen.ArGen.ArGenMain(arxmlR,cfgdir)
         MKFile(cfgdone, SHA256(glob.glob('%s/*xml'%(cfgdir))))
-    if('studio' in COMMAND_LINE_TARGETS):
-        studio=os.path.abspath('../../com/as.tool/config.infrastructure.system/')
+    if(('studio' in COMMAND_LINE_TARGETS) and (env == Env)):
+        studio=os.path.abspath('%s/com/as.tool/config.infrastructure.system/'%(env['ASROOT']))
         assert(arxml)
         pd = os.path.abspath(cfgdir)
         RunCommand('cd %s && %s studio.py %s'%(studio,env['python3'],pd))
@@ -1272,17 +1346,29 @@ def Building(target, sobjs, env=None):
 
     if(GetOption('clean')):
         if(os.path.exists('%s/autosar.arxml'%(cfgdir))):
-            RunCommand('mv {0}/autosar.arxml . && rm -frv {0}/* {0}/../*.map && mv autosar.arxml {0}/'.format(cfgdir))
+            shutil.copy('%s/autosar.arxml'%(cfgdir), '%s/autosar.arxml'%(BDIR))
+            shutil.rmtree(cfgdir)
+            MKDir(cfgdir)
+            shutil.move('%s/autosar.arxml'%(BDIR), '%s/autosar.arxml'%(cfgdir))
         RunCommand('rm -fv *.s19')
 
-    BuildDTS(dts,bdir)
+    BuildDTS(dts,BDIR)
     BuildOFS(ofs)
     BuildingSWCS(swcs)
     if('Program' in env):
         # special program for some compiler
         env['Program'](target, objs, env)
     else:
-        env.Program(target, objs)
+        if('BUILD_TYPE' in env):
+            BUILD_TYPE = env['BUILD_TYPE']
+        else:
+            BUILD_TYPE = 'exe'
+        if(BUILD_TYPE == 'exe'):
+            env.Program(target, objs)
+        elif(BUILD_TYPE == 'dll'):
+            env.SharedLibrary(target, objs)
+        elif(BUILD_TYPE == 'lib'):
+            env.Library(target, objs)
 
     if(IsPlatformWindows()):target += '.exe'
     if(GetOption('memory')):

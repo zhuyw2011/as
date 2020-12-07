@@ -1,16 +1,7 @@
-mainmenu "Automotive Software AS Configuration"
+source "$ASROOT/release/ascore/SgDesign/Kconfig"
+source "$ASROOT/release/ascore/elf/Kconfig"
 
-config BOARD
-    string
-    option env="BOARD"
-    default "posix"
+config RELEASE_ASCORE
+	bool
+	default y
 
-config ASROOT
-    string
-    option env="ASROOT"
-    default "../.."
-
-source "$ASROOT/com/as.application/Kconfig"
-source "$ASROOT/com/as.infrastructure/Kconfig"
-source "SgDesign/Kconfig"
-source "elf/Kconfig"

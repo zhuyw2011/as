@@ -29,12 +29,6 @@ dir-y += $(download)/json-c
 inc-y += -I$(download)
 def-y += -DUSE_JSONC
 ifeq ($(host),Linux)
-else
-def-y += -D_MSC_VER
-$(warning need modify the /c/msys64/mingw64/x86_64-w64-mingw32/include/winnt.h line 2100/8474, \
-	add "FORCEINLINE" to each of the inline function)
-endif
-ifeq ($(host),Linux)
 # for mingw need to install gnutls from ftp://ftp.gnu.org/gnu/gnutls/w32/gnutls-3.0.22-w32.zip
 dir-y += $(download)/libmicrohttpd-0.9.55/src/microhttpd
 endif

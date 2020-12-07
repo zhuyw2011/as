@@ -4,5 +4,6 @@ objs = []
 
 objs += SConscript('as.application/SConscript')
 objs += SConscript('as.infrastructure/SConscript')
+objs += SConscript('as.tool/SConscript')
 
 Return('objs')

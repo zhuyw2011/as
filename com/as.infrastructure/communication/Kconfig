@@ -20,6 +20,11 @@ config CANTP
 	depends on CANIF
 	default y
 
+config CANTP_MINI
+	bool "Mini Communication CAN Transport Layer"
+	depends on CANTP
+	default n
+
 config COM
 	bool "Communication Signals"
 	depends on PDUR

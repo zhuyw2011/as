@@ -175,7 +175,7 @@ void asAssertErrorHook(void)
 }
 ELF_EXPORT(asAssertErrorHook);
 
-#if !defined(__HIWARE__)
+#if !defined(__HIWARE__) && !defined(__WINDOWS__) && !defined(__LINUX__)
 void _assert (const char *_Message, const char *_File, unsigned _Line)
 {
 	printf("assert(%s) failed @ %s %u\n", _Message, _File, _Line);

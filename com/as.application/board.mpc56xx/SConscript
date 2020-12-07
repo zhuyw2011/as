@@ -5,14 +5,14 @@ cwd = GetCurrentDir()
 
 Import('asenv')
 ASROOT = asenv['ASROOT']
-
+BDIR = asenv['BDIR']
 MODULES = ['ECUM','SCHM','MCU',
            'DET',
            'TRACE',
            'CLIB_STDIO_PRINTF',
            'ASKAR','SHELL','CLIB_STRTOK_R',
            'MPC5634M_MLQB80',
-           'PORT','DIO'
+           'PORT','DIO','COMMONXML'
            ]
 
 print('INFO: set NO_COM=YES to remove COM stack')
@@ -27,7 +27,7 @@ if(asenv['RELEASE']=='asboot'):
                'DCM','FLASH','TINYOS',
                'CLIB_STDIO_PRINTF','CLIB_STRTOK_R',
                'SHELL','FLASH_CMD','MEM_CMD','JMP_CMD',
-               'MPC5634M_MLQB80'
+               'MPC5634M_MLQB80','BOOTLOADER'
                ]
     asenv.Append(CPPDEFINES=['CMDLINE_MAX=4096','FLASH_CMD_MAX_DATA=2000'])
 
@@ -44,7 +44,7 @@ asenv['arch'] = arch
 
 objs = []
 
-asenv.Append(LINKFLAGS=['-map','build/mpc56xx/mpc56xx.map'])
+asenv.Append(LINKFLAGS=['-map','%s/mpc56xx.map'%(BDIR)])
 
 MKDir('%s/common/'%(cwd))
 MKSymlink('%s/../board.posix/common/Mcu_Cfg.h'%(cwd),'%s/common/Mcu_Cfg.h'%(cwd))

@@ -1,0 +1,24 @@
+
+config ARCH_ANY
+	bool
+	default y
+	select DEFAULT_ANYOS
+	select IS_ASTOOL
+	select LUA
+
+config ARCH
+	string
+	default "host"
+
+
+config DET
+    bool
+    default y
+
+config SHELL
+	bool
+	default y
+
+config ANYOS
+	bool
+	default y

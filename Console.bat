@@ -39,16 +39,15 @@ cd %ASPATH%
 
 :prepareEnv
 set MSYS=winsymlinks:nativestrict
-if EXIST "%ASPATH%\scons.bat" goto launchConsole
+if EXIST "%ASPATH%\.setup.done" goto launchConsole
 REM pacman -Syuu
 pacman -S unzip wget git mingw-w64-x86_64-gcc mingw-w64-x86_64-glib2 mingw-w64-x86_64-gtk3
 pacman -S mingw32/mingw-w64-i686-gcc mingw-w64-x86_64-diffutils
 pacman -S ncurses-devel gperf scons curl make cmake automake-wrapper libtool
 pacman -S unrar mingw-w64-x86_64-pkg-config mingw-w64-x86_64-binutils
+pacman -S msys2-runtime-devel
 conda install scons pyserial
-echo @echo off > scons.bat
-echo @echo !!!SCONS on MSYS2!!! >> scons.bat
-echo %MSYS2%\usr\bin\python2.exe %MSYS2%\usr\bin\scons %%* >> scons.bat
+echo 0 > .setup.done
 
 :launchConsole
 REM env.asc in format "tokens=value" such as "PACKET_LIB_ADAPTER_NR=2" to set some environment
@@ -64,9 +63,9 @@ if EXIST %CZ% goto launchCZ
 
 :launchConEmu
 start %ConEmu% -title aslua-ascore-asboot-asone ^
-	-runlist -new_console:d:"%ASPATH%\release\aslua":t:aslua ^
-	^|^|^| -new_console:d:"%ASPATH%\release\ascore":t:ascore ^
-	^|^|^| -new_console:d:"%ASPATH%\release\asboot":t:asboot ^
+	-runlist -new_console:d:"%ASPATH%":t:astool ^
+	^|^|^| -new_console:d:"%ASPATH%":t:ascore ^
+	^|^|^| -new_console:d:"%ASPATH%":t:asboot ^
 	^|^|^| -new_console:d:"%ASPATH%\com\as.tool\as.one.py":t:asone
 exit 0
 
@@ -80,21 +79,29 @@ cd \
 mkdir asci
 cd asci
 git clone https://github.com/parai/as.git
-cd as\release
-rm download -fr
-mkdir download
+cd as
+rm release/download build -fr
+mkdir -p release/download
 git pull
-cd aslua
-make aslua
-cd ..\ascore
+
 set BOARD=posix
+set RELEASE=ascore
 scons
+set RELEASE=asboot
+scons
+
 set BOARD=versatilepb
+set RELEASE=ascore
 scons
-cd ..\asboot
-set BOARD=posix
+set RELEASE=asboot
 scons
-set BOARD=versatilepb
+
+set BOARD=any
+set ANY=lua
+scons
+set ANY=pyas
+scons
+set ANY=aslib
 scons
 goto exitPoint
 

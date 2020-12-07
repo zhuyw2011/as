@@ -8,7 +8,7 @@ MODULES = asenv['MODULES']
 
 objs = []
 
-if(asenv['RELEASE']=='asboot'):
+if('BOOTLOADER' in MODULES):
     objs += Glob('common/*.c')
     objs += Glob('common/*.xml')
     objs += Glob('common/*.arxml')
